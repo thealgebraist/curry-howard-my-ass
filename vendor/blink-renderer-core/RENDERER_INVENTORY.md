@@ -241,10 +241,11 @@ Current λΠ work is small compared with that source surface:
   reconsume, custom/sanitizer effects, and full DOM lifecycle are excluded.
   The same inserted node then feeds fixed `p`/`.beta`/`#alpha` selector
   matching, numeric-priority color selection, and an abstract empty-block
-  layout/paint projection. Three cases agree with the C++ reference; the
+  layout/paint projection. Five cases agree with the C++ reference; the
   both-selectors-hit case also checks declaration-order-independent winner
-  selection. The color-bearing paint block is not visible text paint. Full
-  selector syntax, cascade priorities, color scheme, non-empty layout, and
+  selection. The `.beta` selector checks whitespace-separated class tokens
+  and rejects the substring `betamax`. The color-bearing paint block is not
+  visible text paint. Full selector syntax, cascade priorities, color scheme, non-empty layout, and
   paint artifact internals are not modeled.
 * `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
   by property state and forced boundaries around foreign-layer/scrollbar
