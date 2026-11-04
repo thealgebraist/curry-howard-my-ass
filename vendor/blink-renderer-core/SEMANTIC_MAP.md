@@ -551,6 +551,18 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path attribute-name frontier
+
+`examples/blink_html_fastpath_attr_boundary.cpp` models the decision at the end
+of the lowercase scan in `ScanAttrName`. A lowercase/hyphen prefix that reaches
+EOF triggers `kFailedEndOfInputReached`; an ASCII delimiter returns the prefix
+without consuming the delimiter; another invalid name code unit also returns
+the prefix, leaving the caller to reject the input; uppercase/digit input enters
+the mapping loop, which lowercases the full valid name even if that loop reaches
+EOF. Fourteen finite prefix/frontier fixtures compare with a C++ transcription.
+The following caller behavior and arbitrary source strings remain unmodeled.
+Source: `html_document_parser_fastpath.cc:990-1025`.
+
 ## HTML fragment fast-path attribute-name scanning
 
 `examples/blink_html_fastpath_attr_name.cpp` models the name transformation in

@@ -33,6 +33,10 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_attr_boundary.cpp` models the scan-frontier
+  outcome of `ScanAttrName`: early EOF, unchanged prefix before a delimiter or
+  invalid code unit, and the mapped full-name path when uppercase/digits occur.
+  Fourteen finite prefix/frontier cases compare with a C++ branch transcription.
 * `examples/blink_html_fastpath_attr_name.cpp` models `ScanAttrName`
   fast-path detection and ASCII lowercase mapping as recursive λΠ operations.
   Thirty bounded name/boundary states cover lowercase, uppercase, digits, and

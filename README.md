@@ -372,6 +372,12 @@ make test
    * Invalid name characters and the subsequent `ParseAttributes` loop are outside scope.
 
 
+70. **`examples/blink_html_fastpath_attr_boundary.cpp`**:
+   * Models `ScanAttrName` at the scan frontier: end-of-input after a lowercase/hyphen prefix fails; delimiters return the prefix without consuming the delimiter; invalid characters return the prefix for caller rejection; uppercase/digit frontiers trigger full-name lowercase mapping.
+   * Typed λΠ and C++ transcriptions cover 14 finite prefix/frontier states, including the distinct lowercase-fast and mapping-path EOF behaviors.
+   * The subsequent `ParseAttributes` decision and arbitrary source strings remain outside this frontier model.
+
+
 ---
 
 ## License
