@@ -159,8 +159,8 @@ make test
    * The model clears the child-only style-container and suppress-recalc flags, conditionally clears current-size-container recalc, and preserves mark-reattach only when suppression was set. This is the exact flag transform; Element traversal and recalculation scheduling are outside scope.
 
 22. **`examples/blink_style_recalc_traversal.cpp`**:
-   * Models `TraverseChildren`, `TraversePseudoElements`, `TraverseChild`, and `MarkReattachLayoutTree` from `StyleRecalcChange`. It exhausts 640 states each for the first two predicates, all eight mark-reattach flag combinations, and the 64-input OR boundary for `TraverseChild`.
-   * It composes `TraverseChild` with the typed `ShouldRecalcStyleFor` relation over 320 representative node/change states. Query-family flags are grouped as in the dependency model; recursive Element traversal and style-engine scheduling remain outside scope.
+   * Models `TraverseChildren`, `TraversePseudoElements`, `TraverseChild`, `MarkReattachLayoutTree`, and `ShouldUpdatePseudoElement` from `StyleRecalcChange`. It exhausts 640 states each for the first two predicates, 17,920 pseudo-element flag/dependency/dirty states, all eight mark-reattach combinations, and the 64-input OR boundary for `TraverseChild`.
+   * It composes `TraverseChild` with the typed `ShouldRecalcStyleFor` relation over 320 representative node/change states. `ShouldUpdatePseudoElement` keeps its distinct dependency checks: it matches size/style/scroll/anchored queries, but not highlight container-unit styles, cached hover, or content visibility. Query-family flags are grouped as in the dependency model; recursive Element traversal and style-engine scheduling remain outside scope.
 
 23. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
    * Models the shared in-body end-tag branch for all 28 distinct block-element target tags, including the general scope scan, implied-end-tag pass, and pop-through-target transition.

@@ -789,8 +789,9 @@ through unchanged. The model also composes this result with the five
 `ForChildren` propagation outcomes. This isolates the flag and propagation
 transform; it does not model Element traversal or subsequent recalc scheduling.
 
-`examples/blink_style_recalc_traversal.cpp` models the four adjacent predicates
-from `style_recalc_change.cc:14-27` and `style_recalc_change.h:143-205`.
+`examples/blink_style_recalc_traversal.cpp` models the adjacent traversal and
+pseudo-element predicates from `style_recalc_change.cc:14-27,75-99` and
+`style_recalc_change.h:143-205`.
 `TraverseChildren` combines `RecalcChildren()`, the generic recalc-flag
 presence check, and `ChildNeedsStyleRecalc`. `TraversePseudoElements` combines
 `UpdatePseudoElements()`, the same generic flag check, and the child-dirty bit.
@@ -799,11 +800,20 @@ presence check, and `ChildNeedsStyleRecalc`. `TraversePseudoElements` combines
 flags, and layout-subtree dirtiness. The mark-reattach predicate is the exact
 bit condition requiring mark and reattach while suppression is absent.
 
+`ShouldUpdatePseudoElement` is modeled separately from node recalc. It returns
+true for any non-`kNo` propagation, own dirty style, child dirty style, or
+layout-subtree dirtiness. Otherwise, only size/style/scroll-state/anchored
+query dependencies can trigger the result. Unlike `RecalcFlagDependent(node)`,
+its size branch does not include highlight pseudo styles depending on
+container units; it also does not check cached hover or content-visibility.
+The C++/λΠ comparison covers 17,920 combinations of grouped flags, propagation,
+three dirty bits, and seven dependency categories.
+
 Typed λΠ agrees with the C++ transcription on 640 states each for
 `TraverseChildren` and `TraversePseudoElements`, all eight mark-reattach
 boolean combinations, all 64 inputs to the `TraverseChild` disjunction, and
-320 representative compositions with the previously modeled
-`ShouldRecalcStyleFor` gate. This is still a predicate model: it does not
+17,920 pseudo-element cases plus 320 representative compositions with the
+previously modeled `ShouldRecalcStyleFor` gate. This is still a predicate model: it does not
 traverse a DOM/flat tree, invoke `Element::RecalcStyle`, model display locks,
 or schedule style recalc from layout or container-query evaluation.
 

@@ -143,11 +143,14 @@ Current λΠ work is small compared with that source surface:
   five propagation levels. Element traversal and style scheduling remain
   outside scope.
 * `examples/blink_style_recalc_traversal.cpp` models the `TraverseChildren`,
-  `TraversePseudoElements`, `TraverseChild`, and `MarkReattachLayoutTree`
-  predicates. λΠ/C++ comparisons cover 640 cases each for the first two,
-  eight mark-reattach combinations, the 64-case child traversal OR boundary,
-  and 320 representative compositions with `ShouldRecalcStyleFor`. Recursive
-  Element traversal and style-engine scheduling remain outside scope.
+  `TraversePseudoElements`, `TraverseChild`, `MarkReattachLayoutTree`, and
+  `ShouldUpdatePseudoElement` predicates. λΠ/C++ comparisons cover 640 cases
+  each for the first two, 17,920 pseudo-element states, eight mark-reattach
+  combinations, the 64-case child traversal OR boundary, and 320
+  representative compositions with `ShouldRecalcStyleFor`. The pseudo-element
+  dependency set excludes cached hover, content visibility, and container-unit
+  highlight styles, matching its separate source expression. Recursive Element
+  traversal and style-engine scheduling remain outside scope.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).
