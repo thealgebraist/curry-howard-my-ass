@@ -197,19 +197,23 @@ make test
    * Termination connects the tested accumulators to replacement for zero/surrogate/invalid values, U+0080/U+009F Windows-1252 mappings, and ordinary output. The arithmetic and mapping tables remain finite and do not cover arbitrary accumulator traces or every Windows-1252 entry.
 
 33. **`examples/blink_html_named_entity.cpp`**:
-   * Loads and validates all 2,231 pinned CSV rows, then embeds 11 selected entries in a generated λΠ trie because reducing the full trie stalls in the current rewrite kernel.
-   * Twelve C++/typed-λΠ cases cover longest prefix (`not` versus `notin;`), semicolonless attribute rejection, semicolon acceptance, two-codepoint output, no match, and incomplete-prefix end-of-input rollback.
-   * Exact cursor rewind and `SegmentedString` mutations are not modeled. The semantic table is the stated 11-row subset, not the full named-reference set; numeric references are handled separately.
+   * Retains a compact 11-entry λΠ trie for focused longest-prefix and attribute-guard cases.
+   * Exact cursor rewind and `SegmentedString` mutations are not modeled; numeric references are handled separately.
 
-34. **`examples/blink_process_entity_bisimulation.cpp`**:
+34. **`examples/blink_html_named_entity_states.cpp`**:
+   * Generates 9,854 named states from all 2,231 pinned CSV rows, with a distinct `walk_<id>` and `prefix_<id>` rewrite head for each state. `RuleIndex` dispatches their character transitions without scanning unrelated rewrite rules.
+   * Twelve finite C++/typed-λΠ result comparisons cover semicolon-terminated matches, longest-prefix misses, semicolonless attribute acceptance/rejection, two-codepoint output, EOF prefixes, and no match. The latest `make` run generated 59,258 rules in 18 ms, indexed them in 6 ms, typechecked the observer by 24 ms total, and reduced cases in 0–4 ms.
+   * This uses the full table to generate the semantic machine, but compares only selected inputs. It abstracts exact source rewind, `SegmentedString` chunk suspension, and tokenizer mutation; the C++ comparison helper is a standalone reference, not a direct execution of Blink's parser.
+
+35. **`examples/blink_process_entity_bisimulation.cpp`**:
    * Composes finite decoder outcomes with `HTMLTokenizer::ProcessEntity` for Data/RCDATA: success appends one or two codepoints and sets the entity flag, failure appends literal `&`, and incomplete input suspends with the prior token buffer retained. Eight finite outcomes agree between the C++ transcription and typed λΠ.
    * Decoder outcomes are fixture constructors rather than direct calls into the numeric scanner or named trie; exact stream rewind and tokenizer runtime behavior remain outside the model.
 
-35. **`examples/blink_tokenizer_attribute_entity_bisimulation.cpp`**:
+36. **`examples/blink_tokenizer_attribute_entity_bisimulation.cpp`**:
    * Composes bounded named/numeric decoder observations with the attribute-value character-reference state. Ten finite cases cover decoded append/entity flag, literal ampersand fallback, incomplete-input suspension, and restoration to double-quoted, single-quoted, or unquoted state.
    * The C++ decoder uses selected names and numeric fixtures; typed rules encode those fixture outcomes. Full-table reduction, arbitrary codepoint arithmetic, exact cursor rewind, and stream lifecycle remain outside scope.
 
-36. **`examples/blink_css_selector_color.cpp`**:
+37. **`examples/blink_css_selector_color.cpp`**:
    * Composes restricted tag/id/class matching and matched-only declaration collection with three-field abstract priority selection, then applies `color` explicit/initial/inherit/unset/missing behavior using parent or root context.
    * Twelve finite C++/typed-λΠ cases compare match/miss, winner and tie behavior, CSS-wide keywords, and inherited/root outcomes. It does not cover full selector syntax, priority ordering, cascade origins/layers, actual CSS color values, or computed-style lifecycle.
 

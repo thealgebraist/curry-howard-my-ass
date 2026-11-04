@@ -150,11 +150,16 @@ Current λΠ work is small compared with that source surface:
   ordinary output. Arbitrary radix traces and the complete mapping table remain
   outside the model.
 * `examples/blink_html_named_entity.cpp` parses and validates all 2,231 rows of
-  the pinned names CSV, but embeds only 11 selected records in the λΠ trie;
-  normalization of the full trie stalled beyond 45 seconds in the available
-  rewrite kernel. Twelve finite C++/λΠ cases cover longest-prefix selection,
-  the semicolonless attribute guard, two-codepoint output, no match, and
-  incomplete-prefix EOF rollback. Exact source cursor rewind is not modeled.
+  the pinned names CSV and embeds 11 selected records in a focused λΠ trie.
+  Twelve finite C++/λΠ cases cover longest-prefix selection, the semicolonless
+  attribute guard, two-codepoint output, no match, and incomplete-prefix EOF
+  rollback. Exact source cursor rewind is not modeled.
+* `examples/blink_html_named_entity_states.cpp` generates a state machine from
+  all 2,231 pinned names. The generated λΠ model has 9,854 trie states and
+  59,258 rewrite rules, indexed by `RuleIndex`; twelve selected C++/λΠ result
+  comparisons agree. It abstracts exact source rewind, segmented-input
+  suspension, and tokenizer mutation, so full-table data coverage does not
+  establish arbitrary-input parser equivalence.
 * `examples/blink_process_entity_bisimulation.cpp` models Data/RCDATA
   `ProcessEntity` effects over finite decoder outcomes. Eight cases compare
   success append (one/two codepoints plus entity flag), literal ampersand
