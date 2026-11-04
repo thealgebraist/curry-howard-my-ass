@@ -9,7 +9,7 @@ using namespace lp;
 enum class Prop { None, Pseudos, IndependentInherit, Children, Descendants };
 enum class NodeKind { Element, Text };
 enum class FlagSet { None, Suppress, StyleChildren, SuppressStyleChildren };
-struct Node { NodeKind kind; bool needs_style; bool depends_style_query; };
+struct Node { NodeKind kind; bool needs_style; bool has_computed_style; bool depends_style_query; };
 
 static bool cpp_should(Prop prop, FlagSet flags, Node node) {
   if (flags==FlagSet::Suppress || flags==FlagSet::SuppressStyleChildren) return false;
@@ -17,7 +17,8 @@ static bool cpp_should(Prop prop, FlagSet flags, Node node) {
       prop==Prop::Descendants) return true;
   if (node.needs_style) return true;
   const bool style_query_flag=flags==FlagSet::StyleChildren;
-  return style_query_flag && node.kind==NodeKind::Element && node.depends_style_query;
+  return style_query_flag && node.kind==NodeKind::Element &&
+         (!node.has_computed_style || node.depends_style_query);
 }
 struct ChildChange { Prop prop; FlagSet flags; };
 static ChildChange cpp_for_children(Prop prop, FlagSet) {
@@ -44,8 +45,8 @@ int main(){
   sig["Flags"]=type_sort();sig["noFlags"]=flags;sig["suppress"]=flags;sig["styleChildren"]=flags;sig["suppressStyleChildren"]=flags;
   sig["notB"]=fn(boolean,boolean);sig["andB"]=fn(boolean,fn(boolean,boolean));sig["orB"]=fn(boolean,fn(boolean,boolean));sig["or3"]=fn(boolean,fn(boolean,fn(boolean,boolean)));
   sig["isSuppressed"]=fn(flags,boolean);sig["forces"]=fn(prop,boolean);
-  sig["flagDependent"]=fn(flags,fn(node,fn(boolean,boolean)));
-  sig["shouldRecalc"]=fn(prop,fn(flags,fn(node,fn(boolean,fn(boolean,boolean)))));
+  sig["flagDependent"]=fn(flags,fn(node,fn(boolean,fn(boolean,boolean))));
+  sig["shouldRecalc"]=fn(prop,fn(flags,fn(node,fn(boolean,fn(boolean,fn(boolean,boolean))))));
   sig["childProp"]=fn(prop,prop);sig["childFlags"]=fn(flags,flags);
   sig["ChildChange"]=type_sort();sig["childChange"]=fn(prop,fn(flags,child));
   sig["forChildren"]=fn(prop,fn(flags,child));
@@ -72,15 +73,19 @@ int main(){
   rules.push_back(rule(app(sym("forces"),sym("pIndependent")),sym("true")));
   rules.push_back(rule(app(sym("forces"),sym("pChildren")),sym("true")));
   rules.push_back(rule(app(sym("forces"),sym("pDescendants")),sym("true")));
-  for(const char* f:{"noFlags","suppress"})for(const char* n:{"element","textNode"})for(const char* d:{"true","false"})
-    rules.push_back(rule(ap(sym("flagDependent"),{sym(f),sym(n),sym(d)}),sym("false")));
+  for(const char* f:{"noFlags","suppress"})for(const char* n:{"element","textNode"})for(const char* d:{"true","false"})for(const char* has_style:{"true","false"})
+    rules.push_back(rule(ap(sym("flagDependent"),{sym(f),sym(n),sym(has_style),sym(d)}),sym("false")));
   for(const char* f:{"styleChildren","suppressStyleChildren"}){
-    for(const char* d:{"true","false"})rules.push_back(rule(ap(sym("flagDependent"),{sym(f),sym("element"),sym(d)}),sym(d)));
-    for(const char* d:{"true","false"})rules.push_back(rule(ap(sym("flagDependent"),{sym(f),sym("textNode"),sym(d)}),sym("false")));
+    for(const char* d:{"true","false"})for(const char* has_style:{"true","false"}){
+      const char* result=std::string(has_style)=="false"?"true":d;
+      rules.push_back(rule(ap(sym("flagDependent"),{sym(f),sym("element"),sym(has_style),sym(d)}),sym(result)));
+    }
+    for(const char* d:{"true","false"})for(const char* has_style:{"true","false"})
+      rules.push_back(rule(ap(sym("flagDependent"),{sym(f),sym("textNode"),sym(has_style),sym(d)}),sym("false")));
   }
-  rules.push_back(rule(ap(sym("shouldRecalc"),{p(0),p(1),p(2),p(3),p(4)}),
+  rules.push_back(rule(ap(sym("shouldRecalc"),{p(0),p(1),p(2),p(3),p(4),p(5)}),
     ap(sym("andB"),{app(sym("notB"),app(sym("isSuppressed"),p(1))),
-      ap(sym("or3"),{app(sym("forces"),p(0)),p(3),ap(sym("flagDependent"),{p(1),p(2),p(4)})})})));
+      ap(sym("or3"),{app(sym("forces"),p(0)),p(4),ap(sym("flagDependent"),{p(1),p(2),p(3),p(5)})})})));
   for(const char* q:{"pNone","pPseudos","pIndependent","pChildren"})rules.push_back(rule(app(sym("childProp"),sym(q)),sym("pNone")));
   rules.push_back(rule(app(sym("childProp"),sym("pDescendants")),sym("pDescendants")));
   for(const char* f:{"noFlags","suppress","styleChildren","suppressStyleChildren"})rules.push_back(rule(app(sym("childFlags"),sym(f)),sym("noFlags")));
@@ -90,11 +95,12 @@ int main(){
   const Prop props[]={Prop::None,Prop::Pseudos,Prop::IndependentInherit,Prop::Children,Prop::Descendants};
   const FlagSet flag_sets[]={FlagSet::None,FlagSet::Suppress,FlagSet::StyleChildren,FlagSet::SuppressStyleChildren};
   for(Prop pr:props)for(FlagSet fl:flag_sets)for(NodeKind nk:{NodeKind::Element,NodeKind::Text})for(bool dirty:{false,true})for(bool dependent:{false,true}){
-    Node nd{nk,dirty,dependent};
-    Ptr term=ap(sym("shouldRecalc"),{prop_term(pr),flag_term(fl),node_term(nk),bool_term(dirty),bool_term(dependent)});
+    for(bool has_style:{false,true}){
+    Node nd{nk,dirty,has_style,dependent};
+    Ptr term=ap(sym("shouldRecalc"),{prop_term(pr),flag_term(fl),node_term(nk),bool_term(has_style),bool_term(dirty),bool_term(dependent)});
     auto ty=infer({},term,sig,rules);assert(ty&&conv(*ty,boolean,rules));
     assert(conv(nf(term,rules),bool_term(cpp_should(pr,fl,nd)),rules));++gate_cases;
-  }
+  }}
   for(Prop pr:props)for(FlagSet fl:flag_sets){
     ChildChange expected=cpp_for_children(pr,fl);
     Ptr term=ap(sym("forChildren"),{prop_term(pr),flag_term(fl)});
@@ -104,5 +110,5 @@ int main(){
   }
   std::cout<<"StyleRecalcChange gate agrees on "<<gate_cases<<" finite node/change states\n";
   std::cout<<"ForChildren propagation/flag projection agrees on "<<child_cases<<" finite states\n";
-  std::cout<<"Scope: suppression, propagation level, NeedsStyleRecalc, and one style-query-dependent Element path.\n";
+  std::cout<<"Scope: suppression, propagation level, NeedsStyleRecalc, and style-query-dependent Elements with and without an existing computed style.\n";
 }

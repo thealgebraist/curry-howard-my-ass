@@ -723,17 +723,20 @@ For the flag-dependent branch, the model includes only
 Element with an existing computed style, `RecalcFlagDependent` checks
 `DependsOnStyleContainerQueries()` (`style_recalc_change.cc:30-57`). A Text
 node is the non-Element category and returns false at the `DynamicTo<Element>`
-guard. The two modeled flags are `kSuppressRecalc` (documented at
+guard. The modeled flags are `kSuppressRecalc` (documented at
 `style_recalc_change.h:59-61` as suppressing the current node and lost for
-children) and the style-container-children flag. `FlagsForChildren` removes
+children) and `kRecalcStyleContainerChildren`. The latter also models the
+no-computed-style branch: for an Element without old style, this one container
+query flag is enough to recalc because `RecalcContainerQueryDependent()` is
+true; no dependency bit is available to inspect. `FlagsForChildren` removes
 `kRecalcStyleContainerChildren` at `style_recalc_change.cc:156-163` and clears
 `kSuppressRecalc` for children at lines 178-188. Thus the finite projection
 models suppression, child versus descendant propagation, an already-dirty
 node, and an Element-only style-query dependency.
 
 The typed λΠ decision and an independently written C++ transcription agree on
-160 combinations (five propagation levels, four modeled flag sets, Element
-or Text, dirty/clean, dependency true/false). The separate `ForChildren`
+320 combinations (five propagation levels, four modeled flag sets, Element
+or Text, computed-style present/absent, dirty/clean, dependency true/false). The separate `ForChildren`
 projection agrees on 20 propagation/flag combinations. This is not full style
 recalculation equivalence: other container-query, hover, content-visibility,
 reattach and mark-reattach flags are omitted; nodes with no old computed style
