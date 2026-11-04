@@ -112,6 +112,11 @@ Current λΠ work is small compared with that source surface:
   ID counter. Four finite DOM/stack states agree between the C++ reference and
   λΠ. Foster parenting, insertion adjustment, sanitizer, and callbacks are not
   represented.
+* `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
+  by property state and forced boundaries around foreign-layer/scrollbar
+  display items. Eight finite sequences agree between the C++ transcription
+  and λΠ. Display-item creation, chunk property payloads, and full paint artifact
+  lifecycle are outside the model.
 * `examples/blink_layout_dirty_bisimulation.cpp` models the clean-to-dirty
   transition of one layout object and propagation of child-dirty flags through
   a finite rooted container chain. Fixtures assume no relayout-boundary early

@@ -163,6 +163,9 @@ make test
 23. **`examples/blink_dom_insert_html_element.cpp`**:
    * Models normal `HTMLConstructionSite::InsertHTMLElement` attachment with explicit DOM parent IDs, open-element IDs, and fresh node identity. Four finite DOM/stack states agree between the C++ transcription and typed λΠ. Foster parenting, insertion-location adjustment, sanitizer behavior, and DOM callbacks are excluded.
 
+24. **`examples/blink_paint_chunker_bisimulation.cpp`**:
+   * Models PaintChunker grouping by property state, including forced chunk boundaries before and after foreign-layer/scrollbar items. Eight finite item sequences agree between the C++ transcription and typed λΠ; display-item construction and full paint artifact behavior are excluded.
+
 ---
 
 ## License

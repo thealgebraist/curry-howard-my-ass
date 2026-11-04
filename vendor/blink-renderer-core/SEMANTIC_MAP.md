@@ -435,3 +435,14 @@ layout-subtree update flags, and `StyleEngine`/`Element` traversal are not
 modeled. At `ShouldRecalcStyleFor`, the child and descendant propagation
 levels intentionally yield the same true result; only `ForChildren` carries
 the descendant distinction onward.
+
+## Paint chunk grouping
+
+`paint/paint_chunker.cc:30-89` updates current properties and creates a new
+chunk when a boundary is forced or the property state changes. Its special-item
+path at lines 91-149 forces boundaries on both sides of foreign-layer and
+scrollbar display items. `examples/blink_paint_chunker_bisimulation.cpp`
+models those grouping decisions and assigned chunk IDs. Eight finite item
+sequences agree between the C++ transcription and typed λΠ. It omits actual
+display-item creation, property payloads, cache behavior, and `PaintArtifact`
+lifecycle; finite comparisons do not establish general equivalence.

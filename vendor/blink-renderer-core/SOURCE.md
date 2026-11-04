@@ -59,6 +59,9 @@ the small source excerpt associated with the first λΠ model.
 The selected files below were fetched from `third_party/blink/renderer` at the
 earlier revision:
 
+* [`paint/paint_chunker.cc`](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/platform/graphics/paint/paint_chunker.cc)
+* [`paint/paint_chunker.h`](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/platform/graphics/paint/paint_chunker.h)
+
 * `core/README.md`, `core/dom/README.md`, `core/css/README.md`,
   `core/layout/README.md`, `core/paint/README.md`
 * `core/html/parser/html_document_parser.cc`
