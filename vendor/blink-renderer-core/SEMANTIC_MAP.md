@@ -928,6 +928,17 @@ image-kind nodes across 589,824 kind/relation cases. List inequality routes to
 reattachment. The repeated-image fixture exercises recursive delegation twice;
 it does not cover arbitrary list length or every mixed image-kind sequence.
 
+`examples/blink_generated_image_equality.cpp` expands the generated-image branch
+from three relation booleans into structural values. `ContainerSizes::SizesEqual`
+compares optional width and height, `ViewportSize::operator==` compares six
+double fields, and `StyleGeneratedImage::IsEqual` also requires equivalent
+generator values. The λΠ model represents optional dimensions with `noneSize` or
+`someSize(d0|d1)`, viewport dimensions with `d0|d1`, and generator-value
+equivalence as an explicit Boolean input. The executable compares 663,552 finite
+states, including the generated-image reattach decision. It does not cover
+arbitrary doubles, NaN or signed-zero behavior, lazy size lookup effects, or the
+CSS generator/value equality implementation.
+
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
 compares position and mode (`computed_style.h:2578`, `scroll_marker_group.h:25`).

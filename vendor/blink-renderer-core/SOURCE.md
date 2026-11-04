@@ -126,3 +126,8 @@ example; they do not claim behavioral equivalence with Blink.
 * [Image-set equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_image_set.cc#42)
 * [Crossfade equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_crossfade_image.cc#29)
 * [Mask-source equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_mask_source_image.cc#154)
+
+* [Generated image equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_generated_image.cc#46)
+* [ContainerSizes equality declaration](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_to_length_conversion_data.h#246)
+* [ContainerSizes optional width/height equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_to_length_conversion_data.cc#258)
+* [ViewportSize fields and defaulted value equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_to_length_conversion_data.h#162)

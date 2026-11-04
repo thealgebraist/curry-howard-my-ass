@@ -291,6 +291,11 @@ make test
    * Seven finite C++/typed-λΠ cases cover empty lists, trailing Text children, Text after element children, non-Text tails, invalid locations, and empty buffers. Source evidence is `html_construction_site.cc:245-271`, where Blink constructs a Text node, examines `lastChild()` when there is no next child, appends to a prior Text node, or inserts the new child.
    * This models visible child-list identities rather than Blink pointer identity. It fixes insertion at the end of one parent; adjusted/template/foster locations, String canonicalization, task ordering, and all other DOM mutation paths are omitted.
 
+56. **`examples/blink_generated_image_equality.cpp`**:
+   * Refines `StyleGeneratedImage::IsEqual` into equality of optional container width/height, six viewport dimensions, and an explicit generator-value-equivalence input. The C++/λΠ comparison loop spans 663,552 finite states and composes inequality into the generated-image reattach predicate.
+   * Numeric dimensions are restricted to absent/0/1 for container sizes and 0/1 for viewport components. This omits NaN, signed zero, arbitrary double values, lazy container lookup/cache side effects, and the internal `CSSImageGeneratorValue`/`CSSValue` equality implementation.
+
+
 ---
 
 ## License

@@ -188,6 +188,10 @@ Current λΠ work is small compared with that source surface:
   equality branches and the image-content reattach trigger across 147,456 kind/
   relation assignments. Its comparison loop checks the C++ transcription against λΠ.
   Underlying field equalities remain abstract Boolean inputs.
+* `examples/blink_generated_image_equality.cpp` refines generated-image equality
+  into optional container dimensions, six viewport dimensions, and generator-value
+  equivalence. Its C++/λΠ loop spans 663,552 finite states; numeric domains are
+  restricted to absent/0/1 for container sizes and 0/1 for viewport components.
 * `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
   `DiffAffectsScrollAnimations` predicate and its first-priority route into the
   computed-style difference severity. The C++/typed-λΠ comparisons cover all
