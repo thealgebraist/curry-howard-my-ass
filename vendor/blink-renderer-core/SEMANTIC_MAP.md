@@ -1006,6 +1006,15 @@ override. The model abstracts resource/image results and does not include the ou
 cache call in `Load`; its cache state effects are modeled separately in
 `blink_image_set_cache.cpp`.
 
+`examples/blink_image_set_type_support.cpp` refines the option support
+predicate. `CSSImageSetOptionValue::IsSupported` accepts a missing type or a
+supported `CSSImageSetTypeValue`, and also requires positive computed
+resolution. The finite MIME relation lowercases representative ASCII inputs,
+checks the pinned image MIME set, and models conditional AVIF and JPEG XL
+support. Twelve option inputs are compared under all eight feature-flag
+combinations. This relation is not yet wired into the separate `GetBestOption`
+list reduction, which still receives a Boolean type-support result.
+
 `examples/blink_image_set_selection.cpp` models the first `GetBestOption`
 computation for an initially empty `options_` cache. It filters by MIME support
 and positive computed resolution, stable-sorts by resolution, removes duplicate

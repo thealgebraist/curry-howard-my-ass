@@ -316,7 +316,7 @@ make test
 60. **`examples/blink_image_set_selection.cpp`**:
    * Models the first-call `CSSImageSetValue::GetBestOption` pipeline: remove unsupported/nonpositive options, stable-sort by resolution, keep the first option at each duplicate resolution, then choose the first resolution at or above the device scale or fall back to the last option.
    * Eight finite option lists with up to three options are compared at four device scales (32 states). The λΠ model expresses filtering, insertion sort, stable deduplication, and threshold/fallback selection as separate reductions.
-   * Resolution values are 0–3, device scales 1–4, and MIME support is a Boolean input. The model omits floating-point resolution computation, arbitrary CSS type support, `options_` cache mutation, and the subsequent image-load dispatch.
+   * Resolution values are 0–3 and device scales 1–4. MIME support is refined separately in item 63, but remains a Boolean input in this selection reduction. The model omits floating-point resolution computation, arbitrary CSS type support, `options_` cache mutation, and the subsequent image-load dispatch.
 
 
 61. **`examples/blink_image_set_load_dispatch.cpp`**:
@@ -329,6 +329,12 @@ make test
    * Models `CSSImageSetValue::IsCachePending`, `CacheImage`, and permitted `CachedImage` reads for both shared and fetcher-keyed cache modes. A cache update is composed with pending checks for either fetcher and each represented scale.
    * Seven shared-cache states and 49 two-fetcher cache states cover 336 pending queries, 672 cache updates, 4,032 update-then-pending queries, and permitted cache reads. Scale fixtures include 1.0, its next representable `float`, and 2.0 to expose the strict `abs(a-b) < epsilon` boundary.
    * Effective cache mode is an input standing for `fetcher != nullptr && StyleResourceFetcherIdentityCheckEnabled()`. Weak-key expiration, GC identity, concurrent mutation, and general float values are outside scope.
+
+
+63. **`examples/blink_image_set_type_support.cpp`**:
+   * Refines the type-support and positive-resolution predicate used by `CSSImageSetOptionValue::IsSupported`. It models ASCII case normalization, representative supported and unsupported image MIME types, AVIF build-flag gating, and JPEG XL build/runtime-feature gating.
+   * Twelve finite option inputs are compared under all eight feature-flag combinations (96 states). The λΠ relation first normalizes representative MIME atoms, then evaluates support and composes it with positive-resolution gating.
+   * This finite predicate model is not yet substituted into the option-list selection reduction in item 60, whose MIME support remains an explicit Boolean abstraction. Other MIME types and the full Chromium build configuration remain outside scope.
 
 
 ---

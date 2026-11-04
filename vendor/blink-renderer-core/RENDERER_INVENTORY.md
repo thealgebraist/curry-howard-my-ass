@@ -203,6 +203,12 @@ Current λΠ work is small compared with that source surface:
   load observations. The CSS image route carries the option's resolution
   override; the gradient route does not. Fifteen finite states are represented.
   Resource fetching and outer image-set caching remain outside scope.
+* `examples/blink_image_set_type_support.cpp` models the finite
+  `CSSImageSetTypeValue::IsSupported` and option positive-resolution predicate.
+  It covers ASCII case variants, representative MIME support, AVIF build gating,
+  and JXL build/runtime gating over 96 states. This predicate is documented but
+  not yet substituted into the list-selection example, where it remains an
+  explicit Boolean.
 * `examples/blink_image_set_selection.cpp` models the initial `GetBestOption`
   computation: support/positive-resolution filtering, stable sort, stable
   resolution deduplication, and threshold choice with highest-resolution
