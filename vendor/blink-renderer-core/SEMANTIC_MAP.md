@@ -789,6 +789,24 @@ through unchanged. The model also composes this result with the five
 `ForChildren` propagation outcomes. This isolates the flag and propagation
 transform; it does not model Element traversal or subsequent recalc scheduling.
 
+`examples/blink_style_recalc_traversal.cpp` models the four adjacent predicates
+from `style_recalc_change.cc:14-27` and `style_recalc_change.h:143-205`.
+`TraverseChildren` combines `RecalcChildren()`, the generic recalc-flag
+presence check, and `ChildNeedsStyleRecalc`. `TraversePseudoElements` combines
+`UpdatePseudoElements()`, the same generic flag check, and the child-dirty bit.
+`TraverseChild` combines the node-level `ShouldRecalcStyleFor` result,
+`MarkReattachLayoutTree`, child dirtiness, forced reattachment, generic recalc
+flags, and layout-subtree dirtiness. The mark-reattach predicate is the exact
+bit condition requiring mark and reattach while suppression is absent.
+
+Typed λΠ agrees with the C++ transcription on 640 states each for
+`TraverseChildren` and `TraversePseudoElements`, all eight mark-reattach
+boolean combinations, all 64 inputs to the `TraverseChild` disjunction, and
+320 representative compositions with the previously modeled
+`ShouldRecalcStyleFor` gate. This is still a predicate model: it does not
+traverse a DOM/flat tree, invoke `Element::RecalcStyle`, model display locks,
+or schedule style recalc from layout or container-query evaluation.
+
 ## Paint chunk grouping
 
 `paint/paint_chunker.cc:30-89` updates current properties and creates a new
