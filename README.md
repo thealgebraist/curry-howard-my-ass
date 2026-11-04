@@ -163,25 +163,33 @@ make test
 23. **`examples/blink_dom_insert_html_element.cpp`**:
    * Models normal `HTMLConstructionSite::InsertHTMLElement` attachment with explicit DOM parent IDs, open-element IDs, fresh node identity, and ordered finite token attribute name/value pairs copied onto the new node. Four finite DOM/stack/attribute states agree between the C++ transcription and typed λΠ. Custom-element creation, sanitization, foster parenting, insertion-location adjustment, and DOM callbacks are excluded.
 
-24. **`examples/blink_paint_chunker_bisimulation.cpp`**:
+24. **`examples/blink_tree_builder_p_start_dom_insert.cpp`**:
+   * Composes the block-start p-in-button-scope check/pop with attributed element insertion. Four finite states cover a top-p hit, a hit with an ordinary stack entry above p, a button-marker miss with a lower p, and no p; resulting DOM parent, node, and open stack agree between a C++ transcription and typed λΠ. Parse-error/fake-start reprocessing details and full Blink DOM behavior are abstracted.
+
+25. **`examples/blink_paint_chunker_bisimulation.cpp`**:
    * Models PaintChunker grouping by property state, including forced chunk boundaries before and after foreign-layer/scrollbar items. Eight finite item sequences agree between the C++ transcription and typed λΠ; display-item construction and full paint artifact behavior are excluded.
 
-25. **`examples/blink_css_cascade_priority.cpp`**:
+26. **`examples/blink_css_cascade_priority.cpp`**:
    * Compares a semantic λΠ lexicographic key against Blink's packed `CascadePriority` comparison over 18 precedence, equality, and field-boundary pairs. It includes encoded origin/importance, tree and layer order, style flags, rule/declaration indices, and the already-applied bit; CSS rule collection and application remain outside scope.
 
-26. **`examples/blink_css_cascade_map.cpp`**:
+27. **`examples/blink_css_cascade_map.cpp`**:
    * Composes the fixed-prefix packed priority fields with per-property list insertion and first-eligible `FindRevertLayer`. Eleven insertion-prefix states and 99 prefix/bound lookups agree with the C++ transcription, including weaker insertion and new-before-old equal-priority ties.
 
-27. **`examples/blink_tokenizer_attribute_name_bisimulation.cpp`**:
+28. **`examples/blink_tokenizer_attribute_name_bisimulation.cpp`**:
    * Models AttributeName accumulation from an existing name prefix, including lowercase normalization, whitespace, slash, `=`, `>`, EOF, and quote/`<` parse-error append-and-continue behavior.
    * Fourteen finite input sequences compare a C++ transcription with typed λΠ. Duplicate attributes, source-range tracking, null/preprocessor behavior, attribute values, and token/DOM effects remain unmodeled.
 
-28. **`examples/blink_tokenizer_attribute_value_bisimulation.cpp`**:
+29. **`examples/blink_tokenizer_attribute_value_bisimulation.cpp`**:
    * Models before-value, double-quoted, single-quoted, unquoted, after-quoted, and self-closing transitions with explicit value accumulation, parse-error state, and token-emission outcomes.
    * Twenty finite traces compare C++ and typed λΠ. Ampersands terminate at an opaque character-reference handoff that records the quoted or unquoted return mode; entity decoding, null preprocessing, range tracking, and token/DOM internals are outside the model.
 
-29. **`examples/blink_css_revert_color.cpp`**:
+30. **`examples/blink_css_revert_color.cpp`**:
    * Composes strict `revert-layer` candidate selection, `ResolveRevertTo` fallback to `unset`, and inherited `color` handling. Twelve finite C++/λΠ cases cover candidate hits/misses, equal-layer skips, ties, CSS-wide values, parent/root behavior, and a selected priority rejected as not weaker.
+
+31. **`examples/blink_css_match_winner.cpp`**:
+   * Composes conjunctive tag/id/class matching with collection of only matching declarations, then winner selection for one property using a three-field abstract lexicographic priority.
+   * Nine finite rule sets compare the C++ transcription with typed λΠ, including a no-match result, compound selectors, the second and third priority fields, and equal-priority later-input tie selection.
+   * The priority fields are a named projection, not Blink's complete `MatchedRule` sort key or `CascadePriority`; parsing, combinators, attribute/pseudo selectors, layers, origins, importance, property application, and full stylesheet ordering remain outside scope.
 
 ---
 

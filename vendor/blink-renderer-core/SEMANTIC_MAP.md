@@ -88,6 +88,33 @@ constraint in `selector_checker-inl.h` that rejects a child combinator after
 a descendant combinator. The model omits attribute selectors, pseudo-classes,
 namespaces, sibling relations, and the general selector matcher.
 
+`examples/blink_css_match_winner.cpp` composes a deliberately small portion of
+that path with declaration selection. The C++ reference filters declarations
+by a conjunction of tag, id, and class tests, then chooses the greatest
+three-field priority among only those matches; its recursive λΠ `collect` and
+`best` definitions implement the same sequence. Exact ties select the later
+input declaration. The finite fixtures include unmatched higher-priority
+rules, a compound selector, an explicit match-set with no declarations, order changes in
+the second and third priority fields, and an exact tie.
+
+The source boundary is `element_rule_collector.cc:577-673`, where Blink rejects
+non-matching rules and runs either `EasySelectorChecker::Match` or the general
+checker; accepted rules reach `DidMatchRule` at lines 712-718. The simple tag,
+id, and class tests are in `selector_checker-inl.h:218-245`. Blink's actual
+matched-rule ordering stores layer, specificity, and inverse proximity in
+`element_rule_collector.h:70-86`, then sorts by that key and source position in
+`element_rule_collector.cc:1514-1534`. `StyleCascade::CollectFromMatchResult`
+expands matched properties into the property map in `style_cascade.cc:498-524`.
+`cascade_priority.h:53-73` documents the surrounding criteria: origin and
+importance, shadow-including tree order, inline style, layer order, matched
+rule/declaration indices, and applied state.
+The model's priority tuple is an abstract projection and does not claim to
+reproduce that full ordering or Blink's per-property map. It assumes selectors
+are already parsed; namespaces, combinators, attributes, pseudo-classes,
+layers, origins, importance, animations, CSS-wide keyword resolution, and
+property-specific application are omitted. The C++ side is a transcription,
+not execution of Blink's linked classes.
+
 ## Tree-builder boundary: paragraph start tags
 
 `core/html/parser/html_tree_builder.cc` provides a concrete tree-construction
@@ -381,6 +408,37 @@ depth handling, flushing pending text, actual Node/Element allocation,
 and callbacks. The comparison models parent linkage and stack/fresh-ID effects
 for normal append only; it does not model full DOM construction or execution
 of Blink's `HTMLConstructionSite`.
+
+## HTML tree-builder p close followed by block insertion
+
+`examples/blink_tree_builder_p_start_dom_insert.cpp` composes the shared block
+start-tag case from `HTMLTreeBuilder::ProcessStartTagForInBody` at
+`core/html/parser/html_tree_builder.cc:855-883`: it calls
+`ProcessFakePEndTagIfPInButtonScope` and then `InsertHTMLElement`. The helper
+at `html_tree_builder.cc:643-648` checks `InButtonScope(kP)` and routes a
+synthetic `</p>` through end-tag processing. The p branch at
+`html_tree_builder.cc:2296-2308` uses the scope check, implied-end-tag
+generation, and `PopUntilPopped`; the model abstracts the implied-end-tag and
+parse-error work and retains only the final pop-through-p stack effect.
+`HTMLElementStack::InButtonScope` is at
+`core/html/parser/html_element_stack.cc:493-497`; `PopUntilPopped` is at
+`html_element_stack.cc:227-230`.
+
+The unified finite state keeps each open entry's node ID and tag together.
+Scope is evaluated over its tags; on a hit, entries through p are removed.
+Insertion then uses the remaining top entry's ID (or root sentinel), appends a
+node carrying token attributes, and pushes the fresh ID/tag entry. Four
+fixtures compare p at the top, an ordinary entry above an in-scope p
+(exercising recursive prefix removal), a button-marker miss with p below it,
+and no p. They exercise the operation order through to the resulting DOM and
+stack.
+
+This is a bounded projection rather than execution of Blink's tree builder or
+construction site. It models only p presence and button/HTML scope barriers,
+not every scope marker or stack mutation. The fake end-tag parse-error,
+`ProcessFakeStartTag` fallback, implied-end-tag side effects, custom-element
+and sanitizer paths, foster parenting, insertion callbacks, and full DOM
+semantics are excluded. Attribute names and values remain finite constructors.
 
 ## HTML tokenizer boundary: TagName scanning
 

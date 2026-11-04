@@ -102,6 +102,11 @@ Current λΠ work is small compared with that source surface:
   missing/not-weaker candidate fallback to CSS `unset`, and `color` inherited
   defaulting. Twelve finite cases compare C++ and λΠ across candidate hits,
   misses, ties, wide keywords, parent/root states, and explicit colors.
+* `examples/blink_css_match_winner.cpp` composes tag/id/class simple-selector
+  matching, matched-only declaration collection, and one-property winner
+  selection. Nine finite C++/λΠ cases cover selector rejection, compound
+  matches, priority-field ordering, and later-input selection on exact ties.
+  Its three-field priority is an abstraction, not Blink's full sort key.
 * `examples/blink_css_color_defaulting.cpp` models missing, `inherit`,
   `initial`, and `unset` outcomes for Blink's inherited `color` longhand, with
   parent-present and root cases. A C++ branch transcription and typed λΠ
@@ -137,6 +142,13 @@ Current λΠ work is small compared with that source surface:
   new node. Four finite DOM/stack/attribute states agree between the C++
   reference and λΠ. Custom-element creation, sanitization, foster parenting,
   insertion adjustment, and callbacks are not represented.
+* `examples/blink_tree_builder_p_start_dom_insert.cpp` composes an abstract
+  `InButtonScope(kP)`/pop-through-p transition with attribute-aware normal DOM
+  insertion. Four finite states cover top-p hit, hit with an ordinary entry
+  above p, button-marker miss, and no p;
+  the C++ transcription and typed λΠ agree. Synthetic end-tag parse-error and
+  reprocessing control flow, custom/sanitizer behavior, and foster parenting
+  are outside the model.
 * `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
   by property state and forced boundaries around foreign-layer/scrollbar
   display items. Eight finite sequences agree between the C++ transcription
