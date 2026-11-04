@@ -45,6 +45,7 @@ refer to files from the full sparse checkout. Stable source links:
 * [HTMLConstructionSite::FlushPendingText](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_construction_site.cc#245)
 * [HTMLConstructionSite::InsertTextNode](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_construction_site.cc#1081)
 * [HTMLConstructionSite::PendingText accumulator](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_construction_site.h#264)
+* [FlushPendingText appending to the previous Text sibling or inserting](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_construction_site.cc#265)
 * [HTMLConstructionSite::CreateElement and token attribute attachment](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_construction_site.cc#1240)
 * [Element::ParserSetAttributes](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/dom/element.cc#4216)
 * [HTMLTreeBuilder shared in-body block-start branch](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_tree_builder.cc#855)

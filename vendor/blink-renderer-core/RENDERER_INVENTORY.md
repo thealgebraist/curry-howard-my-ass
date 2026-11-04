@@ -268,9 +268,17 @@ Current λΠ work is small compared with that source surface:
   new Text node, and appending to an existing Text sibling. The source
   accumulator and flush are in `html_construction_site.h:264-303` and
   `html_construction_site.cc:245-271,1081-1118`. A one-buffer restricted path
-  is also composed into the raw token example. Actual DOM identity,
-  canonicalization, template/foster adjustment, and task ordering remain
-  outside this projection; it is not yet composed with the raw-input example.
+  is also composed into the raw token example. The full seven-case transition
+  set remains separate. Actual DOM identity, canonicalization,
+  template/foster adjustment, and task ordering remain outside this
+  projection.
+* `examples/blink_dom_text_flush_bisimulation.cpp` models the resulting child
+  list at `FlushPendingText` for a null `next_child`. A valid non-empty buffer
+  inserts a fresh Text child after a non-Text tail, or appends data to the last
+  Text child while preserving its ID; empty/invalid buffers leave the child
+  list and next ID unchanged. Seven finite λΠ/C++ cases cover those branches.
+  This models abstract IDs rather than Blink pointers and omits adjusted
+  template/foster locations, String canonicalization, and task ordering.
 * `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
   by property state and forced boundaries around foreign-layer/scrollbar
   display items. Eight finite sequences agree between the C++ transcription

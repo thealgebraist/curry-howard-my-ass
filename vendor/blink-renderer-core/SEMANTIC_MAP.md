@@ -984,3 +984,15 @@ template/foster insertion adjustment, actual DOM mutation and task ordering
 remain outside the model. A restricted one-buffer form is now connected to
 the raw-input example; that path still stores flushed text as a flattened
 paragraph field rather than a distinct Text node.
+
+`examples/blink_dom_text_flush_bisimulation.cpp` models a stronger mutation
+observation at the same source boundary. Its `Children` list distinguishes
+element children from Text children with abstract IDs. At a null `next_child`,
+valid non-empty text appends to the final Text child while keeping that child's
+ID, or inserts a fresh Text child after a non-Text tail and advances the next
+ID. Empty and invalid flushes preserve the list and next ID. Seven finite
+C++/typed-λΠ cases cover these outcomes, including coalescing after an element
+child. This is a child-list/identity projection for `FlushPendingText`, not
+Blink pointer identity or full DOM mutation. It fixes the adjusted insertion
+location to one parent at append-to-end and omits templates, foster parenting,
+String canonicalization, and task scheduling.

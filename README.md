@@ -252,6 +252,11 @@ make test
    * Seven finite C++/typed-λΠ cases cover same-location accumulation, parent and next-child boundaries, all three previous-sibling categories, valid/invalid locations, and whitespace-mode minimization. Source anchors are `html_construction_site.h:264-303`, `html_construction_site.cc:245-271,1081-1118`.
    * This is an extracted transition model. Text chunks are opaque finite atoms; it does not model Blink String canonicalization, actual Node identity or mutation, insertion-location adjustment for templates/foster parenting, or task-queue ordering. Its one-buffer append/flush path is also connected to the raw `<p>…</p>` fixture above.
 
+46. **`examples/blink_dom_text_flush_bisimulation.cpp`**:
+   * Models the child-list mutation at `HTMLConstructionSite::FlushPendingText` for a null `next_child`: an empty/invalid buffer leaves children and next ID unchanged; a valid non-empty buffer inserts a new identified Text child unless the last child is already Text, in which case its data grows and its identity is preserved.
+   * Seven finite C++/typed-λΠ cases cover empty lists, trailing Text children, Text after element children, non-Text tails, invalid locations, and empty buffers. Source evidence is `html_construction_site.cc:245-271`, where Blink constructs a Text node, examines `lastChild()` when there is no next child, appends to a prior Text node, or inserts the new child.
+   * This models visible child-list identities rather than Blink pointer identity. It fixes insertion at the end of one parent; adjusted/template/foster locations, String canonicalization, task ordering, and all other DOM mutation paths are omitted.
+
 ---
 
 ## License
