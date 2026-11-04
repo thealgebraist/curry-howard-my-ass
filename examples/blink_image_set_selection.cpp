@@ -72,8 +72,17 @@ static Ptr features_term(MimeFeatures f) {
 static Ptr mime_term(const std::string& mime) {
   const std::string lower = ascii_lower(mime);
   if (lower == "image/jpeg") return sym(mime == lower ? "mimeJpeg" : "mimeJpegUpper");
+  if (lower == "image/pjpeg") return sym(mime == lower ? "mimePjpeg" : "mimePjpegUpper");
+  if (lower == "image/jpg") return sym(mime == lower ? "mimeJpg" : "mimeJpgUpper");
   if (lower == "image/webp") return sym(mime == lower ? "mimeWebp" : "mimeWebpUpper");
-  if (lower == "image/png") return sym("mimePng");
+  if (lower == "image/png") return sym(mime == lower ? "mimePng" : "mimePngUpper");
+  if (lower == "image/apng") return sym(mime == lower ? "mimeApng" : "mimeApngUpper");
+  if (lower == "image/gif") return sym(mime == lower ? "mimeGif" : "mimeGifUpper");
+  if (lower == "image/bmp") return sym(mime == lower ? "mimeBmp" : "mimeBmpUpper");
+  if (lower == "image/vnd.microsoft.icon") return sym(mime == lower ? "mimeMicrosoftIcon" : "mimeMicrosoftIconUpper");
+  if (lower == "image/x-icon") return sym(mime == lower ? "mimeXIcon" : "mimeXIconUpper");
+  if (lower == "image/x-xbitmap") return sym(mime == lower ? "mimeXXbitmap" : "mimeXXbitmapUpper");
+  if (lower == "image/x-png") return sym(mime == lower ? "mimeXPng" : "mimeXPngUpper");
   if (lower == "image/svg+xml") return sym("mimeSvg");
   if (lower == "image/avif") return sym("mimeAvif");
   if (lower == "image/jxl") return sym("mimeJxl");
@@ -111,9 +120,9 @@ int main() {
   for(unsigned i=0;i<6;++i) signature["image"+std::to_string(i)]=I;
   signature["MimeFeatures"]=type_sort(); signature["mimeFeatures"]=fn(B,fn(B,fn(B,F)));
   signature["MimeInput"]=type_sort();
-  for(const char* mime:{"mimeJpeg","mimeJpegUpper","mimeWebp","mimeWebpUpper","mimePng","mimeSvg","mimeAvif","mimeJxl","mimeUnknown"}) signature[mime]=M;
+  for(const char* mime:{"mimeJpeg", "mimeJpegUpper","mimePjpeg", "mimePjpegUpper","mimeJpg", "mimeJpgUpper","mimeWebp", "mimeWebpUpper","mimePng", "mimePngUpper","mimeApng", "mimeApngUpper","mimeGif", "mimeGifUpper","mimeBmp", "mimeBmpUpper","mimeMicrosoftIcon", "mimeMicrosoftIconUpper","mimeXIcon", "mimeXIconUpper","mimeXXbitmap", "mimeXXbitmapUpper","mimeXPng", "mimeXPngUpper","mimeSvg","mimeAvif","mimeJxl","mimeUnknown"}) signature[mime]=M;
   signature["CanonicalMime"]=type_sort();
-  for(const char* mime:{"canonicalJpeg","canonicalWebp","canonicalPng","canonicalSvg","canonicalAvif","canonicalJxl","canonicalOther"}) signature[mime]=C;
+  for(const char* mime:{"canonicalStaticImage","canonicalSvg","canonicalAvif","canonicalJxl","canonicalOther"}) signature[mime]=C;
   signature["OptionalMime"]=type_sort(); signature["noMime"]=OM; signature["someMime"]=fn(M,OM);
   signature["ImageSetOption"]=type_sort(); signature["option"]=fn(I,fn(R,fn(OM,O)));
   signature["OptionList"]=type_sort(); signature["nilOptions"]=L; signature["consOption"]=fn(O,fn(L,L));
@@ -135,14 +144,12 @@ int main() {
 
   for(bool a:{false,true}) for(bool b:{false,true}) rules.push_back(rule(apps(sym("andB"),{bool_term(a),bool_term(b)}),bool_term(a&&b)));
   for(unsigned r=0;r<=3;++r) rules.push_back(rule(app(sym("positiveResolution"),resolution_term(r)),bool_term(r>0)));
-  for(const char* mime:{"mimeJpeg","mimeJpegUpper"}) rules.push_back(rule(app(sym("normalizeMime"),sym(mime)),sym("canonicalJpeg")));
-  for(const char* mime:{"mimeWebp","mimeWebpUpper"}) rules.push_back(rule(app(sym("normalizeMime"),sym(mime)),sym("canonicalWebp")));
-  rules.push_back(rule(app(sym("normalizeMime"),sym("mimePng")),sym("canonicalPng")));
+  for(const char* mime:{"mimeJpeg", "mimeJpegUpper","mimePjpeg", "mimePjpegUpper","mimeJpg", "mimeJpgUpper","mimeWebp", "mimeWebpUpper","mimePng", "mimePngUpper","mimeApng", "mimeApngUpper","mimeGif", "mimeGifUpper","mimeBmp", "mimeBmpUpper","mimeMicrosoftIcon", "mimeMicrosoftIconUpper","mimeXIcon", "mimeXIconUpper","mimeXXbitmap", "mimeXXbitmapUpper","mimeXPng", "mimeXPngUpper"}) rules.push_back(rule(app(sym("normalizeMime"),sym(mime)),sym("canonicalStaticImage")));
   rules.push_back(rule(app(sym("normalizeMime"),sym("mimeSvg")),sym("canonicalSvg")));
   rules.push_back(rule(app(sym("normalizeMime"),sym("mimeAvif")),sym("canonicalAvif")));
   rules.push_back(rule(app(sym("normalizeMime"),sym("mimeJxl")),sym("canonicalJxl")));
   rules.push_back(rule(app(sym("normalizeMime"),pvar(0)),sym("canonicalOther")));
-  for(const char* mime:{"canonicalJpeg","canonicalWebp","canonicalPng"})
+  for(const char* mime:{"canonicalStaticImage"})
     rules.push_back(rule(apps(sym("canonicalMimeSupported"),{sym(mime),pvar(1)}),sym("true")));
   rules.push_back(rule(apps(sym("canonicalMimeSupported"),{sym("canonicalSvg"),pvar(2)}),sym("false")));
   rules.push_back(rule(apps(sym("canonicalMimeSupported"),{sym("canonicalOther"),pvar(3)}),sym("false")));
@@ -213,7 +220,20 @@ int main() {
     {{0,0,std::nullopt},{1,2,"application/octet-stream"}},
     {{0,2,"image/svg+xml"},{1,1,"image/jpeg"},{2,3,"image/avif"}},
     {{0,3,"image/jxl"},{1,1,"image/webp"},{2,2,"image/png"}},
-    {{0,1,"IMAGE/JPEG"},{1,2,"IMAGE/WEBP"}}
+    {{0,1,"IMAGE/JPEG"},{1,2,"IMAGE/WEBP"}},
+    {{0,1,"image/jpeg"}},
+    {{0,1,"IMAGE/PJPEG"}},
+    {{0,1,"image/jpg"}},
+    {{0,1,"IMAGE/WEBP"}},
+    {{0,1,"image/png"}},
+    {{0,1,"IMAGE/APNG"}},
+    {{0,1,"image/gif"}},
+    {{0,1,"IMAGE/BMP"}},
+    {{0,1,"image/vnd.microsoft.icon"}},
+    {{0,1,"IMAGE/X-ICON"}},
+    {{0,1,"image/x-xbitmap"}},
+    {{0,1,"IMAGE/X-PNG"}},
+    {{0,1,"image/svg+xml"},{1,2,"application/octet-stream"}}
   };
   unsigned states=0;
   for(const auto& options:cases) for(unsigned scale=1;scale<=4;++scale)
@@ -229,5 +249,5 @@ int main() {
       ++states;
     }
   std::cout<<"CSSImageSetValue MIME-aware filtering, stable resolution ordering/deduplication, and device-scale selection cover "<<states<<" finite states.\n";
-  std::cout<<"Scope: resolution values are 0..3, device scales 1..4, representative MIME strings are ASCII-lowercased, AVIF/JXL feature flags vary, and each fixture has at most three options; arbitrary MIME strings, floating-point resolution computation, lazy options_ cache mutation, and later image loading remain omitted.\n";
+  std::cout<<"Scope: resolution values are 0..3, device scales 1..4, all twelve pinned static image MIME entries and ASCII case variants are represented, AVIF/JXL feature flags vary, and each fixture has at most three options; arbitrary MIME strings, floating-point resolution computation, lazy options_ cache mutation, and later image loading remain omitted.\n";
 }

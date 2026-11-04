@@ -315,7 +315,7 @@ make test
 
 60. **`examples/blink_image_set_selection.cpp`**:
    * Models the first-call `CSSImageSetValue::GetBestOption` pipeline: remove unsupported/nonpositive options, stable-sort by resolution, keep the first option at each duplicate resolution, then choose the first resolution at or above the device scale or fall back to the last option.
-   * Eight finite option lists with up to three options are compared at four device scales and all eight AVIF/JXL feature configurations (256 states). The λΠ model expresses optional MIME normalization/support, positive-resolution filtering, insertion sort, stable deduplication, and threshold/fallback selection as separate reductions.
+   * Twenty-one finite option lists with up to three options are compared at four device scales and all eight AVIF/JXL feature configurations (672 states). The λΠ model expresses optional MIME normalization/support, positive-resolution filtering, insertion sort, stable deduplication, and threshold/fallback selection as separate reductions.
    * Resolution values are 0–3 and device scales 1–4. MIME support uses representative ASCII strings; it includes the finite support relation detailed in item 63. The model omits floating-point resolution computation, MIME values outside the represented set, `options_` cache mutation, and the subsequent image-load dispatch.
 
 
@@ -333,7 +333,7 @@ make test
 
 63. **`examples/blink_image_set_type_support.cpp`**:
    * Refines the type-support and positive-resolution predicate used by `CSSImageSetOptionValue::IsSupported`. It models ASCII case normalization, representative supported and unsupported image MIME types, AVIF build-flag gating, and JPEG XL build/runtime-feature gating.
-   * Twelve finite option inputs are compared under all eight feature-flag combinations (96 states). The λΠ relation first normalizes representative MIME atoms, then evaluates support and composes it with positive-resolution gating.
+   * Twenty finite option inputs, including all twelve static supported MIME types and case variants, are compared under all eight feature-flag combinations (160 states). The λΠ relation first normalizes all twelve static supported MIME atoms and case variants, then evaluates support and composes it with positive-resolution gating.
    * The same predicate is also composed into the option-list selection reduction in item 60. Other MIME types and the full Chromium build configuration remain outside scope.
 
 
