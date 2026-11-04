@@ -247,18 +247,19 @@ Current λΠ work is small compared with that source surface:
   agree with the C++ reference; the
   both-selectors-hit case also checks declaration-order-independent winner
   selection. The `.beta` selector checks whitespace-separated class tokens
-  and rejects the substring `betamax`. The C++ projection splits body data at
-  its midpoint into two fixture chunks. Typed rules create a PendingText
-  buffer from the first CharacterToken, append the second at the current
-  p/null-next-child location, then flush before flattened paragraph content
-  is updated. All six cases compare the buffer term and resulting parser
-  state; non-empty data reaches `textRun` and abstract `paintText`,
+  and rejects the substring `betamax`. The C++ projection splits body data
+  into three fixture chunks. The first two CharacterTokens accumulate and
+  flush to a new identified Text child; the third is flushed separately and
+  coalesces into that Text child with its ID preserved. Typed `nodeText`
+  concatenates child data for the style/layout/paint projection. All six cases
+  compare the resulting DOM and parser state, including child ID and next ID;
+  non-empty data reaches `textRun` and abstract `paintText`,
   while an empty token emits no text item. A
   changed-color simple-paint flag is projected only when text is present.
   Only a text run followed by `</p>` is accepted; other markup, body entity
-  references, actual tokenizer stream chunking, location-change flushes, sibling
-  coalescing, and tokenizer chunking remain unmodeled. Character data is flattened rather than modeled
-  as a DOM Text node with separate identity or coalescing; glyph shaping,
+  references, actual tokenizer stream chunking, location-change flushes, and
+  actual Blink Node pointers remain unmodeled. Text child IDs are abstract;
+  glyph shaping,
   geometry, full layout, and Blink paint artifact internals remain outside scope. Full selector syntax,
   cascade priorities, and color scheme are also unmodeled.
 * `examples/blink_pending_text_bisimulation.cpp` models Blink's pending-text
@@ -267,8 +268,9 @@ Current λΠ work is small compared with that source surface:
   changes, whitespace-mode minimization, invalid/empty discard, insertion of a
   new Text node, and appending to an existing Text sibling. The source
   accumulator and flush are in `html_construction_site.h:264-303` and
-  `html_construction_site.cc:245-271,1081-1118`. A one-buffer restricted path
-  is also composed into the raw token example. The full seven-case transition
+  `html_construction_site.cc:245-271,1081-1118`. Same-location accumulation,
+  flushing into a new Text child, and a second-flush Text-sibling coalescing
+  path are composed into the raw token example. The full seven-case transition
   set remains separate. Actual DOM identity, canonicalization,
   template/foster adjustment, and task ordering remain outside this
   projection.
