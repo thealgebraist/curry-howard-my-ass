@@ -629,13 +629,10 @@ reverse `Push`, longer `Prepend(kUnconsume)`, exact-match no-rewind, and
 longest-match reconsume. The typed tokenizer transition preserves buffered
 output/context and suspends on need-more; on completion it appends one or two
 decoded codepoints and sets the entity flag, or appends literal `&` on failure.
-Ten direct CursorSource cases and fourteen legacy observer cross-checks pass.
-Data and attribute `not` + appended `in;` continuations compare tokenizer
-outcomes and exact cursor-source states. `RuleIndex` indexes
-177,673 rules and builds in about 30 ms in the bounded run. Sources are
+Ten direct CursorSource cases and fourteen legacy observer cross-checks pass. A typed `enterCharacterReference` transition consumes `&` and maps the originating Data/double-quoted/single-quoted/unquoted value state to a cursor context; the remaining CursorSource feeds the named-entity guard and direct trie walker. The resulting source outcome is applied to a cursor-preserving tokenizer state. Seven handoff fixtures and pending/append/resume in all four contexts compare output, entity flag, restored phase, and exact cursor source, including the consumed-ampersand offset. Double-quoted `amp;"`, single-quoted `NotEqualTilde;'`, and unquoted `notin;>` fixtures retain their delimiters. `RuleIndex` indexes 177,709 rules and builds in about 30 ms in the bounded run. Sources are
 `html_entity_parser.cc:66-134`, `platform/text/segmented_string.h:92-115`,
 `platform/text/segmented_string.cc:67-81`, and `html_tokenizer.cc:173-188,
-298-302, 1049-1078`. The direct traversal consumes CursorSource at each edge;
+298-302, 976-1026, 1049-1078`. The direct traversal consumes CursorSource at each edge;
 comparison checks the full CursorSource constructor, current segment before/remaining lists, queued segment partition, and global offset after rollback. Backing String identity and intermediate cursor positions are omitted. The tokenizer state is a bounded projection
 and does not include complete token attributes, preprocessor behavior, or full
 tokenizer lifecycle. The old flat-list observer remains only as a separate

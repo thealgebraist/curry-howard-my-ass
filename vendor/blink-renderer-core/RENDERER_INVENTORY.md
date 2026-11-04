@@ -179,10 +179,14 @@ Current λΠ work is small compared with that source surface:
   transitions. Ten direct finite CursorSource cases cover chunk-split edges,
   mismatch lookahead, longest-match correction, exact and overread attribute
   guards, one/two-character Push, longer Prepend, and both end modes; fourteen
-  legacy observer comparisons remain for cross-checking. Data and attribute
-  `not` + `in;` append/resume traces compare tokenizer outcomes and exact
-  cursor-source state, covering suspension, one/two-codepoint success, entity
-  flagging, and literal `&` fallback. The
+  legacy observer comparisons remain for cross-checking. A typed `enterCharacterReference` transition consumes `&` and maps the
+  originating Data/double-quoted/single-quoted/unquoted value state to a cursor
+  context; the remaining CursorSource feeds the guard and direct trie walker.
+  Results update a cursor-preserving tokenizer state. Seven handoff
+  fixtures and pending/append/resume in all four contexts compare output,
+  entity flag, restored phase, and exact cursor source, including consumed ampersand offset.
+  Double-quoted `amp;"`, single-quoted `NotEqualTilde;'`, and unquoted
+  `notin;>` fixtures leave the value delimiter unconsumed. The
   trie consumes CursorSource directly; result checks compare the full cursor
   constructor, segment before/remaining lists, queued segment partition, and
   global offset. Backing String identity and intermediate cursors are omitted.
