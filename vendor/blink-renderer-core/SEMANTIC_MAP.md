@@ -943,7 +943,14 @@ derives each `paint(...)` string. Thirty-six value pairs compare directly; 144
 cases compose paint equality with representative equal/unequal container and
 viewport sizes. The model omits arbitrary doubles, NaN or signed-zero behavior,
 lazy size lookup effects, general argument serialization, multiple arguments,
-and gradient equality.
+and multiple arguments. A shared `CSSGradientValue::Equals` model covers repeat,
+color interpolation space, hue method, and recursive color-stop list equality
+through two stops. It compares 254,016 finite gradient-base pairs using three
+representative color spaces, all four hue methods, two repeat values, and red/blue
+colors with zero/half offsets. This is only the common base relation used by
+concrete gradient subclasses; stop colors and offsets use finite CSSValue atoms
+with no null hint components. Linear/radial/conic-specific fields and complete
+CSS value equality remain outside the model.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`

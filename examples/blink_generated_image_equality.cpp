@@ -19,6 +19,16 @@ struct CSSPaintValue {
   const char* argument_constructor;
   const char* argument;
 };
+struct GradientStop {
+  const char* color;
+  const char* offset;
+};
+struct GradientBase {
+  bool repeating;
+  const char* interpolation_space;
+  const char* hue_method;
+  std::vector<GradientStop> stops;
+};
 
 static Ptr fn(Ptr a, Ptr b) { return arrow(std::move(a), std::move(b)); }
 static Rule rule(Ptr lhs, Ptr rhs) { return {std::move(lhs), std::move(rhs)}; }
@@ -59,6 +69,18 @@ static std::string paint_custom_css_text(const CSSPaintValue& value) {
   text += ')';
   return text;
 }
+static Ptr gradient_stops_term(const std::vector<GradientStop>& stops) {
+  Ptr result = sym("nilStops");
+  for (auto it = stops.rbegin(); it != stops.rend(); ++it)
+    result = apps(sym("consStop"),
+                  {apps(sym("gradientStop"), {sym(it->color), sym(it->offset)}), result});
+  return result;
+}
+static Ptr gradient_base_term(const GradientBase& value) {
+  return apps(sym("gradientBase"),
+              {bool_term(value.repeating), sym(value.interpolation_space),
+               sym(value.hue_method), gradient_stops_term(value.stops)});
+}
 static Ptr generated_equal_term(const ContainerSizes& left_container,
                                 const ContainerSizes& right_container,
                                 const ViewportSize& left_viewport,
@@ -88,6 +110,8 @@ int main() {
   const Ptr C = sym("ContainerSizes"), V = sym("ViewportSize");
   const Ptr P = sym("CSSPaintName"), A = sym("CSSPaintArgument");
   const Ptr Q = sym("CSSPaintValue"), T = sym("CSSPaintText");
+  const Ptr G = sym("CSSGradientBase"), S = sym("GradientStop"), SL = sym("GradientStopList");
+  const Ptr CS = sym("GradientColorSpace"), H = sym("HueInterpolationMethod"), Col = sym("GradientColor"), Off = sym("GradientOffset");
   signature["Bool"] = type_sort();
   signature["true"] = B;
   signature["false"] = B;
@@ -130,6 +154,32 @@ int main() {
   signature["paintValueEqual"] = fn(Q, fn(Q, B));
   signature["generatedPaintImageEqual"] = fn(C, fn(C, fn(V, fn(V, fn(Q, fn(Q, B))))));
   signature["generatedPaintImageNeedsReattach"] = fn(C, fn(C, fn(V, fn(V, fn(Q, fn(Q, B))))));
+  signature["CSSGradientBase"] = type_sort();
+  signature["CSSGradientRepeat"] = type_sort();
+  signature["nonRepeating"] = sym("CSSGradientRepeat");
+  signature["repeating"] = sym("CSSGradientRepeat");
+  signature["GradientColorSpace"] = type_sort();
+  for (const char* space : {"spaceNone", "spaceSRGB", "spaceLab"}) signature[space] = CS;
+  signature["HueInterpolationMethod"] = type_sort();
+  for (const char* hue : {"hueShorter", "hueLonger", "hueIncreasing", "hueDecreasing"}) signature[hue] = H;
+  signature["GradientColor"] = type_sort();
+  signature["colorRed"] = Col; signature["colorBlue"] = Col;
+  signature["GradientOffset"] = type_sort();
+  signature["offsetZero"] = Off; signature["offsetHalf"] = Off;
+  signature["GradientStop"] = type_sort();
+  signature["gradientStop"] = fn(Col, fn(Off, S));
+  signature["GradientStopList"] = type_sort();
+  signature["nilStops"] = SL;
+  signature["consStop"] = fn(S, fn(SL, SL));
+  signature["gradientBase"] = fn(B, fn(CS, fn(H, fn(SL, G))));
+  signature["boolEqual"] = fn(B, fn(B, B));
+  signature["gradientSpaceEqual"] = fn(CS, fn(CS, B));
+  signature["hueMethodEqual"] = fn(H, fn(H, B));
+  signature["gradientColorEqual"] = fn(Col, fn(Col, B));
+  signature["gradientOffsetEqual"] = fn(Off, fn(Off, B));
+  signature["gradientStopEqual"] = fn(S, fn(S, B));
+  signature["gradientStopListEqual"] = fn(SL, fn(SL, B));
+  signature["gradientBaseEqual"] = fn(G, fn(G, B));
 
   for (bool a : {false, true})
     for (bool b : {false, true})
@@ -215,6 +265,46 @@ int main() {
   rules.push_back(rule(apps(sym("generatedPaintImageNeedsReattach"), generated_paint_args),
                        app(sym("notB"), apps(sym("generatedPaintImageEqual"), generated_paint_args))));
 
+  rules.push_back(rule(apps(sym("boolEqual"), {sym("true"),sym("true")}), sym("true")));
+  rules.push_back(rule(apps(sym("boolEqual"), {sym("false"),sym("false")}), sym("true")));
+  rules.push_back(rule(apps(sym("boolEqual"), {pvar(60),pvar(61)}), sym("false")));
+  auto add_finite_equality = [&](const char* function, const std::vector<const char*>& values) {
+    for (const char* value : values)
+      rules.push_back(rule(apps(sym(function), {sym(value),sym(value)}), sym("true")));
+    rules.push_back(rule(apps(sym(function), {pvar(62),pvar(63)}), sym("false")));
+  };
+  add_finite_equality("gradientSpaceEqual", {"spaceNone","spaceSRGB","spaceLab"});
+  add_finite_equality("hueMethodEqual", {"hueShorter","hueLonger","hueIncreasing","hueDecreasing"});
+  add_finite_equality("gradientColorEqual", {"colorRed","colorBlue"});
+  add_finite_equality("gradientOffsetEqual", {"offsetZero","offsetHalf"});
+  rules.push_back(rule(apps(sym("gradientStopEqual"),
+                            {apps(sym("gradientStop"), {pvar(64),pvar(65)}),
+                             apps(sym("gradientStop"), {pvar(66),pvar(67)})}),
+                       apps(sym("andB"),
+                         {apps(sym("gradientColorEqual"), {pvar(64),pvar(66)}),
+                          apps(sym("gradientOffsetEqual"), {pvar(65),pvar(67)})})));
+  rules.push_back(rule(apps(sym("gradientStopListEqual"), {sym("nilStops"),sym("nilStops")}), sym("true")));
+  rules.push_back(rule(apps(sym("gradientStopListEqual"),
+                            {sym("nilStops"),apps(sym("consStop"),{pvar(68),pvar(69)})}), sym("false")));
+  rules.push_back(rule(apps(sym("gradientStopListEqual"),
+                            {apps(sym("consStop"),{pvar(68),pvar(69)}),sym("nilStops")}), sym("false")));
+  rules.push_back(rule(apps(sym("gradientStopListEqual"),
+                            {apps(sym("consStop"),{pvar(68),pvar(69)}),
+                             apps(sym("consStop"),{pvar(70),pvar(71)})}),
+                       apps(sym("andB"),
+                         {apps(sym("gradientStopEqual"),{pvar(68),pvar(70)}),
+                          apps(sym("gradientStopListEqual"),{pvar(69),pvar(71)})})));
+  rules.push_back(rule(apps(sym("gradientBaseEqual"),
+                            {apps(sym("gradientBase"),{pvar(72),pvar(73),pvar(74),pvar(75)}),
+                             apps(sym("gradientBase"),{pvar(76),pvar(77),pvar(78),pvar(79)})}),
+                       apps(sym("andB"),
+                         {apps(sym("boolEqual"),{pvar(72),pvar(76)}),
+                          apps(sym("andB"),
+                            {apps(sym("gradientSpaceEqual"),{pvar(73),pvar(77)}),
+                             apps(sym("andB"),
+                               {apps(sym("hueMethodEqual"),{pvar(74),pvar(78)}),
+                                apps(sym("gradientStopListEqual"),{pvar(75),pvar(79)})})})})));
+
   RuleIndex indexed_rules(rules);
   auto optional_type = infer({}, apps(sym("optionalSizeEqual"), {sym("noneSize"), sym("noneSize")}), signature, rules);
   assert(optional_type && conv(*optional_type, B, indexed_rules));
@@ -228,6 +318,11 @@ int main() {
                                                           {"paintNameA","alpha","noPaintArgument",nullptr}),
                           signature, rules);
   assert(paint_type && conv(*paint_type, B, indexed_rules));
+  auto gradient_type = infer({}, apps(sym("gradientBaseEqual"),
+                                      {gradient_base_term({false,"spaceNone","hueShorter",{}}),
+                                       gradient_base_term({false,"spaceNone","hueShorter",{}})}),
+                             signature, rules);
+  assert(gradient_type && conv(*gradient_type, B, indexed_rules));
 
   std::vector<ContainerSizes> containers;
   const std::vector<std::optional<unsigned>> optional_values={std::nullopt, 0u, 1u};
@@ -324,4 +419,40 @@ int main() {
   std::cout << "CSSPaintValue name/custom-CSS-text equality compares " << paint_value_pairs
             << " finite string-atom pairs; generated paint image composition covers "
             << paint_image_compositions << " size/value states.\n";
+
+  std::vector<std::vector<GradientStop>> stop_lists(1);
+  const std::vector<GradientStop> stop_domain={{"colorRed","offsetZero"},
+                                                {"colorRed","offsetHalf"},
+                                                {"colorBlue","offsetZero"},
+                                                {"colorBlue","offsetHalf"}};
+  for (const auto& stop : stop_domain) stop_lists.push_back({stop});
+  for (const auto& first : stop_domain)
+    for (const auto& second : stop_domain) stop_lists.push_back({first,second});
+  std::vector<GradientBase> gradients;
+  const char* spaces[]={"spaceNone","spaceSRGB","spaceLab"};
+  const char* hues[]={"hueShorter","hueLonger","hueIncreasing","hueDecreasing"};
+  for (bool repeating : {false,true})
+    for (const char* space : spaces)
+      for (const char* hue : hues)
+        for (const auto& stops : stop_lists)
+          gradients.push_back({repeating,space,hue,stops});
+  unsigned gradient_pairs=0;
+  for (const auto& left : gradients)
+    for (const auto& right : gradients) {
+      bool expected=left.repeating==right.repeating &&
+                    std::string(left.interpolation_space)==right.interpolation_space &&
+                    std::string(left.hue_method)==right.hue_method &&
+                    left.stops.size()==right.stops.size();
+      for (size_t i=0; expected && i<left.stops.size(); ++i)
+        expected=std::string(left.stops[i].color)==right.stops[i].color &&
+                 std::string(left.stops[i].offset)==right.stops[i].offset;
+      Ptr term=apps(sym("gradientBaseEqual"),{gradient_base_term(left),gradient_base_term(right)});
+      if (!conv(normalize(term,indexed_rules),bool_term(expected),indexed_rules)) {
+        std::cerr << "CSSGradientValue base equality mismatch\n";
+        return 7;
+      }
+      ++gradient_pairs;
+    }
+  std::cout << "CSSGradientValue common-field and bounded color-stop-list equality compares "
+            << gradient_pairs << " finite gradient pairs.\n";
 }
