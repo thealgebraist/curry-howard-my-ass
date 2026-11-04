@@ -2,6 +2,10 @@ test_suite
 mltt_vectors
 automath_logic
 inverse_galois
+*.vo
+*.vok
+*.vos
+*.glob
 *.o
 *.dSYM
 .DS_Store
