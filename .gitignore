@@ -1,0 +1,5 @@
+mltt_vectors
+automath_logic
+*.o
+*.dSYM
+.DS_Store
