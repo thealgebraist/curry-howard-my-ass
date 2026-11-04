@@ -118,9 +118,10 @@ Current λΠ work is small compared with that source surface:
   reduction agree on 24 finite cases; values are abstract color IDs.
 * `examples/blink_style_recalc_gate.cpp` models the suppression-first
   `ShouldRecalcStyleFor` decision and the `ForChildren` propagation projection
-  for `kRecalcChildren`/`kRecalcDescendants` plus the style-container-query
-  flag. Its C++ transcription agrees with λΠ on 160 node/change inputs and 20
-  child-change inputs; other flags and Element traversal remain outside scope.
+  for `kIndependentInherit`, `kRecalcChildren`, and `kRecalcDescendants`, plus
+  the style-container-query flag. Its C++ transcription agrees with λΠ on 160
+  node/change inputs and 20 child-change inputs; other flags and Element
+  traversal remain outside scope.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).

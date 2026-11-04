@@ -148,7 +148,7 @@ make test
    * Models `color` defaulting for missing, `inherit`, `initial`, and `unset`, with or without a parent style. A native C++ branch transcription agrees with λΠ on 24 finite cases. Color values are abstract IDs and initial black is encoded as zero.
 
 19. **`examples/blink_style_recalc_gate.cpp`**:
-   * Models `ShouldRecalcStyleFor` suppression, propagation, dirty-node and style-container-query-dependent branches, plus the selected `ForChildren` propagation/flag projection. A C++ transcription agrees on 160 gate states and 20 child-change states; other flags and real DOM traversal are omitted.
+   * Models `ShouldRecalcStyleFor` suppression, all three forcing propagation levels (`kIndependentInherit`, `kRecalcChildren`, `kRecalcDescendants`), dirty-node and style-container-query-dependent branches, plus the selected `ForChildren` propagation/flag projection. A C++ transcription agrees on 160 gate states and 20 child-change states; other flags and real DOM traversal are omitted.
 
 20. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
    * Models the shared in-body end-tag branch for all 28 distinct block-element target tags, including the general scope scan, implied-end-tag pass, and pop-through-target transition.

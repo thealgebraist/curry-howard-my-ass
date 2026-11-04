@@ -713,8 +713,8 @@ Chromium commit `99d77c2af39f60ee06a5516ad5428e4d2aa61da4`. In
 `kSuppressRecalc` first (false), then `RecalcChildren()` (true), then
 `Node::NeedsStyleRecalc()`, then `RecalcFlagDependent(node)`. In
 `style_recalc_change.h:198-199`, `RecalcChildren` means propagation greater
-than `kUpdatePseudoElements`, so `kRecalcChildren` and `kRecalcDescendants`
-both force this node predicate to true. The model preserves the distinction
+than `kUpdatePseudoElements`, so `kIndependentInherit`, `kRecalcChildren`, and `kRecalcDescendants`
+force this node predicate to true. The model preserves the distinction
 when propagating to children: `ForChildren` at `style_recalc_change.h:116-119`
 retains `kRecalcDescendants`, while other propagation values become `kNo`.
 

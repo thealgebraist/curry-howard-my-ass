@@ -13,7 +13,8 @@ struct Node { NodeKind kind; bool needs_style; bool depends_style_query; };
 
 static bool cpp_should(Prop prop, FlagSet flags, Node node) {
   if (flags==FlagSet::Suppress || flags==FlagSet::SuppressStyleChildren) return false;
-  if (prop==Prop::Children || prop==Prop::Descendants) return true;
+  if (prop==Prop::IndependentInherit || prop==Prop::Children ||
+      prop==Prop::Descendants) return true;
   if (node.needs_style) return true;
   const bool style_query_flag=flags==FlagSet::StyleChildren;
   return style_query_flag && node.kind==NodeKind::Element && node.depends_style_query;
@@ -67,7 +68,8 @@ int main(){
   rules.push_back(rule(app(sym("isSuppressed"),sym("styleChildren")),sym("false")));
   rules.push_back(rule(app(sym("isSuppressed"),sym("suppress")),sym("true")));
   rules.push_back(rule(app(sym("isSuppressed"),sym("suppressStyleChildren")),sym("true")));
-  for(const char* q:{"pNone","pPseudos","pIndependent"})rules.push_back(rule(app(sym("forces"),sym(q)),sym("false")));
+  for(const char* q:{"pNone","pPseudos"})rules.push_back(rule(app(sym("forces"),sym(q)),sym("false")));
+  rules.push_back(rule(app(sym("forces"),sym("pIndependent")),sym("true")));
   rules.push_back(rule(app(sym("forces"),sym("pChildren")),sym("true")));
   rules.push_back(rule(app(sym("forces"),sym("pDescendants")),sym("true")));
   for(const char* f:{"noFlags","suppress"})for(const char* n:{"element","textNode"})for(const char* d:{"true","false"})
