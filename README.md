@@ -408,6 +408,12 @@ make test
    * Entity parsing/consumption, concrete source offsets, string canonicalization, and buffer allocation remain abstract.
 
 
+76. **`examples/blink_html_fastpath_reference_dispatch.cpp`**:
+   * Models `ScanHTMLCharacterReference` after a semicolon-terminated scan observation: reject early EOF, NUL, overlong lookahead, and references shorter than two characters; dispatch numeric output, exact `amp`/`lt`/`gt`/`nbsp`, or uncommon-name fallback. A fallback remainder selects the cursor-rewind branch.
+   * Typed λΠ dispatch and a C++ transcription cover 15 finite gate/decoder observations, including a semicolon found at the lookahead boundary.
+   * The scan’s character-by-character loop, numeric conversion, entity table lookup, and concrete cursor offsets are abstracted as input observations.
+
+
 ---
 
 ## License

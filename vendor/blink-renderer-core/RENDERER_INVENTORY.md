@@ -33,6 +33,11 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_reference_dispatch.cpp` models the
+  `ScanHTMLCharacterReference` gate and dispatch to numeric, four common-name,
+  or uncommon-name paths, including failure and fallback cursor rewind. Fifteen
+  finite observations include the 20-character lookahead boundary; scanning,
+  numeric conversion, and entity-table lookup remain abstract.
 * `examples/blink_html_fastpath_scan_escaped_text.cpp` models the slow text
   scanner with character-reference results supplied as observations. It handles
   literal/reference output, CR normalization, `<` handoff, and failure results

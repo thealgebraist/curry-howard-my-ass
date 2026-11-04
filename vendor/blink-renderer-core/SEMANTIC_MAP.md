@@ -551,6 +551,21 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path character-reference dispatch
+
+`examples/blink_html_fastpath_reference_dispatch.cpp` models the gate and
+branch structure in `ScanHTMLCharacterReference`. The scanner must find a
+semicolon without hitting EOF, NUL, or the greater-than-20 lookahead failure; a
+semicolon after 20 reference code units is represented as the accepted boundary.
+The resulting reference must have at least two code units. Numeric references
+consume a supplied numeric-decoder result; exact `amp`, `lt`, `gt`, and `nbsp`
+names emit their direct output; other names use a supplied
+`ConsumeHTMLEntity` observation. A non-empty fallback remainder selects the
+source cursor-rewind branch. Fifteen finite C++/λΠ observations cover these
+branches. The character scan, numeric accumulation/`AppendLegalEntityFor`,
+entity table, fallback decoder, and concrete offsets are modeled elsewhere or
+left as explicit inputs. Source: `html_document_parser_fastpath.cc:1209-1305`.
+
 ## HTML fragment fast-path escaped-text scan
 
 `examples/blink_html_fastpath_scan_escaped_text.cpp` models the slow
