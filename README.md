@@ -123,11 +123,25 @@ make test
    * Models right-to-left compounds of tag, id, and class selectors with child and descendant relations over finite element trees, following Blink's `CSSSelector` representation and easy-matcher path.
    * The finite relation checks nine selector/tree cases and a terminal state against a native C++ matcher.
    * Cases obey `EasySelectorChecker::IsEasy`'s restriction against child combinators after descendant combinators. Sibling relations, namespaces, and general selector matching remain unmodeled.
-
 12. **`examples/blink_tree_builder_p_start_bisimulation.cpp`**:
    * Models the shared in-body start-tag path for `<p>` and the 24 other tags in its block-start case set: when `<p>` is in button scope, Blink processes a fake `</p>` before inserting the incoming element.
    * A finite coalgebra checks `<p>` against eleven stack configurations and each distinct block-start tag against both an in-scope stack and a stack with `<p>` hidden under a marker: 59 token/stack cases plus a terminal state.
    * Each start-tag name has its own λΠ constructor and remains distinct in the resulting stack. Scope markers are grouped into button, HTML, foreign-content, and document-fragment categories. The model also checks one non-top removal of `<p>`; general stack mutations, parse-error effects, and DOM mutation remain unmodeled.
+
+13. **`examples/blink_tree_builder_p_end_bisimulation.cpp`**:
+   * Models the final open-element-stack effect of the `</p>` branch over ten finite stacks. The native projection includes represented `li`, `dt`, and `option` implied-end-tag pops; seven cases check that λΠ's direct pop-through-`p` projection gives the same suffix. Fake-token flow, parse errors, unrepresented implied candidates, and DOM effects remain outside the model.
+
+14. **`examples/blink_css_revert_layer.cpp`**:
+   * Models Blink's first-eligible search over an already sorted strongest-first priority list for one `revert-layer` declaration. A separate C++ scan agrees with λΠ reduction on twenty finite inputs, including same-layer ties. Construction of the full priority map, origin comparisons, and recursive CSS value resolution are not included.
+
+15. **`examples/blink_layout_dirty_bisimulation.cpp`**:
+   * Models `SetNeedsLayout` idempotence and propagation of child-dirty bits through a bounded rooted container chain. It assumes no relayout-boundary early return and excludes display locks, out-of-flow container jumps, orthogonal writing modes, view scheduling, and paint invalidation.
+
+16. **`examples/blink_css_priority_layer_normalization.cpp`**:
+   * Checks the layer-field normalization performed by `CascadePriority::ForLayerComparison` against a C++ transcription of the packed bit operations. The λΠ field model covers all 16 four-bit values with importance on and off (32 cases); the other priority fields are fixed or omitted.
+
+17. **`examples/blink_tree_builder_li_end_bisimulation.cpp`**:
+   * Models the `</li>` stack transition, including list-item-scope hits and no-op misses. Eleven finite stacks are compared; five hit cases check that represented implied-end-tag popping has the same final stack as the λΠ pop-through-`li` abstraction.
 
 ---
 

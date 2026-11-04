@@ -28,6 +28,23 @@ git -C vendor/chromium-src checkout 99d77c2af39f60ee06a5516ad5428e4d2aa61da4
 See [`RENDERER_INVENTORY.md`](RENDERER_INVENTORY.md) for the checked-out file
 counts and the current semantic-model coverage.
 
+## Additional source references for newer model slices
+
+The two pinned checkouts above differ: the full sparse renderer is at
+`99d77c2af39f60ee06a5516ad5428e4d2aa61da4`, while the curated excerpts below
+remain at `b8b9e813434efddb2eed020daa9cc44686aeee7a`. The newer λΠ examples
+refer to files from the full sparse checkout. Stable source links:
+
+* [HTMLTreeBuilder::ProcessEndTagForInBody and the `</p>` branch](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_tree_builder.cc#2217)
+* [HTMLConstructionSite implied end tags](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_construction_site.cc#113)
+* [HTMLElementStack button-scope markers and cached paragraph state](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_element_stack.cc#145)
+* [HTMLTreeBuilder list-item end-tag processing](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_tree_builder.cc#2309)
+* [StyleCascade revert-layer resolution](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/style_cascade.cc#1593)
+* [CascadeMap revert-layer candidate search](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/cascade_map.cc#78)
+* [CascadePriority encoding and layer comparison](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/cascade_priority.h#21)
+* [LayoutObject::SetNeedsLayout](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/layout/layout_object_inlines.h#36)
+* [LayoutObject::MarkContainerChainForLayout](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/layout/layout_object.cc#1634)
+
 ## Earlier selected-file snapshot
 
 The curated files in `vendor/blink-renderer-core` and the expanded directory

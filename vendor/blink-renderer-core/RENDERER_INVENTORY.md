@@ -49,6 +49,21 @@ Current λΠ work is small compared with that source surface:
   HTML, foreign-content, document-fragment, and button markers. A separate
   finite case removes a non-top `p` and checks the recomputed cache bit.
   Resulting stacks are compared between the C++ transcription and λΠ.
+* `examples/blink_tree_builder_p_end_bisimulation.cpp` models the resulting
+  open-element stack for the `</p>` branch over ten finite stacks, including
+  several consecutive implied-end-tag candidates and intervening unrelated
+  tags. Its C++ reference explicitly applies the represented implied-tag pops;
+  λΠ checks the resulting pop-through-`p` stack projection, and seven
+  in-scope cases check that the explicit native sequence equals direct
+  pop-through-`p`. It still omits parse-error reporting, namespace identity,
+  unrepresented implied candidates, and DOM effects.
+* `examples/blink_tree_builder_li_end_bisimulation.cpp` models the distinct
+  `</li>` stack transition over eleven finite stacks: five list-item-scope
+  hits and six misses that remain unchanged. It includes `ol`/`ul`, HTML,
+  non-HTML, and document-fragment scope markers, plus a `button` case showing
+  that button alone does not stop list-item scope. Five hit cases compare
+  explicit implied-end-tag popping followed by pop-through-`li` with the
+  final-stack abstraction used in λΠ.
 * `examples/blink_css_cascade_bisimulation.cpp` models a restricted
   per-property cascade over five already-matched declaration sets, with a
   finite closure check between an imperative C++ scan and a λΠ priority
@@ -59,6 +74,19 @@ Current λΠ work is small compared with that source surface:
 * `examples/blink_css_combinator_bisimulation.cpp` covers right-to-left
   compounds of tag/id/class tests with child/descendant relations over nine
   finite tree cases.
+* `examples/blink_css_revert_layer.cpp` models the first eligible entry in an
+  already sorted, strongest-first per-property priority list over twenty
+  finite list/bound cases, including same-layer ties. It does not construct
+  Blink's packed priority map.
+* `examples/blink_css_priority_layer_normalization.cpp` checks a four-bit
+  projection of `CascadePriority::ForLayerComparison` for both importance
+  values across 32 field cases. Origin, tree order, and the rest of the packed
+  priority remain fixed or omitted.
+* `examples/blink_layout_dirty_bisimulation.cpp` models the clean-to-dirty
+  transition of one layout object and propagation of child-dirty flags through
+  a finite rooted container chain. Fixtures assume no relayout-boundary early
+  return. Display locks, out-of-flow jumps, view scheduling, simplified layout,
+  and paint invalidation remain outside the model.
 * None of these programs is generated from the C++ source. None models the full
   parser, style cascade, layout algorithms, paint structures, invalidation,
   script interactions, or incremental lifecycle.

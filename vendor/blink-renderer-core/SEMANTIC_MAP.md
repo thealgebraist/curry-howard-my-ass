@@ -118,3 +118,138 @@ pop/remove/replace sequences, parse-error effects, and DOM mutation are
 omitted. The result-stack transition models the final stack effect of implied
 end-tag processing, not its diagnostics or other side effects.
 The C++ side is a transcription, not execution of Blink's `HTMLTreeBuilder`.
+
+`examples/blink_css_revert_layer.cpp` models the ordered lookup used for
+`revert-layer`. `CascadeMap::FindRevertLayer` iterates a per-property list and
+returns the first entry whose `ForLayerComparison()` is below the reverting
+priority. `CascadePriorityList::InsertKeepingSorted` maintains strongest-first
+order, inserting equal priorities before older entries; `CascadeMap::Add`
+pushes a new stronger priority and inserts weaker/equal priorities into that
+ordered list. The λΠ transition now scans an explicitly strongest-first list
+and returns its first eligible declaration, preserving the list's represented
+tie order. The C++ transcription uses the same scan. Twenty finite
+(declaration-list, reverting-layer) inputs were type-checked and reduced in
+λΠ, and agreed with the operational scan. The source definitions are in the
+pinned checkout's `third_party/blink/renderer/core/css/resolver/cascade_map.cc`
+(`FindRevertLayer`, `Add`), `cascade_map.h`
+(`CascadePriorityList::InsertKeepingSorted`),
+`cascade_priority.h` (`ForLayerComparison`), and `style_cascade.cc`
+(`ResolveRevertLayer`, `ResolveRevertTo`).
+
+The model assumes the input priorities are already in Blink's sorted order;
+it does not formalize `CascadePriority`'s packed bit encoding or all
+origin/importance/tree-order/layer comparisons. Its natural-number layer field
+only supplies the eligibility projection, while earlier list position
+represents other priority and tie-order information. This covers `Find`'s
+ordered search shape, not construction of the real map. No eligible candidate
+maps to the model's unset sentinel (numeric zero), corresponding to
+`ResolveRevertTo`'s missing-candidate branch. CSS `revert`, `revert-rule`,
+recursive substitution, and property application remain outside scope.
+
+## Tree-builder boundary: paragraph end tags
+
+`examples/blink_tree_builder_p_end_bisimulation.cpp` models the open-element
+stack projection of the `HTMLTag::kP` branch in
+`core/html/parser/html_tree_builder.cc:2296-2308` (line numbers refer to the
+pinned checkout). `HTMLElementStack::InButtonScope` reads the cached bit for
+`p` at `core/html/parser/html_element_stack.cc:493-497`; the bit's update
+recurrence is at lines 570-578. `IsButtonScopeMarker` is defined at lines
+145-152: it uses HTML scope-marker tags, document-fragment roots, `button`, and
+the non-HTML scope-marker predicate. The model uses grouped marker constructors
+for these categories; its `foreignMarker` stands only for a non-HTML scope
+marker, not every foreign-content element. When `InButtonScope(kP)` fails, Blink
+reports a parse error and processes a fake `<p>` start tag before reprocessing
+the end tag. The model captures the resulting stack effect: a synthetic top
+`p` is popped, leaving the original stack. When `p` is in scope, it models
+`GenerateImpliedEndTagsWithExclusion(p)` followed by `PopUntilPopped(p)` as
+discarding the stack prefix through that `p`. `HTMLConstructionSite::HasImpliedEndTag`
+at `core/html/parser/html_construction_site.cc:113-130` recognizes `dd`, `dt`,
+`li`, `option`, `optgroup`, `p`, `rb`, `rp`, `rt`, and `rtc` in the HTML
+namespace. The C++ reference represents four of those candidates (`li`, `dt`,
+`option`, and the excluded `p`) plus unrelated tags, and explicitly performs
+the eligible top pops before `PopUntilPopped`. Typed λΠ intentionally captures
+the final pop-through-`p` abstraction. Ten finite stacks were compared between
+the native projection and λΠ; seven in-scope configurations also assert that
+the explicit implied-pop-then-pop algorithm returns the same suffix as direct
+pop-through-`p`. Cases include several consecutive implied candidates,
+intervening unrelated tags, nested `p`, and scope markers. This stack
+projection does not model the fake-token control flow itself; it abstracts
+parse-error reporting, candidates outside the represented subset, namespace
+identity for ordinary tags, and DOM effects. It does not establish full `</p>`
+processing equivalence.
+
+## Tree-builder boundary: list-item end tags
+
+`examples/blink_tree_builder_li_end_bisimulation.cpp` adds a distinct typed
+λΠ `endLi` transition for the `HTMLTag::kLi` branch at
+`core/html/parser/html_tree_builder.cc:2309-2319`. Blink first checks
+`HTMLElementStack::InListItemScope(kLi)` (`core/html/parser/html_element_stack.cc:480-481`);
+on a miss it reports a parse error and returns without changing the stack. On
+a hit it calls `GenerateImpliedEndTagsWithExclusion(li)`, optionally reports a
+parse error if the current item is not `li`, then calls `PopUntilPopped(li)`.
+The model represents this as a separate scope predicate, recursive implied
+candidate removal with `li` excluded, and the final pop-through-`li` operation.
+
+The scope predicate follows `IsListItemScopeMarker` at
+`core/html/parser/html_element_stack.cc:85-94`: besides the HTML scope-marker
+set, the HTML branch treats document fragments and `ol`/`ul` as markers; the
+non-HTML branch uses `IsScopeMarkerNonHTML` at lines 63-73. λΠ groups the HTML
+scope-marker set, non-HTML marker set, and fragment roots into distinct
+constructors. In particular, `button` is not itself a list-item-scope marker;
+one finite hit case checks that distinction.
+
+The C++ reference models the complete `HasImpliedEndTag` candidate list
+(`html_construction_site.cc:113-130`) as HTML constructors and performs
+eligible popping before `PopUntilPopped`. Eleven stacks are compared: five
+scope hits and six misses, including `ol`, `ul`, HTML, non-HTML, and fragment
+markers. For each hit, an explicit implied-pop sequence is checked against the
+direct final-stack projection through the same `li`. The model does not
+represent token diagnostics, the current-node parse-error condition, namespace
+identity for ordinary tags, actual DOM effects, or state beyond the open
+element stack. It therefore checks this finite transition projection, not the
+complete Blink tree-builder.
+
+## Layout boundary: dirty-bit propagation
+
+`examples/blink_layout_dirty_bisimulation.cpp` models a bounded part of
+`LayoutObject::SetNeedsLayout` in `core/layout/layout_object_inlines.h` and
+`MarkContainerChainForLayout` in `core/layout/layout_object.cc`. For a
+target-first chain of rooted normal-flow objects, a clean target becomes
+self-dirty and propagates child-dirty bits toward its container ancestors.
+Propagation stops when an ancestor already needs self layout or child layout;
+calling `SetNeedsLayout` on an already self-dirty target is idempotent and does
+not repeat propagation. The C++ reference and typed λΠ rewrite model are
+compared on eight finite chains, including dirty target, dirty self ancestor,
+dirty child ancestor, singleton, and empty cases.
+
+The model holds fixed `mark_parents` at `kMarkContainerChain` and abstracts
+overflow/cache dirtiness. It omits display-lock stopping behavior,
+out-of-flow containing-block jumps, unrooted subtrees, simplified-layout
+propagation, orthogonal writing modes, and in-layout behavior. It assumes the
+container chain does not trigger the `allow_subtree_layout_root` /
+`ObjectIsRelayoutBoundary` early return; it does not model the view's layout
+state or subtree scheduling. Paint invalidation is also omitted. This is a
+state-transition projection, not a translation of the `LayoutObject`
+implementation or layout algorithms.
+
+`examples/blink_css_priority_layer_normalization.cpp` isolates the layer-field
+normalization in `CascadePriority::ForLayerComparison` from pinned Chromium
+commit `99d77c2af39f60ee06a5516ad5428e4d2aa61da4`. In
+`third_party/blink/renderer/core/css/resolver/cascade_priority.h`,
+`EncodeLayerOrder` XORs the 16-bit layer value with `0xFFFF` for important
+declarations (line 45); `kLayerOrderOffset` is 33, `kLayerOrderMask` is
+`0xFFFF << 33`, and `kImportantBit` is 19 in `high_bits_` (lines 82–95).
+After assembling the upper 64 bits, `ForLayerComparison` tests packed bit
+`kImportantBit + 32`, XORs the shifted layer mask (`kLayerOrderMask >> 32`),
+then shifts right by `kLayerOrderOffset - 32` (lines 185–204). The model
+exhaustively checks the low four bits of that 16-bit field for both importance
+values: 32 λΠ inputs typed and reduced to the matching independent C++ packed
+bit-operation transcription. On those four bits, important layer encoding
+and normalization each complement with `0xF`, so the final projected field
+equals the original layer value.
+
+This is exact for the selected finite layer-field projection. It fixes origin
+and tree order to zero and omits their normalization masks, inline/try-style
+flags, lower rule/declaration indices, and the remaining packed 96-bit
+priority comparison behavior. It does not prove equivalence of the complete
+`ForLayerComparison` method.
