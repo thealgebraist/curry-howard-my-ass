@@ -935,9 +935,14 @@ double fields, and `StyleGeneratedImage::IsEqual` also requires equivalent
 generator values. The λΠ model represents optional dimensions with `noneSize` or
 `someSize(d0|d1)`, viewport dimensions with `d0|d1`, and generator-value
 equivalence as an explicit Boolean input. The executable compares 663,552 finite
-states, including the generated-image reattach decision. It does not cover
-arbitrary doubles, NaN or signed-zero behavior, lazy size lookup effects, or the
-CSS generator/value equality implementation.
+size/value states, including the generated-image reattach decision. A paint-
+specific route also models `CSSPaintValue::Equals`, which compares `GetName()`
+and `CustomCSSText()`, using finite name and custom-CSS-text atoms. Sixteen atom
+pairs compare directly; 64 cases compose that equality with representative
+container and viewport comparisons. Their cross-product may include pairs that
+are not constructible CSSPaintValues. This omits arbitrary doubles, NaN or
+signed-zero behavior, lazy size lookup effects, general string serialization,
+and gradient equality.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`

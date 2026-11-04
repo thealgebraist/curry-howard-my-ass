@@ -293,7 +293,7 @@ make test
 
 56. **`examples/blink_generated_image_equality.cpp`**:
    * Refines `StyleGeneratedImage::IsEqual` into equality of optional container width/height, six viewport dimensions, and an explicit generator-value-equivalence input. The C++/λΠ comparison loop spans 663,552 finite states and composes inequality into the generated-image reattach predicate.
-   * Numeric dimensions are restricted to absent/0/1 for container sizes and 0/1 for viewport components. This omits NaN, signed zero, arbitrary double values, lazy container lookup/cache side effects, and the internal `CSSImageGeneratorValue`/`CSSValue` equality implementation.
+   * Numeric dimensions are restricted to absent/0/1 for container sizes and 0/1 for viewport components. The paint-specific branch also models the two string comparisons in `CSSPaintValue::Equals` over finite name and custom-CSS-text atoms. Their cross-product includes pairs that may not be constructible as valid `CSSPaintValue`s. The model omits NaN, signed zero, arbitrary doubles, lazy container lookup/cache side effects, general string serialization, and gradient equality.
 
 
 ---
