@@ -987,6 +987,16 @@ pairs reduce to false through the tag dispatch. The inequality is checked throug
 a generated-image change predicate. These fixtures integrate the represented
 subclass models but do not widen their finite CSSValue payload domains.
 
+`examples/blink_image_set_value_equality.cpp` refines the image-set arm of
+`StyleImage::IsEqual`. `StyleImageSet::IsEqual` checks the right-hand subclass,
+then `ValuesEquivalent` for the best-fit image, then `CSSImageSetValue::Equals`.
+The latter inherits `CSSValueList::Equals`, which compares the comma separator
+and ordered option list; each `CSSImageSetOptionValue::Equals` compares image,
+resolution, and optional type. The λΠ model covers six finite option lists and
+composes option-list equality with the subclass and best-fit conditions. Nested
+CSSValue relations and best-fit image equality are finite atoms or explicit
+inputs, so this is not general CSS image-set equivalence.
+
 `examples/blink_crossfade_value_equality.cpp` models
 `CSSCrossfadeValue::Equals` as length equality followed by ordered pairwise
 `ValuesEquivalent` checks for each image and percentage. The finite model uses

@@ -307,6 +307,12 @@ make test
    * This does not model arbitrary CSS image/percentage values, other crossfade payload structures, construction, resolution, weight calculation, or rendering.
 
 
+59. **`examples/blink_image_set_value_equality.cpp`**:
+   * Refines the `StyleImageSet::IsEqual` branch into right-hand subclass check, best-fit image equivalence, and `CSSImageSetValue` equality. The CSS value relation compares ordered options, and each option compares image, resolution, and optional type.
+   * Six finite values (empty, singleton and length-two lists) yield 36 CSS value pairs. With both right-hand kinds and both best-fit outcomes, the StyleImageSet composition covers 144 states. The source constructor fixes the value-list separator to comma; the model therefore treats it as equal on both sides.
+   * Nested image, resolution, and type CSSValue relations use finite atoms. Best-fit image equality remains an explicit Boolean input; unbounded option lists, CSSValue dispatch, resource selection, and image rendering are not modeled.
+
+
 ---
 
 ## License

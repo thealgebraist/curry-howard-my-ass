@@ -191,6 +191,12 @@ Current λΠ work is small compared with that source surface:
   both right-hand image kinds (50 composed states). Nested CSSValue relations
   are represented by finite atoms; arbitrary crossfade values and rendering
   behavior remain outside scope.
+* `examples/blink_image_set_value_equality.cpp` refines the image-set branch:
+  `StyleImageSet::IsEqual` requires matching subclass, equivalent best-fit
+  images, and equal `CSSImageSetValue` lists. Each ordered option compares its
+  image, resolution, and optional type. Six finite option lists cover 36 list
+  pairs and 144 StyleImageSet compositions; nested CSSValue and best-fit image
+  relations remain bounded or abstract.
 * `examples/blink_style_image_equality.cpp` models all six `StyleImage` subclass
   equality branches and the image-content reattach trigger across 147,456 kind/
   relation assignments. Its comparison loop checks the C++ transcription against λΠ.
