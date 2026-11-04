@@ -239,18 +239,21 @@ Current λΠ work is small compared with that source surface:
   token term and final DOM/stack state. This is a mapped transcription, not
   execution of Blink's tokenizer; Unicode, duplicate attrs, parse-error
   reconsume, custom/sanitizer effects, and full DOM lifecycle are excluded.
-  The same inserted node then feeds fixed `p`/`.beta`/`#alpha` selector
-  matching, numeric-priority color selection, and an abstract empty-block
-  layout/paint projection. Five cases agree with the C++ reference; the
+  The same raw source is scanned to derive the start-tag token and suffix
+  character token; a quoted-attribute `>` case checks the tag/body boundary.
+  The inserted node then feeds fixed `p`/`.beta`/`#alpha` selector matching,
+  numeric-priority color selection, and abstract text layout/paint. Six cases
+  agree with the C++ reference; the
   both-selectors-hit case also checks declaration-order-independent winner
   selection. The `.beta` selector checks whitespace-separated class tokens
   and rejects the substring `betamax`. A separate in-body `CharacterToken`
   appends content to the same inserted node; non-empty data reaches `textRun`
   and an abstract `paintText`, while an empty token emits no text item. A
   changed-color simple-paint flag is projected only when text is present.
-  Character data is flattened rather than modeled as a DOM Text node with
-  separate identity or coalescing; glyph shaping, geometry, full layout, and
-  Blink paint artifact internals remain outside scope. Full selector syntax,
+  The suffix is one character token: later markup, references, and tokenizer
+  chunking remain unmodeled. Character data is flattened rather than modeled
+  as a DOM Text node with separate identity or coalescing; glyph shaping,
+  geometry, full layout, and Blink paint artifact internals remain outside scope. Full selector syntax,
   cascade priorities, and color scheme are also unmodeled.
 * `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
   by property state and forced boundaries around foreign-layer/scrollbar
