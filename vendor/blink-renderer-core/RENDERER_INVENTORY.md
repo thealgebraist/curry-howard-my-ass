@@ -247,15 +247,16 @@ Current λΠ work is small compared with that source surface:
   agree with the C++ reference; the
   both-selectors-hit case also checks declaration-order-independent winner
   selection. The `.beta` selector checks whitespace-separated class tokens
-  and rejects the substring `betamax`. The in-body `CharacterToken` is
-  represented as a typed PendingText buffer at the current p/null-next-child
-  location, then passed through a flush relation before flattened paragraph
-  content is updated. All six cases compare the buffer term and resulting
-  parser state; non-empty data reaches `textRun` and abstract `paintText`,
+  and rejects the substring `betamax`. The C++ projection splits body data at
+  its midpoint into two fixture chunks. Typed rules create a PendingText
+  buffer from the first CharacterToken, append the second at the current
+  p/null-next-child location, then flush before flattened paragraph content
+  is updated. All six cases compare the buffer term and resulting parser
+  state; non-empty data reaches `textRun` and abstract `paintText`,
   while an empty token emits no text item. A
   changed-color simple-paint flag is projected only when text is present.
   Only a text run followed by `</p>` is accepted; other markup, body entity
-  references, multiple text tokens, location-change flushes, sibling
+  references, actual tokenizer stream chunking, location-change flushes, sibling
   coalescing, and tokenizer chunking remain unmodeled. Character data is flattened rather than modeled
   as a DOM Text node with separate identity or coalescing; glyph shaping,
   geometry, full layout, and Blink paint artifact internals remain outside scope. Full selector syntax,
