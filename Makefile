@@ -1,7 +1,7 @@
 CXX ?= g++-16
 CXXFLAGS ?= -std=c++23 -Wall -Wextra -O2 -Isrc
 
-all: test_suite mltt_vectors automath_logic inverse_galois scheme_interpreter cpp_template_evaluator blink_rendering_model blink_parser_lifecycle blink_parser_bisimulation blink_tree_builder_p_start_bisimulation blink_tree_builder_p_end_bisimulation blink_tree_builder_li_end_bisimulation blink_tree_builder_block_end_bisimulation blink_css_cascade_bisimulation blink_css_selector_bisimulation blink_css_combinator_bisimulation blink_css_revert_layer blink_css_priority_layer_normalization blink_css_cascade_priority blink_css_color_defaulting blink_style_recalc_gate blink_dom_insert_html_element blink_layout_dirty_bisimulation blink_tokenizer_open_tag_bisimulation blink_tokenizer_tag_name_bisimulation blink_tokenizer_attribute_name_bisimulation blink_paint_chunker_bisimulation
+all: test_suite mltt_vectors automath_logic inverse_galois scheme_interpreter cpp_template_evaluator blink_rendering_model blink_parser_lifecycle blink_parser_bisimulation blink_tree_builder_p_start_bisimulation blink_tree_builder_p_end_bisimulation blink_tree_builder_li_end_bisimulation blink_tree_builder_block_end_bisimulation blink_css_cascade_bisimulation blink_css_selector_bisimulation blink_css_combinator_bisimulation blink_css_revert_layer blink_css_priority_layer_normalization blink_css_cascade_priority blink_css_cascade_map blink_css_color_defaulting blink_style_recalc_gate blink_dom_insert_html_element blink_layout_dirty_bisimulation blink_tokenizer_open_tag_bisimulation blink_tokenizer_tag_name_bisimulation blink_tokenizer_attribute_name_bisimulation blink_tokenizer_attribute_value_bisimulation blink_paint_chunker_bisimulation
 
 test_suite: tests/test_suite.cpp src/lambda_pi.hpp src/automath.hpp
 	$(CXX) $(CXXFLAGS) tests/test_suite.cpp -o test_suite
@@ -60,6 +60,9 @@ blink_css_priority_layer_normalization: examples/blink_css_priority_layer_normal
 blink_css_cascade_priority: examples/blink_css_cascade_priority.cpp src/lambda_pi.hpp
 	$(CXX) $(CXXFLAGS) examples/blink_css_cascade_priority.cpp -o blink_css_cascade_priority
 
+blink_css_cascade_map: examples/blink_css_cascade_map.cpp src/lambda_pi.hpp
+	$(CXX) $(CXXFLAGS) examples/blink_css_cascade_map.cpp -o blink_css_cascade_map
+
 blink_css_color_defaulting: examples/blink_css_color_defaulting.cpp src/lambda_pi.hpp
 	$(CXX) $(CXXFLAGS) examples/blink_css_color_defaulting.cpp -o blink_css_color_defaulting
 
@@ -77,6 +80,9 @@ blink_tokenizer_tag_name_bisimulation: examples/blink_tokenizer_tag_name_bisimul
 
 blink_tokenizer_attribute_name_bisimulation: examples/blink_tokenizer_attribute_name_bisimulation.cpp src/lambda_pi.hpp
 	$(CXX) $(CXXFLAGS) examples/blink_tokenizer_attribute_name_bisimulation.cpp -o blink_tokenizer_attribute_name_bisimulation
+
+blink_tokenizer_attribute_value_bisimulation: examples/blink_tokenizer_attribute_value_bisimulation.cpp src/lambda_pi.hpp
+	$(CXX) $(CXXFLAGS) examples/blink_tokenizer_attribute_value_bisimulation.cpp -o blink_tokenizer_attribute_value_bisimulation
 
 blink_dom_insert_html_element: examples/blink_dom_insert_html_element.cpp src/lambda_pi.hpp
 	$(CXX) $(CXXFLAGS) examples/blink_dom_insert_html_element.cpp -o blink_dom_insert_html_element
@@ -123,6 +129,8 @@ test: all
 	./blink_css_priority_layer_normalization
 	@echo "\n=== Running finite λΠ CascadePriority full ordering key ==="
 	./blink_css_cascade_priority
+	@echo "\n=== Running finite λΠ CascadeMap list and revert-layer model ==="
+	./blink_css_cascade_map
 	@echo "\n=== Running finite λΠ Blink color defaulting model ==="
 	./blink_css_color_defaulting
 	@echo "\n=== Running finite λΠ Blink style recalc gate ==="
@@ -137,10 +145,12 @@ test: all
 	./blink_tokenizer_tag_name_bisimulation
 	@echo "\n=== Running finite λΠ Blink tokenizer AttributeName scan model ==="
 	./blink_tokenizer_attribute_name_bisimulation
+	@echo "\n=== Running finite λΠ Blink tokenizer attribute-value model ==="
+	./blink_tokenizer_attribute_value_bisimulation
 	@echo "\n=== Running finite λΠ Blink PaintChunker grouping model ==="
 	./blink_paint_chunker_bisimulation
 
 clean:
-	rm -f test_suite mltt_vectors automath_logic inverse_galois scheme_interpreter cpp_template_evaluator blink_rendering_model blink_parser_lifecycle blink_parser_bisimulation blink_tree_builder_p_start_bisimulation blink_tree_builder_p_end_bisimulation blink_tree_builder_li_end_bisimulation blink_tree_builder_block_end_bisimulation blink_css_cascade_bisimulation blink_css_selector_bisimulation blink_css_combinator_bisimulation blink_css_revert_layer blink_css_priority_layer_normalization blink_css_cascade_priority blink_css_color_defaulting blink_style_recalc_gate blink_dom_insert_html_element blink_layout_dirty_bisimulation blink_tokenizer_open_tag_bisimulation blink_tokenizer_tag_name_bisimulation blink_tokenizer_attribute_name_bisimulation blink_paint_chunker_bisimulation
+	rm -f test_suite mltt_vectors automath_logic inverse_galois scheme_interpreter cpp_template_evaluator blink_rendering_model blink_parser_lifecycle blink_parser_bisimulation blink_tree_builder_p_start_bisimulation blink_tree_builder_p_end_bisimulation blink_tree_builder_li_end_bisimulation blink_tree_builder_block_end_bisimulation blink_css_cascade_bisimulation blink_css_selector_bisimulation blink_css_combinator_bisimulation blink_css_revert_layer blink_css_priority_layer_normalization blink_css_cascade_priority blink_css_cascade_map blink_css_color_defaulting blink_style_recalc_gate blink_dom_insert_html_element blink_layout_dirty_bisimulation blink_tokenizer_open_tag_bisimulation blink_tokenizer_tag_name_bisimulation blink_tokenizer_attribute_name_bisimulation blink_tokenizer_attribute_value_bisimulation blink_paint_chunker_bisimulation
 
 .PHONY: all test clean

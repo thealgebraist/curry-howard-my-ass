@@ -93,6 +93,11 @@ Current λΠ work is small compared with that source surface:
   comparison across 18 precedence, equality, and field-boundary pairs. Rule
   collection, property-specific semantics, and declaration application are
   not modeled.
+* `examples/blink_css_cascade_map.cpp` composes a selected packed priority
+  field subset with strongest-first per-property insertion and
+  `FindRevertLayer` first-eligible lookup. The C++ packed-key/list transcription
+  and λΠ agree on eleven insertion prefixes and 99 revert-bound cases;
+  origin/tree/style-prefix fields are fixed.
 * `examples/blink_css_color_defaulting.cpp` models missing, `inherit`,
   `initial`, and `unset` outcomes for Blink's inherited `color` longhand, with
   parent-present and root cases. A C++ branch transcription and typed λΠ
@@ -117,6 +122,11 @@ Current λΠ work is small compared with that source surface:
   normalization, delimiters, and quote/`<` parse-error append-and-continue
   behavior. Fourteen finite sequences compare C++ and λΠ; duplicate handling,
   source ranges, null preprocessing, and attribute values are omitted.
+* `examples/blink_tokenizer_attribute_value_bisimulation.cpp` extends the
+  tokenizer path through before-value, quoted/unquoted value, after-quoted, and
+  self-closing states. Twenty finite traces compare value accumulation,
+  parse-error flags, character-reference handoff mode, and emission/transition
+  outcomes. Character-reference resolution remains opaque.
 * `examples/blink_dom_insert_html_element.cpp` models normal HTML element
   attachment using explicit DOM node parent IDs, open-element IDs, and a fresh
   ID counter. Four finite DOM/stack states agree between the C++ reference and

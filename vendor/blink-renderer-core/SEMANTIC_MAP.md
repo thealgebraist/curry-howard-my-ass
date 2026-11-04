@@ -428,6 +428,35 @@ boundaries), Unicode case mapping beyond the representative ASCII letters,
 token internals, and DOM effects. The comparison establishes the finite
 AttributeName projection only, not full tokenizer equivalence.
 
+## HTML tokenizer boundary: attribute-value states
+
+`examples/blink_tokenizer_attribute_value_bisimulation.cpp` models the path
+from `kBeforeAttributeValueState` through quoted and unquoted values, then the
+after-quoted and self-closing dispatch boundaries. The corresponding branches
+are `HTMLTokenizer::NextTokenImpl` in
+`core/html/parser/html_tokenizer.cc:925-963` (before value), 966-1013
+(double/single quoted), 1016-1047 (unquoted), 1049-1080 (character-reference
+handoff), and 1082-1108 (after quoted/self-closing).
+
+The transition carries an explicit value list, parse-error bit, state, and
+action. It models quote selection; ordinary append behavior; the parse-error
+append cases for `<`, `=`, and backtick before/unquoted; whitespace and `>`
+termination; EOF reconsumption; and post-quote/self-closing outcomes. A slash
+inside an unquoted value is appended as ordinary value text, as Blink's
+unquoted branch requires; a slash after a quoted value takes the self-closing
+path. The first-value and subsequent quoted/unquoted ampersands return distinct
+opaque handoff states for `additional_allowed_character_` `>`, `"`, and `'`.
+
+Twenty finite traces were compared between a C++ transcription and typed λΠ.
+This covers the selected transitions, accumulation, error flag, and emission
+action. It does not execute `ConsumeHTMLEntity`: entity success/failure,
+decoded characters, the literal-ampersand fallback, and not-enough-input
+behavior are outside the opaque reference boundary. It also omits full
+`SegmentedString`/preprocessor behavior, NUL replacement, attribute-range
+tracking, generated token internals, and tree-builder/DOM effects. The result
+is finite evidence for these state transitions, not complete tokenizer
+equivalence.
+
 ## Style recalculation gate
 
 `examples/blink_style_recalc_gate.cpp` models selected branches of
@@ -515,3 +544,43 @@ This models the ordering representation only. It does not model
 properties, `CascadeMap` construction, revert lookups, CSS value resolution,
 property application, or any browser rendering behavior. Agreement on these
 finite pairs is not proof of the full CSS cascade.
+
+## CascadeMap list composition
+
+`examples/blink_css_cascade_map.cpp` composes selected `CascadePriority`
+fields with the per-property priority-list behavior in pinned Chromium commit
+`99d77c2af39f60ee06a5516ad5428e4d2aa61da4`. The C++ reference packs variable
+layer, rule-index, declaration-index, and already-applied fields at their
+source offsets, with origin/importance, tree order, inline style, try style,
+and try-tactics fixed. Its packed low word is compared with the typed λΠ
+lexicographic priority projection. For this fixed prefix, `ForLayerComparison`
+is represented by the natural-number layer field.
+
+The source insertion path is `core/css/resolver/cascade_map.cc:208-228`:
+`CascadeMap::Add` checks the layer-comparison precondition, inserts equal or
+weaker priorities using `InsertKeepingSorted`, and pushes a strictly stronger
+priority. `cascade_map.h:284-325` implements head insertion in `Push` and
+sorted traversal in `InsertKeepingSorted`; because its break condition is
+`priority >= curr_node.priority`, a new equal-priority node is placed before
+the older tie. `cascade_map.cc:78-103` implements `FindRevertLayer` by scanning
+this strongest-first list and returning the first entry whose
+`ForLayerComparison()` is strictly below the reverting key.
+
+The model checks every prefix of two insertion sequences (11 configurations)
+against the final ordered list from the C++ packed-key insertion. Cases include
+a weaker same-layer priority inserted behind a stronger one, a stronger head
+push, duplicate full priorities inserted before prior ties, and same-layer
+priorities distinguished by rule index. For each prefix, nine reverting-layer
+bounds are compared between λΠ and the C++ first-eligible scan (99 outcomes).
+The sequences satisfy `Add`'s nondecreasing layer-comparison DCHECK. The
+existing `blink_css_cascade_priority.cpp` covers the ordering fields more
+broadly, while `blink_css_revert_layer.cpp` covers first-eligible search over
+preordered lists; this example composes selected field packing, list
+construction, and lookup.
+
+This is a finite projection, not a translation of `CascadeMap`. It fixes the
+high-word and style-flag prefix and abstracts a property to one list. It omits
+native/custom property storage, `important_set_`, inline/presentation-hint
+loss flags, list-node backing storage, arbitrary 16-bit field arithmetic,
+actual `CascadePriority::ForLayerComparison` packing, `StyleCascade` resolution,
+CSS parsing/application, and `ElementRuleCollector` order production.
