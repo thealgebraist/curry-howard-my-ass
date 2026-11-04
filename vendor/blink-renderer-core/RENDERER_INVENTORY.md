@@ -33,6 +33,10 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_attr_name.cpp` models `ScanAttrName`
+  fast-path detection and ASCII lowercase mapping as recursive λΠ operations.
+  Thirty bounded name/boundary states cover lowercase, uppercase, digits, and
+  hyphens; malformed characters and the caller loop are omitted.
 * `examples/blink_html_fastpath_attributes.cpp` models the fast parser's
   event-handler and `is` attribute bailouts, terminator validation, and
   duplicate canonical-name check. A typed λΠ recursive scan covers canonical

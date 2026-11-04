@@ -551,6 +551,20 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path attribute-name scanning
+
+`examples/blink_html_fastpath_attr_name.cpp` models the name transformation in
+`ScanAttrName`: lowercase ASCII letters and hyphens remain on the no-mapping
+path; encountering uppercase ASCII or a digit triggers the full valid-name scan,
+which lowercases uppercase letters. At end-of-input the lowercase fast path
+returns its end-of-input failure, while the mapping path returns the accumulated
+name and leaves later caller handling to `ParseAttributes`. Typed λΠ list
+recursions for the fast-character predicate and ASCII lowercase map are compared
+with a C++ transcription over 15 finite names and two ending conditions (30
+states). Inputs are restricted to valid name characters; invalid-character
+handling and the subsequent attribute loop are not modeled. Source:
+`html_document_parser_fastpath.cc:990-1025`.
+
 ## HTML fragment fast-path attributes
 
 `examples/blink_html_fastpath_attributes.cpp` models the decision in

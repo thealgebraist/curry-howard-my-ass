@@ -366,6 +366,12 @@ make test
    * Attribute-name scanning/case normalization, attribute values, and DOM assignment are abstracted; the model covers the ordered guards and duplicate-name fallback only.
 
 
+69. **`examples/blink_html_fastpath_attr_name.cpp`**:
+   * Models `ScanAttrName` over ASCII-valid name characters: lowercase letters and hyphen use the fast path, while uppercase letters or digits take the mapping path, and uppercase ASCII is normalized to lowercase.
+   * Typed λΠ recursive predicates and normalization are compared with a C++ transcription for 15 finite names at both boundary and end-of-input conditions (30 states). Lowercase-only names that end at input fail immediately; names that invoke the mapping path return a normalized span and leave subsequent EOF handling to the caller.
+   * Invalid name characters and the subsequent `ParseAttributes` loop are outside scope.
+
+
 ---
 
 ## License
