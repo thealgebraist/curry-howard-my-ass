@@ -186,6 +186,11 @@ Current λΠ work is small compared with that source surface:
   missing-candidate fallback, parent/root results, and weaker-priority
   rejection. Full packed `CascadePriority`, color-scheme and computed-style
   behavior remain unmodeled.
+* `examples/blink_css_revert_origin_full_priority.cpp` composes revert-origin
+  lookup and color defaulting with a λΠ tuple for all `CascadePriority` fields;
+  a C++ packed-word transcription agrees on 18 composition cases and 12 direct
+  field precedence/boundary pairs. The λΠ 16-bit field domain is finite, and it
+  does not model packed 96-bit arithmetic or the full style lifecycle.
 * `examples/blink_process_entity_bisimulation.cpp` models Data/RCDATA
   `ProcessEntity` effects over finite decoder outcomes. Eight cases compare
   success append (one/two codepoints plus entity flag), literal ampersand

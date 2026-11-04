@@ -233,6 +233,10 @@ make test
    * Models bounded `SegmentedString` source chunks, cursor advancement, consumed offset, the `PushIfPossible` rewind and prepend fallback, and `Prepend(kUnconsume)` rollback.
    * Per-operation C++/typed-λΠ checks cover one/two-character rewind, segment-boundary and mismatch fallback, a longer rollback followed by longest-prefix replay, and Data/attribute suspension, append, resume, and completion. The traces are bounded ASCII cases; general trie lookup and entity decoding are separate.
 
+42. **`examples/blink_css_revert_origin_full_priority.cpp`**:
+   * Composes revert-origin selection and inherited `color` defaulting with a typed semantic key for every `CascadePriority` field in pinned high/low significance order; the C++ transcription independently compares the packed high and low words.
+   * Eighteen composition cases and twelve priority boundary pairs cover origin/importance, tree and layer reversal, try/inline flags, rule/declaration indices, and already-applied. The λΠ field domain is finite; packed 96-bit arithmetic and full renderer behavior remain outside scope.
+
 ---
 
 ## License

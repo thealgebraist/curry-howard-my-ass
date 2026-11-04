@@ -906,3 +906,30 @@ no-origin candidates; a weaker candidate; and equal/stronger fallback in the
 complete `CascadePriority` packing or declaration collection. CSS-wide value
 recursion, tree-scope rules, property application, and rendering remain
 outside the model.
+
+## Revert-origin color with full priority ordering
+
+`examples/blink_css_revert_origin_full_priority.cpp` extends that composition
+using the pinned `core/css/resolver/cascade_priority.h` (there is no
+`cascade_priority.cc` in this checkout). `EncodeOriginImportance` is at
+`:21-26`, `EncodeTreeOrder` at `:33-38`, and `EncodeLayerOrder` at `:44-50`.
+The class comment and constructor at `:54-76` and `:134-155` define the
+significance order and packed fields. `operator<`/`operator>=` at `:208-218`
+compare `high_bits_` first and `low_bits_` second. The semantic λΠ key follows
+that order: encoded origin/importance, encoded tree order, try-tactics, try,
+inline, encoded layer order, rule index, declaration index, already-applied.
+The C++ transcription packs the same values according to the constructor and
+compares the resulting high/low words. Candidate lists in the C++ observer are
+sorted by that packed comparator; λΠ performs the first origin-eligible scan
+and a strict weaker-than comparison against the reverting priority.
+
+The resulting CSS value then follows the inherited-color defaulting slice
+above. Eighteen finite composed cases agree with C++, and twelve direct
+priority pairs agree at field precedence, important tree/layer reversals,
+flags, index boundaries and equality. Sixteen-bit fields are represented by a
+finite set of constructors, ranked into a small Peano domain for comparison;
+this avoids treating a finite boundary value such as `0xffff` as a 65,535-step
+Peano numeral. The λΠ model is a semantic tuple comparison, not 96-bit packing,
+and does not establish behavior for arbitrary field values. CSS color-scheme,
+`currentColor`, visited/animated color behavior, declaration collection,
+tree-scope semantics, and renderer lifecycle remain outside the model.
