@@ -301,6 +301,12 @@ make test
    * The field-level relation is integrated into constant-gradient, color-image, and gradient-stop color equality in item 56. Other color spaces, arbitrary float values, and color-construction semantics are not modeled.
 
 
+58. **`examples/blink_crossfade_value_equality.cpp`**:
+   * Models `CSSCrossfadeValue::Equals` as equal-length ordered lists of image/percentage pairs, with separate finite equality relations for each CSSValue field. It composes that relation with `StyleCrossfadeImage::IsEqual`’s crossfade-kind guard.
+   * Five finite CSSCrossfadeValue fixtures (empty, singleton, and length-two lists) yield 25 ordered value pairs; both crossfade and non-crossfade right-hand kinds yield 50 composed states. The pinned method compares each image and percentage with `base::ValuesEquivalent`; the model abstracts those nested value relations to finite atoms.
+   * This does not model arbitrary CSS image/percentage values, other crossfade payload structures, construction, resolution, weight calculation, or rendering.
+
+
 ---
 
 ## License

@@ -184,6 +184,13 @@ Current λΠ work is small compared with that source surface:
   reattach trigger. Typed λΠ and C++ comparisons cover 11,449 directed node
   pairs and 34,348 bounded list pairs, including Counter/AltCounter asymmetry.
   String, counter-style, and tree-scope payload values are finite atoms; ordinary list fixtures cover through length two. A relation-parameterized image-list path checks 589,824 singleton/head/tail/repeated-image comparisons over 147,456 subclass/relation states and composes inequality with reattachment.
+* `examples/blink_crossfade_value_equality.cpp` models the ordered image/
+  percentage pair comparison in `CSSCrossfadeValue::Equals` and composes it
+  with `StyleCrossfadeImage::IsEqual`'s crossfade-kind guard. Five finite values
+  cover empty, singleton, and length-two lists (25 ordered value pairs), with
+  both right-hand image kinds (50 composed states). Nested CSSValue relations
+  are represented by finite atoms; arbitrary crossfade values and rendering
+  behavior remain outside scope.
 * `examples/blink_style_image_equality.cpp` models all six `StyleImage` subclass
   equality branches and the image-content reattach trigger across 147,456 kind/
   relation assignments. Its comparison loop checks the C++ transcription against λΠ.

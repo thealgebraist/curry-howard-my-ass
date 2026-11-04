@@ -987,6 +987,14 @@ pairs reduce to false through the tag dispatch. The inequality is checked throug
 a generated-image change predicate. These fixtures integrate the represented
 subclass models but do not widen their finite CSSValue payload domains.
 
+`examples/blink_crossfade_value_equality.cpp` models
+`CSSCrossfadeValue::Equals` as length equality followed by ordered pairwise
+`ValuesEquivalent` checks for each image and percentage. The finite model uses
+five values with list lengths zero through two and composes the relation with
+`StyleCrossfadeImage::IsEqual`, which first checks that the right operand is a
+crossfade image. This abstracts nested CSSValue equality to finite atoms and
+omits construction, resolution, weight calculation, and image rendering.
+
 `examples/blink_css_color_equality.cpp` refines the CSSColor atom relation to
 Blink's value fields. `CSSColor::Equals` delegates to `Color::operator==`, which
 compares color space, four component-presence flags, and four stored component
