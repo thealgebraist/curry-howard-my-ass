@@ -397,6 +397,37 @@ tag identity, EOF's subsequent Data-state emission, token buffering/emission
 internals, and tree-builder/DOM effects. The C++ side is a transcription, not
 execution of Blink's tokenizer.
 
+## HTML tokenizer boundary: AttributeName scanning
+
+`examples/blink_tokenizer_attribute_name_bisimulation.cpp` models a bounded
+scan from an existing attribute-name accumulator, corresponding to
+`HTMLTokenizer::NextTokenImpl`'s `kAttributeNameState` at
+`core/html/parser/html_tokenizer.cc:856-898`. The initial attribute prefix is
+assumed to have been added by the preceding `kBeforeAttributeNameState`
+branch; this model covers the subsequent `AppendToAttributeName` behavior.
+Ordinary represented letters pass through explicit lowercase normalization,
+and a nonalphabetic `#` is preserved.
+
+The λΠ transition models whitespace to `AfterAttributeName`, slash to
+`SelfClosingStartTag`, `=` to `BeforeAttributeValue`, and `>` to token emission
+in Data. EOF sets the parse-error observation and reconsumes in Data. Quote,
+apostrophe, and `<` each set the parse-error bit, append that character to the
+name, and continue scanning in AttributeName. The scan result carries both
+the accumulated name and whether one of those parse errors occurred, so a later
+delimiter does not erase the earlier observation. An exhausted finite input
+returns an await-more result with the prefix and parse-error bit retained.
+Fourteen finite sequences were compared between the C++ transcription and
+typed λΠ.
+
+`kAttributeNameSpecial` is declared at `html_tokenizer.cc:80-81`; the ordinary
+append loop is at lines 856-861. Actual attribute range bookkeeping in
+`EndAttributeName`, duplicate-attribute handling, first-character creation,
+null handling, and the subsequent attribute-value states are omitted. So are
+input-stream preprocessing details (including CR/LF and segmented-buffer
+boundaries), Unicode case mapping beyond the representative ASCII letters,
+token internals, and DOM effects. The comparison establishes the finite
+AttributeName projection only, not full tokenizer equivalence.
+
 ## Style recalculation gate
 
 `examples/blink_style_recalc_gate.cpp` models selected branches of
@@ -446,3 +477,41 @@ models those grouping decisions and assigned chunk IDs. Eight finite item
 sequences agree between the C++ transcription and typed λΠ. It omits actual
 display-item creation, property payloads, cache behavior, and `PaintArtifact`
 lifecycle; finite comparisons do not establish general equivalence.
+
+## CascadePriority ordering fields
+
+`examples/blink_css_cascade_priority.cpp` models the documented semantic
+priority fields from pinned Chromium commit `99d77c2af39f60ee06a5516ad5428e4d2aa61da4`
+and compares the λΠ lexicographic observer against a separate C++ transcription
+of the packed words. The source is
+`core/css/resolver/cascade_priority.h`: origin/importance encoding is
+`origin ^ 0xF` for important values (lines 21–27); tree and layer order are
+XORed with `0xFFFF` when important (lines 33–50). `CascadeOrigin` enumerators
+and their important ordering rationale are in `cascade_origin.h:15-35`.
+
+The model follows the actual bit significance. `CascadePriority::operator<`
+compares `high_bits_` first and `low_bits_` second (`cascade_priority.h:208-217`).
+The high word stores tree order in bits 0–15 and origin/importance at offset 16
+(masks and offsets at lines 82–100; packing at 145–156). In the low word, the
+most-significant-to-least-significant order is try-tactics at bit 51, try-style
+at 50, inline-style at 49, 16-bit layer order at offset 33, 16-bit rule index
+at offset 17, 16-bit declaration index at offset 1, and `already_applied` at
+bit 0. This means the low-word flag order for comparison is try-tactics, try,
+inline; `examples` uses this order even though issue shorthand listed the flag
+names in a different sequence.
+
+The typed λΠ key compares the nine encoded fields lexicographically. The
+`encodeOrigin` rewrite table includes all origin enum values in the pinned
+`CascadeOrigin`; the 18 comparison fixtures exercise a subset of those origins
+alongside a closed selected set of 16-bit field values `{0, 1, 0xFFFE, 0xFFFF}`,
+the low-word style flags, and importance on/off. They compare the semantic
+observer against packed `uint32_t high_bits` and `uint64_t low_bits`. The
+selected field set permits explicit layer/tree/rule/declaration boundary checks
+without claiming exhaustive 16-bit arithmetic or exhaustive origin-pair
+coverage.
+
+This models the ordering representation only. It does not model
+`ElementRuleCollector` sorting or matching, how rule indices refer to matched
+properties, `CascadeMap` construction, revert lookups, CSS value resolution,
+property application, or any browser rendering behavior. Agreement on these
+finite pairs is not proof of the full CSS cascade.
