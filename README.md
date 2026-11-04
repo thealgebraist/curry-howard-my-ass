@@ -222,8 +222,8 @@ make test
    * Eleven finite C++/typed-λΠ comparisons cover UA/user/hint/author/animation target origins, absent and no-origin candidates, weaker resolution, and equal/stronger priority fallback. It does not model CSS-wide value recursion, declaration collection, or full packed priority ordering.
 
 39. **`examples/blink_html_named_entity_remainder.cpp`**:
-   * Extends the all-table named-reference state model with `decoded`, `noEntity`, `guardReject`, and `needMore` outcomes plus the selected spelling and remaining text.
-   * Twelve finite C++/typed-λΠ comparisons cover successful matches, overlong-prefix rollback, attribute guard rejection, and incomplete prefixes. Remainder values are fixture-indexed; generic suffix extraction, actual `SegmentedString` mutation, tokenizer state changes, and continuation across chunks remain outside scope.
+   * Extends the all-table named-reference state model with `decoded`, `noEntity`, `guardReject`, and `needMore` outcomes, consumed spelling, numeric cursor offset, and remaining text. λΠ computes accepted remainder with generic list-prefix operations.
+   * Twelve finite C++/typed-λΠ comparisons and one two-chunk continuation cover successful matches, overlong-prefix rollback, attribute guard rejection, incomplete prefixes, and preserved attribute context. Offsets are relative to candidate text after `&`; `SegmentedString` segment mutation and tokenizer state/token mutation remain outside scope.
 
 ---
 

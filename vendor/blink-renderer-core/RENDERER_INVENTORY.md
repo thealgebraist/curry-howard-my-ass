@@ -162,10 +162,11 @@ Current λΠ work is small compared with that source surface:
   suspension, and tokenizer mutation, so full-table data coverage does not
   establish arbitrary-input parser equivalence.
 * `examples/blink_html_named_entity_remainder.cpp` extends the generated state
-  machine with decoder status, consumed spelling, and remaining text for
-  twelve finite inputs. The remainder cases are fixture-indexed; generic
-  suffix extraction, actual segmented-source mutation, chunk continuation,
-  and tokenizer-state changes remain unmodeled.
+  machine with decoder status, consumed spelling, generic list-prefix
+  consumption, cursor offset, and remaining text. Twelve selected comparisons
+  plus a two-chunk continuation pass. Offsets refer to text after `&`; actual
+  `SegmentedString` mutation/segments and tokenizer-state changes remain
+  unmodeled.
 * `examples/blink_css_revert_origin.cpp` models CSS `revert` target-origin
   selection, `CascadeMap::Find(property, origin)` filtering, and the
   `ResolveRevertTo` priority fallback. Eleven finite C++/λΠ cases cover

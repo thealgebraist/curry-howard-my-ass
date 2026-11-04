@@ -614,9 +614,17 @@ rejects a semicolonless match in attribute context when the following
 character is ASCII alphanumeric or `=`. The λΠ state machine follows names by
 character and retains the most recent terminal, with per-state fallback rules.
 It models lookup outcomes and the EOF-prefix decision. The remainder example
-uses case-indexed suffix fixtures rather than a generic string-drop function;
-it does not mutate a `SegmentedString`, execute chunk continuation, or change
-tokenizer state. Preprocessing and numeric references remain separate.
+uses a generic list-prefix `length`/`after` operation to compute consumed
+spelling, an offset relative to the input after `&`, and the remaining list.
+It compares twelve selected outcomes and a two-chunk `not` + `in;`
+continuation while preserving the additional-allowed-character context.
+`UnconsumeCharacters` at `html_entity_parser.cc:66-75` restores the consumed
+candidate prefix in Blink; the model represents that as cursor zero plus the
+unchanged list for no-match, guard-rejection, and `needMore`. The continuation
+concatenates the retained list with a new chunk and restarts lookup, but does
+not model `SegmentedString` segments or its actual `Push`/`Prepend` mutations,
+nor tokenizer token/state mutation. Preprocessing and numeric references
+remain separate.
 `html_entity_table.h:35-53` defines each generated entry's one/two-value
 layout and name accessors. `html_tokenizer.cc:173-185` and `:1049-1062` show
 how the tokenizer preserves an incomplete reference for a later chunk and
