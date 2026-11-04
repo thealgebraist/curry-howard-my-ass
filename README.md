@@ -161,7 +161,7 @@ make test
    * Nine finite sequences compare a C++ transcription with typed λΠ across whitespace, slash, `>`, EOF, and exhausted-chunk boundaries. It omits the input-stream preprocessor, null replacement, full Unicode case handling, attributes, and token/DOM side effects.
 
 23. **`examples/blink_dom_insert_html_element.cpp`**:
-   * Models normal `HTMLConstructionSite::InsertHTMLElement` attachment with explicit DOM parent IDs, open-element IDs, and fresh node identity. Four finite DOM/stack states agree between the C++ transcription and typed λΠ. Foster parenting, insertion-location adjustment, sanitizer behavior, and DOM callbacks are excluded.
+   * Models normal `HTMLConstructionSite::InsertHTMLElement` attachment with explicit DOM parent IDs, open-element IDs, fresh node identity, and ordered finite token attribute name/value pairs copied onto the new node. Four finite DOM/stack/attribute states agree between the C++ transcription and typed λΠ. Custom-element creation, sanitization, foster parenting, insertion-location adjustment, and DOM callbacks are excluded.
 
 24. **`examples/blink_paint_chunker_bisimulation.cpp`**:
    * Models PaintChunker grouping by property state, including forced chunk boundaries before and after foreign-layer/scrollbar items. Eight finite item sequences agree between the C++ transcription and typed λΠ; display-item construction and full paint artifact behavior are excluded.
@@ -179,6 +179,9 @@ make test
 28. **`examples/blink_tokenizer_attribute_value_bisimulation.cpp`**:
    * Models before-value, double-quoted, single-quoted, unquoted, after-quoted, and self-closing transitions with explicit value accumulation, parse-error state, and token-emission outcomes.
    * Twenty finite traces compare C++ and typed λΠ. Ampersands terminate at an opaque character-reference handoff that records the quoted or unquoted return mode; entity decoding, null preprocessing, range tracking, and token/DOM internals are outside the model.
+
+29. **`examples/blink_css_revert_color.cpp`**:
+   * Composes strict `revert-layer` candidate selection, `ResolveRevertTo` fallback to `unset`, and inherited `color` handling. Twelve finite C++/λΠ cases cover candidate hits/misses, equal-layer skips, ties, CSS-wide values, parent/root behavior, and a selected priority rejected as not weaker.
 
 ---
 

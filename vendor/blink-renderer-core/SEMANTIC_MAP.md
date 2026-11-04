@@ -348,19 +348,33 @@ execution of Blink's linked `HTMLTokenizer`.
 
 `examples/blink_dom_insert_html_element.cpp` models a normal-path projection
 of `HTMLConstructionSite::InsertHTMLElement` at
-`core/html/parser/html_construction_site.cc:986-989`. Blink creates the HTML
-element and stack item, then calls `AttachOrFosterParent`. In that helper
+`core/html/parser/html_construction_site.cc:986-989`. Blink calls
+`CreateElement` and creates a stack item, then calls `AttachOrFosterParent`.
+`CreateElement` is defined at `html_construction_site.cc:1240`; the ordinary
+non-custom branch appends token attributes with `SetAttributes` at
+`html_construction_site.cc:1460-1461`, which calls `ParserSetAttributes` at
+`html_construction_site.cc:95-100`. `Element::ParserSetAttributes` consumes the
+ordered attribute vector at `core/dom/element.cc:4216-4248`. The model projects
+that token-vector-to-new-element copy as an ordered list of finite
+name/value constructors on the new DOM record; it does not execute Blink's
+creation code. In `AttachOrFosterParent`
 (`html_construction_site.cc:368-384`), the current insertion location is
 captured before the optional open-element stack push. On the modeled
 non-foster-parent path, `Attach` inserts the child at that captured parent.
-The λΠ state represents the DOM as node records with explicit parent IDs, an
-open-element stack of IDs, and a fresh-ID counter. Its transition appends a
-node with the old stack top as parent (or a root sentinel when empty), pushes
-the new ID, and increments the counter. The C++ transcription and typed λΠ
-transition agree on four finite DOM/stack states, including nested insertion,
-sibling insertion at a common parent, and empty-stack fallback.
+The λΠ state represents the DOM as node records with explicit parent IDs,
+ordered attributes, an open-element stack of IDs, and a fresh-ID counter. Its
+transition copies the token's attribute list onto a node with the old stack top
+as parent (or a root sentinel when empty), pushes the new ID, and increments
+the counter. Four finite inputs compare empty attributes, one attribute, and
+two attributes in different orders; C++ and typed λΠ agree on the resulting
+DOM/stack records.
 
-This omits `ShouldFosterParent` and `FosterParent`, adjusted insertion
+This is a projection of token-attribute copying, not execution of Blink's
+`CreateElement`, `SetAttributes`, or `ParserSetAttributes` routines. Attribute
+names and values are finite constructors; the check does not cover arbitrary
+strings, duplicate-attribute tokenization, attribute namespace handling,
+scripting-attribute stripping, or callbacks triggered during attribute setup.
+It omits `ShouldFosterParent` and `FosterParent`, adjusted insertion
 locations, `ShouldInsertChild`, fragment/root insertion points, sanitizer and
 depth handling, flushing pending text, actual Node/Element allocation,
 `BeginParsingChildren`/self-closing lifecycle, script/custom-element policy,
@@ -584,3 +598,46 @@ native/custom property storage, `important_set_`, inline/presentation-hint
 loss flags, list-node backing storage, arbitrary 16-bit field arithmetic,
 actual `CascadePriority::ForLayerComparison` packing, `StyleCascade` resolution,
 CSS parsing/application, and `ElementRuleCollector` order production.
+
+## Revert-layer to computed color
+
+`examples/blink_css_revert_color.cpp` composes selected branches from the
+pinned Chromium snapshot (`99d77c2af39f60ee06a5516ad5428e4d2aa61da4`).
+`core/css/resolver/cascade_map.cc:78-103` scans the per-property list and
+returns the first `ForLayerComparison() < revert_from` entry.
+`core/css/resolver/style_cascade.cc:1593-1601` passes the current priority's
+layer-comparison key to that search. `ResolveRevertTo` at `style_cascade.cc`
+`1613-1630` returns CSS `unset` if no candidate exists, the candidate has no
+origin, or its full priority is not weaker than the reverting declaration;
+otherwise it resolves the selected declaration's value. The model represents
+the no-candidate and not-weaker branches explicitly, and models values from a
+finite set of explicit colors and CSS-wide `initial`, `inherit`, and `unset`
+keywords.
+
+The value then passes through the `color` defaulting decision. The property's
+metadata at `core/css/css_properties.json5:1398-1419` marks `color` inherited
+and sets its default to `StyleColor(Color::kBlack)`. `style_builder.cc:104-132`
+maps `inherit`, `initial`, and `unset` to inheritance or initial application,
+and rewrites root-level `inherit`/`unset` to initial when no parent style
+exists. `style_resolver_state.cc:164-167` defines `IsInheritedForUnset`;
+the ordinary inherited `color` case therefore takes the parent value for
+`unset` when present.
+
+The typed λΠ composition and a separately written C++ transcription agree
+on twelve finite cases: eligible lower-layer explicit values; equal/higher
+layer skips; no candidate with parent and at root; same-layer eligible ties
+where the first list entry wins; explicit initial/inherit/unset values with
+parent and root; and a selected candidate rejected by the not-weaker guard.
+Initial black is encoded as color ID zero. The model assumes any selected
+candidate has a valid origin; it represents no candidate and not-weaker
+fallbacks, but does not encode the `!p->HasOrigin()` test separately. Layer
+and full-priority keys are abstract ordered projections, so this is a semantic
+composition over selected results, not the packed 96-bit `CascadePriority`
+calculation.
+
+The model omits declaration collection and insertion, parsed CSS values,
+animations, origins/tree-scope ordering, recursive substitution, generated
+`ApplyInitial`/`ApplyInherit`, real `ComputedStyle` color representation,
+highlight and pseudo-element rules, dependent-property invalidation, and all
+rendering. It does not establish full `StyleCascade` or color computation
+equivalence.

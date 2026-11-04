@@ -98,6 +98,10 @@ Current λΠ work is small compared with that source surface:
   `FindRevertLayer` first-eligible lookup. The C++ packed-key/list transcription
   and λΠ agree on eleven insertion prefixes and 99 revert-bound cases;
   origin/tree/style-prefix fields are fixed.
+* `examples/blink_css_revert_color.cpp` composes first-eligible layer search,
+  missing/not-weaker candidate fallback to CSS `unset`, and `color` inherited
+  defaulting. Twelve finite cases compare C++ and λΠ across candidate hits,
+  misses, ties, wide keywords, parent/root states, and explicit colors.
 * `examples/blink_css_color_defaulting.cpp` models missing, `inherit`,
   `initial`, and `unset` outcomes for Blink's inherited `color` longhand, with
   parent-present and root cases. A C++ branch transcription and typed λΠ
@@ -128,10 +132,11 @@ Current λΠ work is small compared with that source surface:
   parse-error flags, character-reference handoff mode, and emission/transition
   outcomes. Character-reference resolution remains opaque.
 * `examples/blink_dom_insert_html_element.cpp` models normal HTML element
-  attachment using explicit DOM node parent IDs, open-element IDs, and a fresh
-  ID counter. Four finite DOM/stack states agree between the C++ reference and
-  λΠ. Foster parenting, insertion adjustment, sanitizer, and callbacks are not
-  represented.
+  attachment using explicit DOM node parent IDs, open-element IDs, a fresh ID
+  counter, and ordered finite token attribute name/value pairs copied to the
+  new node. Four finite DOM/stack/attribute states agree between the C++
+  reference and λΠ. Custom-element creation, sanitization, foster parenting,
+  insertion adjustment, and callbacks are not represented.
 * `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
   by property state and forced boundaries around foreign-layer/scrollbar
   display items. Eight finite sequences agree between the C++ transcription
