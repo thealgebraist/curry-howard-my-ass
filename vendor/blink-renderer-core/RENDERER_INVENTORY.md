@@ -206,13 +206,12 @@ Current λΠ work is small compared with that source surface:
 * `examples/blink_image_set_type_support.cpp` models the finite
   `CSSImageSetTypeValue::IsSupported` and option positive-resolution predicate.
   It covers ASCII case variants, representative MIME support, AVIF build gating,
-  and JXL build/runtime gating over 96 states. This predicate is documented but
-  not yet substituted into the list-selection example, where it remains an
-  explicit Boolean.
+  and JXL build/runtime gating over 96 states. The predicate is also composed into the list-selection model.
 * `examples/blink_image_set_selection.cpp` models the initial `GetBestOption`
   computation: support/positive-resolution filtering, stable sort, stable
   resolution deduplication, and threshold choice with highest-resolution
-  fallback. Eight finite lists are compared at four device scales (32 states).
+  fallback. Eight finite lists are compared at four device scales and eight
+  AVIF/JXL feature configurations (256 states).
   Resolution computation, lazy `options_` cache behavior, and subsequent load
   dispatch are not modeled.
 * `examples/blink_image_set_value_equality.cpp` refines the image-set branch:

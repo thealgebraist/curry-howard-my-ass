@@ -1012,17 +1012,20 @@ supported `CSSImageSetTypeValue`, and also requires positive computed
 resolution. The finite MIME relation lowercases representative ASCII inputs,
 checks the pinned image MIME set, and models conditional AVIF and JPEG XL
 support. Twelve option inputs are compared under all eight feature-flag
-combinations. This relation is not yet wired into the separate `GetBestOption`
-list reduction, which still receives a Boolean type-support result.
+combinations, and the MIME relation is also used directly in the separate
+`GetBestOption` list reduction. That composed selection model covers eight
+finite lists at four scales and all eight feature configurations (256 states).
 
 `examples/blink_image_set_selection.cpp` models the first `GetBestOption`
 computation for an initially empty `options_` cache. It filters by MIME support
 and positive computed resolution, stable-sorts by resolution, removes duplicate
 resolutions while retaining the first option, then chooses the first option at
 or above the device scale, falling back to the final (highest-resolution)
-option. The reduction model compares eight bounded lists at four scale values.
-It treats resolution computation and type support as finite inputs and omits
-cache mutation and later resource loading.
+option. The reduction model compares eight bounded lists at four scale values and all
+eight AVIF/JXL build/runtime configurations. It computes support from optional
+representative MIME strings, including ASCII case normalization and feature
+gates; computed-resolution values remain finite. Cache mutation and later
+resource loading remain outside this example.
 
 `examples/blink_image_set_value_equality.cpp` refines the image-set arm of
 `StyleImage::IsEqual`. `StyleImageSet::IsEqual` checks the right-hand subclass,
