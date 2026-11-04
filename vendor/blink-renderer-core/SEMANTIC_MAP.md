@@ -809,11 +809,24 @@ container units; it also does not check cached hover or content-visibility.
 The C++/λΠ comparison covers 17,920 combinations of grouped flags, propagation,
 three dirty bits, and seven dependency categories.
 
+`IndependentInherit` models the predicate from
+`style_recalc_change.cc:191-199`, called from `Element::RecalcOwnStyle` at
+`core/dom/element.cc:5894-5903`. It is true only for `kIndependentInherit`, and
+only when either the size-query family is absent or the old style does not
+depend on size queries, and either the style-query family is absent or the old
+style does not depend on style queries. Scroll-state and anchored query flags
+do not disable this optimization in the inspected implementation. Typed λΠ
+and C++ agree on 1,280 combinations of five propagation levels, 64 grouped flag
+masks, and the two old-style dependency booleans. The caller's `parent_style &&
+old_style` guard, inherited-property copying, and later style diff handling are
+not modeled.
+
 Typed λΠ agrees with the C++ transcription on 640 states each for
 `TraverseChildren` and `TraversePseudoElements`, all eight mark-reattach
 boolean combinations, all 64 inputs to the `TraverseChild` disjunction, and
-17,920 pseudo-element cases plus 320 representative compositions with the
-previously modeled `ShouldRecalcStyleFor` gate. This is still a predicate model: it does not
+17,920 pseudo-element cases, 1,280 `IndependentInherit` cases, and 320
+representative compositions with the previously modeled `ShouldRecalcStyleFor`
+gate. This is still a predicate model: it does not
 traverse a DOM/flat tree, invoke `Element::RecalcStyle`, model display locks,
 or schedule style recalc from layout or container-query evaluation.
 

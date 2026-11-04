@@ -65,6 +65,8 @@ refer to files from the full sparse checkout. Stable source links:
 * [StyleRecalcChange flag families and propagation](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/style_recalc_change.h#21)
 * [StyleRecalcChange query-dependent node predicate](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/style_recalc_change.cc#30)
 * [StyleRecalcChange pseudo-element update predicate](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/style_recalc_change.cc#75)
+* [StyleRecalcChange independent inheritance check](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/style_recalc_change.cc#191)
+* [Element independent inherited-property propagation caller](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/dom/element.cc#5894)
 * [CascadeOrigin enum and ordering codes](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/cascade_origin.h#15)
 * [HTMLTokenizer attribute-name/value scanning and tag termination](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_tokenizer.cc#852)
 * [HTMLToken attribute name/value accumulation](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_token.h#292)

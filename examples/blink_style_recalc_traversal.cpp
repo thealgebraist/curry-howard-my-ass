@@ -29,6 +29,9 @@ static bool cpp_should_update_pseudo(Prop p,unsigned f,bool dirty,bool child_dir
   return cpp_any_flags(f)&&(((f&Size)&&d==Dependency::Size)||((f&Style)&&d==Dependency::Style)||
     ((f&Scroll)&&d==Dependency::ScrollState)||((f&Anchor)&&d==Dependency::Anchored));
 }
+static bool cpp_independent_inherit(Prop p,unsigned f,bool depends_size,bool depends_style){
+  return p==Prop::IndependentInherit&&(!(f&Size)||!depends_size)&&(!(f&Style)||!depends_style);
+}
 static Ptr fn(Ptr a,Ptr b){return arrow(std::move(a),std::move(b));}
 static Rule R(Ptr a,Ptr b){return{std::move(a),std::move(b)};}
 static Ptr ap(Ptr f,std::initializer_list<Ptr> xs){for(const auto& x:xs)f=app(f,x);return f;}
@@ -54,6 +57,7 @@ int main(){
   sig["markReattach"]=fn(B,fn(B,fn(B,B)));sig["recalcChildren"]=fn(P,B);sig["updatePseudos"]=fn(P,B);
   sig["traverseChildren"]=fn(P,fn(F,fn(B,B)));sig["traversePseudo"]=fn(P,fn(F,fn(B,B)));
   sig["pseudoDependencyHit"]=fn(F,fn(D,B));sig["shouldUpdatePseudo"]=fn(P,fn(F,fn(B,fn(B,fn(B,fn(D,B))))));
+  sig["isIndependentInherit"]=fn(P,B);sig["independentInherit"]=fn(P,fn(F,fn(B,fn(B,B))));
   sig["traverseChild"]=fn(B,fn(B,fn(B,fn(B,fn(B,fn(B,B))))));
   rules.push_back(R(app(sym("notB"),sym("true")),sym("false")));rules.push_back(R(app(sym("notB"),sym("false")),sym("true")));
   for(const char* x:{"true","false"})for(const char* y:{"true","false"}){
@@ -99,6 +103,12 @@ int main(){
   rules.push_back(R(ap(sym("shouldUpdatePseudo"),{v(0),v(1),v(2),v(3),v(4),v(5)}),
     ap(sym("orB"),{ap(sym("or3"),{app(sym("updatePseudos"),v(0)),v(2),v(3)}),
       ap(sym("orB"),{v(4),ap(sym("andB"),{app(sym("anyFlags"),v(1)),ap(sym("pseudoDependencyHit"),{v(1),v(5)})})})})));
+  rules.push_back(R(app(sym("isIndependentInherit"),sym("pIndependent")),sym("true")));
+  for(const char* n:{"pNone","pPseudos","pChildren","pDescendants"})rules.push_back(R(app(sym("isIndependentInherit"),sym(n)),sym("false")));
+  rules.push_back(R(ap(sym("independentInherit"),{v(0),v(1),v(2),v(3)}),
+    ap(sym("andB"),{app(sym("isIndependentInherit"),v(0)),ap(sym("andB"),{
+      app(sym("notB"),ap(sym("andB"),{app(sym("flagSize"),v(1)),v(2)})),
+      app(sym("notB"),ap(sym("andB"),{app(sym("flagStyle"),v(1)),v(3)}))})})));
   rules.push_back(R(ap(sym("traverseChild"),{v(0),v(1),v(2),v(3),v(4),v(5)}),ap(sym("orB"),{ap(sym("or3"),{v(0),v(1),v(2)}),ap(sym("or3"),{v(3),v(4),v(5)})})));
   RuleIndex ix(rules);auto elem=sym("element"),txt=sym("textNode");
   Ptr type_examples[]={
@@ -107,10 +117,11 @@ int main(){
     ap(sym("traverseChildren"),{sym("pNone"),fterm(0),sym("false")}),
     ap(sym("traversePseudo"),{sym("pNone"),fterm(0),sym("false")}),
     ap(sym("shouldUpdatePseudo"),{sym("pNone"),fterm(0),sym("false"),sym("false"),sym("false"),sym("depNone")}),
+    ap(sym("independentInherit"),{sym("pIndependent"),fterm(0),sym("false"),sym("false")}),
     ap(sym("traverseChild"),{sym("true"),sym("false"),sym("false"),sym("false"),sym("false"),sym("false")})};
   for(Ptr t:type_examples){auto ty=infer({},t,sig,rules);assert(ty&&conv(*ty,B,ix));}
   const Dependency deps[]={Dependency::None,Dependency::Size,Dependency::HighlightUnits,Dependency::Style,Dependency::ScrollState,Dependency::Anchored,Dependency::CachedHover};
-  unsigned children_cases=0,pseudo_cases=0,pseudo_update_cases=0,mark_cases=0,child_formula_cases=0,child_composition_cases=0;
+  unsigned children_cases=0,pseudo_cases=0,pseudo_update_cases=0,independent_cases=0,mark_cases=0,child_formula_cases=0,child_composition_cases=0;
   for(unsigned mask=0;mask<64;++mask){bool vals[6];for(unsigned i=0;i<6;++i)vals[i]=(mask&(1u<<i))!=0;Ptr t=ap(sym("traverseChild"),{bt(vals[0]),bt(vals[1]),bt(vals[2]),bt(vals[3]),bt(vals[4]),bt(vals[5])});if(!conv(nf(t,ix),bt(cpp_traverse_child(vals[0],vals[1],vals[2],vals[3],vals[4],vals[5])),ix)){std::cerr<<"formula mismatch mask="<<mask<<" actual="<<to_string(nf(t,ix))<<" expected="<<to_string(bt(cpp_traverse_child(vals[0],vals[1],vals[2],vals[3],vals[4],vals[5])))<<"\n";return 7;}++child_formula_cases;}
   for(unsigned f=0;f<64;++f)for(Prop p:{Prop::None,Prop::Pseudos,Prop::IndependentInherit,Prop::Children,Prop::Descendants})for(bool dirty:{false,true}){
     Ptr tc=ap(sym("traverseChildren"),{prop_term(p),fterm(f),bt(dirty)});Ptr tp=ap(sym("traversePseudo"),{prop_term(p),fterm(f),bt(dirty)});
@@ -120,6 +131,10 @@ int main(){
     bool expected=cpp_should_update_pseudo(p,f,dirty,child_dirty,layout_dirty,d);
     Ptr t=ap(sym("shouldUpdatePseudo"),{prop_term(p),fterm(f),bt(dirty),bt(child_dirty),bt(layout_dirty),dep_term(d)});
     assert(conv(nf(t,ix),bt(expected),ix));++pseudo_update_cases;
+  }
+  for(unsigned f=0;f<64;++f)for(Prop p:{Prop::None,Prop::Pseudos,Prop::IndependentInherit,Prop::Children,Prop::Descendants})for(bool depends_size:{false,true})for(bool depends_style:{false,true}){
+    Ptr t=ap(sym("independentInherit"),{prop_term(p),fterm(f),bt(depends_size),bt(depends_style)});
+    assert(conv(nf(t,ix),bt(cpp_independent_inherit(p,f,depends_size,depends_style)),ix));++independent_cases;
   }
   for(bool mark:{false,true})for(bool reattach:{false,true})for(bool suppress:{false,true}){Ptr t=ap(sym("markReattach"),{bt(mark),bt(reattach),bt(suppress)});assert(conv(nf(t,ix),bt(cpp_mark_reattach(mark,reattach,suppress)),ix));++mark_cases;}
   for(unsigned i=0;i<320;++i){
@@ -131,6 +146,7 @@ int main(){
   }
   std::cout<<"TraverseChildren and TraversePseudoElements agree on "<<children_cases<<" TraverseChildren and "<<pseudo_cases<<" TraversePseudoElements states\n";
   std::cout<<"ShouldUpdatePseudoElement agrees on "<<pseudo_update_cases<<" finite flag/dependency/dirty states\n";
+  std::cout<<"IndependentInherit agrees on "<<independent_cases<<" propagation/flag/dependency states\n";
   std::cout<<"MarkReattachLayoutTree agrees on "<<mark_cases<<" flag combinations; TraverseChild OR agrees on "<<child_formula_cases<<" combinations\n";
   std::cout<<"TraverseChild composition agrees on "<<child_composition_cases<<" representative node/change states\n";
   std::cout<<"Scope: grouped query-family flags; no Element recursion, style-engine scheduling, or DOM tree traversal.\n";

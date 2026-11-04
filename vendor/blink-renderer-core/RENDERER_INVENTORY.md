@@ -143,10 +143,11 @@ Current λΠ work is small compared with that source surface:
   five propagation levels. Element traversal and style scheduling remain
   outside scope.
 * `examples/blink_style_recalc_traversal.cpp` models the `TraverseChildren`,
-  `TraversePseudoElements`, `TraverseChild`, `MarkReattachLayoutTree`, and
-  `ShouldUpdatePseudoElement` predicates. λΠ/C++ comparisons cover 640 cases
-  each for the first two, 17,920 pseudo-element states, eight mark-reattach
-  combinations, the 64-case child traversal OR boundary, and 320
+  `TraversePseudoElements`, `TraverseChild`, `MarkReattachLayoutTree`,
+  `ShouldUpdatePseudoElement`, and `IndependentInherit` predicates. λΠ/C++
+  comparisons cover 640 cases each for the first two, 17,920 pseudo-element
+  states, 1,280 independent-inherit states, eight mark-reattach combinations,
+  the 64-case child traversal OR boundary, and 320
   representative compositions with `ShouldRecalcStyleFor`. The pseudo-element
   dependency set excludes cached hover, content visibility, and container-unit
   highlight styles, matching its separate source expression. Recursive Element
