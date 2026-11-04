@@ -239,6 +239,13 @@ Current λΠ work is small compared with that source surface:
   token term and final DOM/stack state. This is a mapped transcription, not
   execution of Blink's tokenizer; Unicode, duplicate attrs, parse-error
   reconsume, custom/sanitizer effects, and full DOM lifecycle are excluded.
+  The same inserted node then feeds fixed `p`/`.beta`/`#alpha` selector
+  matching, numeric-priority color selection, and an abstract empty-block
+  layout/paint projection. Three cases agree with the C++ reference; the
+  both-selectors-hit case also checks declaration-order-independent winner
+  selection. The color-bearing paint block is not visible text paint. Full
+  selector syntax, cascade priorities, color scheme, non-empty layout, and
+  paint artifact internals are not modeled.
 * `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
   by property state and forced boundaries around foreign-layer/scrollbar
   display items. Eight finite sequences agree between the C++ transcription
