@@ -985,6 +985,16 @@ pairs reduce to false through the tag dispatch. The inequality is checked throug
 a generated-image change predicate. These fixtures integrate the represented
 subclass models but do not widen their finite CSSValue payload domains.
 
+`examples/blink_css_color_equality.cpp` refines the CSSColor atom relation to
+Blink's value fields. `CSSColor::Equals` delegates to `Color::operator==`, which
+compares color space, four component-presence flags, and four stored component
+values. The executable compares 262,144 ordered pairs using two color spaces,
+all four-flag assignments, and exact component values in `{0,1}`. This is a
+separate model: gradient-stop and constant-image fixtures still use red/blue
+color atoms, so the new relation has not yet been substituted into those
+compositions. Other color spaces, arbitrary float values, and parsing or color
+construction remain outside scope.
+
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
 compares position and mode (`computed_style.h:2578`, `scroll_marker_group.h:25`).

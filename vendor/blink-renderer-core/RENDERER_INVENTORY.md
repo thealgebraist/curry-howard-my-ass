@@ -188,6 +188,10 @@ Current λΠ work is small compared with that source surface:
   equality branches and the image-content reattach trigger across 147,456 kind/
   relation assignments. Its comparison loop checks the C++ transcription against λΠ.
   Underlying field equalities remain abstract Boolean inputs.
+* `examples/blink_css_color_equality.cpp` models `CSSColor::Equals` and the
+  underlying `Color::operator==` fields over 262,144 ordered pairs: two color
+  spaces, four Boolean missing-component flags, and four components in `{0,1}`.
+  It remains separate from the image models, whose color fixtures use finite atoms.
 * `examples/blink_generated_image_equality.cpp` refines generated-image equality
   into optional container dimensions, six viewport dimensions, and generator-value
   equivalence. Its C++/λΠ loop spans 663,552 finite states; numeric domains are
