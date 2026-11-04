@@ -551,6 +551,18 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path text scan
+
+`examples/blink_html_fastpath_scan_text.cpp` models the non-vectorized core
+loop in `ScanText`: ordinary 8-bit/16-bit code units accumulate into a plain
+span; `<` remains at the cursor and ends the span; encountering `&` or `\r`
+resets scanning to the original start and delegates to `ScanEscapedText`; NUL
+returns `kFailedContainsNull`. The typed λΠ scanner recurses over symbolic code
+units and tracks the accumulated text, remaining input, and `is_8bit` flag.
+Eleven finite sequences compare with a C++ transcription. The escaped scanner,
+newline-then-spaces canonicalization fast check, SIMD implementation, and actual
+string storage are omitted. Source: `html_document_parser_fastpath.cc:850-905,907-939`.
+
 ## HTML fragment fast-path child-loop step
 
 `examples/blink_html_fastpath_children_step.cpp` models one iteration of

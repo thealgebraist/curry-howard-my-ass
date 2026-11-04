@@ -396,6 +396,12 @@ make test
    * Recursive parser calls, actual text/element node construction, and DOM mutation are outside scope.
 
 
+74. **`examples/blink_html_fastpath_scan_text.cpp`**:
+   * Models the core `ScanText` loop over symbolic code units: it accumulates plain text, leaves `<` unconsumed, delegates from the original start on `&` or carriage return, marks non-8-bit text, and fails on NUL.
+   * Recursive typed λΠ rules compare with a C++ transcription on 11 finite code-unit sequences, including delimiter, escape, carriage-return, width, and NUL cases.
+   * `ScanEscapedText`, newline-whitespace canonicalization, SIMD scanning, and source-string identity are not modeled.
+
+
 ---
 
 ## License

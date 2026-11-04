@@ -33,6 +33,10 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_scan_text.cpp` models the recursive plain-text
+  scan and handoff to escaped scanning, preserving the `<` cursor boundary,
+  8-bit flag, and null-character failure. Eleven finite sequences compare
+  with a C++ transcription; escaped scanning and SIMD are outside scope.
 * `examples/blink_html_fastpath_children_step.cpp` models one iteration of
   the fast parser's `ParseChildren` loop, including text append order, EOF and
   close-tag exits, depth-limit failure, child failure, and child append before
