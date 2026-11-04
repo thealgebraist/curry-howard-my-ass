@@ -225,6 +225,14 @@ make test
    * Extends the all-table named-reference state model with `decoded`, `noEntity`, `guardReject`, and `needMore` outcomes, consumed spelling, numeric cursor offset, and remaining text. λΠ computes accepted remainder with generic list-prefix operations.
    * Twelve finite C++/typed-λΠ comparisons and one two-chunk continuation cover successful matches, overlong-prefix rollback, attribute guard rejection, incomplete prefixes, and preserved attribute context. Offsets are relative to candidate text after `&`; `SegmentedString` segment mutation and tokenizer state/token mutation remain outside scope.
 
+40. **`examples/blink_css_revert_origin_color.cpp`**:
+   * Composes the `revert` target-origin scan and weaker-priority fallback with CSS-wide defaulting for inherited `color`, including explicit, initial, inherit, unset, missing-candidate, parent, and root cases.
+   * Twelve finite C++/typed-λΠ comparisons use the origin/importance plus rule-index priority projection from the separate revert-origin model. Other `CascadePriority` fields, actual color-scheme state, `currentColor`, visited/animated color behavior, and style-tree effects are omitted.
+
+41. **`examples/blink_segmented_entity_source_bisimulation.cpp`**:
+   * Models bounded `SegmentedString` source chunks, cursor advancement, consumed offset, the `PushIfPossible` rewind and prepend fallback, and `Prepend(kUnconsume)` rollback.
+   * Per-operation C++/typed-λΠ checks cover one/two-character rewind, segment-boundary and mismatch fallback, a longer rollback followed by longest-prefix replay, and Data/attribute suspension, append, resume, and completion. The traces are bounded ASCII cases; general trie lookup and entity decoding are separate.
+
 ---
 
 ## License

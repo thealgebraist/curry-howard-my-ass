@@ -167,6 +167,12 @@ Current λΠ work is small compared with that source surface:
   plus a two-chunk continuation pass. Offsets refer to text after `&`; actual
   `SegmentedString` mutation/segments and tokenizer-state changes remain
   unmodeled.
+* `examples/blink_segmented_entity_source_bisimulation.cpp` models bounded
+  segmented input operations and tokenizer suspension/resume around entity
+  processing. Per-operation λΠ/C++ checks compare source shape and consumed
+  offset for one/two-character `Push`, fallback prepend, longer unconsume and
+  longest-prefix replay, plus Data/attribute append/resume traces. It uses
+  bounded ASCII fixtures and does not include general trie decoding.
 * `examples/blink_css_revert_origin.cpp` models CSS `revert` target-origin
   selection, `CascadeMap::Find(property, origin)` filtering, and the
   `ResolveRevertTo` priority fallback. Eleven finite C++/λΠ cases cover
@@ -174,6 +180,12 @@ Current λΠ work is small compared with that source surface:
   weaker, equal, and stronger candidates. Tree order, layers, inline/try flags,
   declaration collection, recursive value resolution, and computed-style
   application remain outside this projection.
+* `examples/blink_css_revert_origin_color.cpp` composes that finite origin and
+  priority projection with inherited `color` CSS-wide defaulting. Twelve
+  C++/typed-λΠ cases cover selected explicit/initial/inherit/unset values,
+  missing-candidate fallback, parent/root results, and weaker-priority
+  rejection. Full packed `CascadePriority`, color-scheme and computed-style
+  behavior remain unmodeled.
 * `examples/blink_process_entity_bisimulation.cpp` models Data/RCDATA
   `ProcessEntity` effects over finite decoder outcomes. Eight cases compare
   success append (one/two codepoints plus entity flag), literal ampersand

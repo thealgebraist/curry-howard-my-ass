@@ -667,6 +667,22 @@ attribute transition. Neither side models arbitrary numeric accumulation in
 this file, exact consumed/unconsumed suffixes, full `SegmentedString` chunking,
 attribute range tracking, or the full tokenizer lifecycle.
 
+## Segmented source rollback and tokenizer suspension
+
+`examples/blink_segmented_entity_source_bisimulation.cpp` gives the source
+cursor an explicit sequence of bounded segments and a consumed-character
+offset. Its C++ operation transcription follows `SegmentedString::Advance`,
+`AdvanceExpecting`, `Push`, `Prepend(kUnconsume)`, `Append`, and the
+`PushIfPossible` fast rewind. Typed λΠ rules compare source structure and
+consumed offset after each operation. Fixtures cover one/two-character
+rollback, segment-boundary and mismatched-character prepend fallback, and a
+longer `noti` rollback followed by replay of the matched `not`, leaving `i` at
+the cursor. Data and attribute traces preserve the token buffer and
+character-reference phase through need-more suspension, append, resume, source
+replay, and entity completion. The example passes these bounded ASCII traces;
+it does not compose with the general named-entity trie or numeric decoder and
+does not establish arbitrary-input parser equivalence.
+
 ## Style recalculation gate
 
 `examples/blink_style_recalc_gate.cpp` models selected branches of
@@ -837,6 +853,31 @@ animations, origins/tree-scope ordering, recursive substitution, generated
 highlight and pseudo-element rules, dependent-property invalidation, and all
 rendering. It does not establish full `StyleCascade` or color computation
 equivalence.
+
+## Revert-origin selection through inherited color defaulting
+
+`examples/blink_css_revert_origin_color.cpp` composes the projection in
+`examples/blink_css_revert_origin.cpp` with the CSS-wide defaulting rules for
+the inherited `color` longhand. In the pinned Chromium source,
+`core/css/resolver/style_cascade.cc:180-193` defines
+`TargetOriginForRevert`; `:1567-1591` searches the target origin;
+`cascade_map.cc:42-71` selects the first eligible candidate from the
+strongest-first property list; and `style_cascade.cc:1613-1630` applies the
+no-candidate/no-origin/not-weaker `unset` fallback. `longhands/longhands_custom.cc`
+`:2536-2562` gives `color` initial and inherited application behavior, while
+`style_builder.cc:104-132` maps CSS-wide keywords and root inheritance to
+initial defaulting. The metadata at `core/css/css_properties.json5:1398-1419`
+marks `color` inherited and supplies a color-scheme-dependent initial black
+value; this model fixes that initial result to abstract ID zero.
+
+The C++ transcription and typed λΠ composition agree on twelve finite cases
+covering target-origin skips, explicit values, initial/inherit/unset, missing
+candidate fallback, parent/root outcomes, and equal/stronger priority fallback.
+The priority projection varies only encoded origin/importance and rule index;
+other `CascadePriority` fields are fixed. Color values are IDs. Color-scheme
+selection, `currentColor`, visited/animated color behavior, actual style
+builder flags, tree scopes, declaration collection, and rendering are outside
+the model; the result is not full `StyleCascade` equivalence.
 
 ## CSS `revert` origin selection
 
