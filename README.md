@@ -237,6 +237,10 @@ make test
    * Composes revert-origin selection and inherited `color` defaulting with a typed semantic key for every `CascadePriority` field in pinned high/low significance order; the C++ transcription independently compares the packed high and low words.
    * Eighteen composition cases and twelve priority boundary pairs cover origin/importance, tree and layer reversal, try/inline flags, rule/declaration indices, and already-applied. The λΠ field domain is finite; packed 96-bit arithmetic and full renderer behavior remain outside scope.
 
+43. **`examples/blink_named_entity_segmented_composition.cpp`**:
+   * Composes the generated all-name trie with a bounded segmented-source cursor and tokenizer result record. It models need-more suspension with token/context preservation, decoded one/two-codepoint append plus entity flag, and literal `&` fallback on no-match/attribute guard.
+   * Fourteen finite full-table inputs compare trie outcomes and logical source/offset effects; Data and attribute `not` + appended `in;` resume traces compare tokenizer state. `RuleIndex` indexes 59,285 rewrite rules. Trie observation flattens the chunks, and source checks quotient away post-rewind segment shape and intermediate cursors.
+
 ---
 
 ## License

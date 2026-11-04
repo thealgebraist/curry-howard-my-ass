@@ -616,6 +616,23 @@ character and retains the most recent terminal, with per-state fallback rules.
 It models lookup outcomes and the EOF-prefix decision. The remainder example
 uses a generic list-prefix `length`/`after` operation to compute consumed
 spelling, an offset relative to the input after `&`, and the remaining list.
+
+`examples/blink_named_entity_segmented_composition.cpp` composes the same
+59,285-rule generated machine with a typed chunk-list source observer and a
+tokenizer record. Its independent C++ `ConsumeNamedEntity` transcript checks
+prefix-only scanning, one/two-character reverse `Push`, longer
+`Prepend(kUnconsume)`, exact-match no-rewind, and longest-match reconsume. The
+typed tokenizer transition preserves buffered output/context and suspends on
+need-more; on completion it appends one or two decoded codepoints and sets the
+entity flag, or appends literal `&` on failure. Fourteen finite outcomes plus
+Data and attribute `not` + appended `in;` continuations pass. Sources are
+`html_entity_parser.cc:66-134`, `platform/text/segmented_string.h:92-115`,
+`platform/text/segmented_string.cc:67-81`, and `html_tokenizer.cc:173-188,
+298-302, 1049-1078`. Trie observation flattens typed chunks; comparison checks
+logical remainder and global offset, not post-rewind segment partition or
+intermediate cursor states. The tokenizer state is a bounded projection and
+does not include complete token attributes, preprocessor behavior, or full
+tokenizer lifecycle.
 It compares twelve selected outcomes and a two-chunk `not` + `in;`
 continuation while preserving the additional-allowed-character context.
 `UnconsumeCharacters` at `html_entity_parser.cc:66-75` restores the consumed
