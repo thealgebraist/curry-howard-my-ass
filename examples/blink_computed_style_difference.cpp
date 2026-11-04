@@ -5,6 +5,7 @@
 using namespace lp;
 
 enum class Difference : unsigned { Equal, NonInherited, PseudoElement, IndependentInherited, Inherited, DescendantAffecting };
+enum class Propagate : unsigned { None, Pseudos, IndependentInherit, Children, Descendants };
 struct Features {
   bool scroll_animation_diff, display_changed, display_affects_descendants;
   bool marker_group_none_changed, old_marker_group_none, scroll_container_changed;
@@ -37,6 +38,7 @@ static Rule R(Ptr a,Ptr b){return{std::move(a),std::move(b)};}
 static Ptr ap(Ptr f,const std::vector<Ptr>& xs){for(const auto& x:xs)f=app(f,x);return f;}
 static Ptr bt(bool b){return sym(b?"true":"false");}
 static Ptr diff_term(Difference d){const char* n[]={"dEqual","dNonInherited","dPseudo","dIndependent","dInherited","dDescendant"};return sym(n[static_cast<unsigned>(d)]);}
+static Ptr prop_term(Propagate p){const char* n[]={"pNone","pPseudos","pIndependent","pChildren","pDescendants"};return sym(n[static_cast<unsigned>(p)]);}
 static Difference cpp_max(Difference a,Difference b){return static_cast<unsigned>(a)>static_cast<unsigned>(b)?a:b;}
 static Difference cpp_compute(bool old_present,bool new_present,bool same_pointer,
                               bool cached_first_line,Difference first_line,
@@ -44,6 +46,14 @@ static Difference cpp_compute(bool old_present,bool new_present,bool same_pointe
   if(same_pointer)return Difference::Equal;
   if(!old_present||!new_present)return Difference::Inherited;
   return cpp_max(cached_first_line?first_line:Difference::Equal,regular);
+}
+static Propagate cpp_apply_style_diff(Propagate current,Difference diff){
+  if(current==Propagate::Descendants||static_cast<unsigned>(diff)<static_cast<unsigned>(Difference::PseudoElement))return current;
+  Propagate required=Propagate::Pseudos;
+  if(diff==Difference::IndependentInherited)required=Propagate::IndependentInherit;
+  if(diff==Difference::Inherited)required=Propagate::Children;
+  if(diff==Difference::DescendantAffecting)required=Propagate::Descendants;
+  return static_cast<unsigned>(current)>static_cast<unsigned>(required)?current:required;
 }
 using Pattern=std::vector<int>; // -1 is wildcard; 0/1 are false/true.
 static void add_pattern(std::vector<Rule>& rules,const Pattern& p,Ptr output){
@@ -55,8 +65,10 @@ int main(){
   Signature sig;std::vector<Rule> rules;Ptr B=sym("Bool"),D=sym("Difference");
   sig["Bool"]=type_sort();sig["true"]=B;sig["false"]=B;sig["Difference"]=type_sort();
   for(const char* d:{"dEqual","dNonInherited","dPseudo","dIndependent","dInherited","dDescendant"})sig[d]=D;
+  Ptr P=sym("Propagate");sig["Propagate"]=type_sort();for(const char* p:{"pNone","pPseudos","pIndependent","pChildren","pDescendants"})sig[p]=P;
   Ptr ftype=D;for(int i=0;i<19;++i)ftype=fn(B,ftype);sig["classifyDifference"]=ftype;
   sig["computeDifference"]=fn(B,fn(B,fn(B,fn(B,fn(D,fn(D,D))))));
+  sig["applyStyleDiff"]=fn(P,fn(D,P));
   auto branch=[&](std::initializer_list<std::pair<size_t,bool>> constraints,Difference out){auto p=wild();for(auto [i,b]:constraints)p[i]=b?1:0;add_pattern(rules,p,diff_term(out));};
   // First-match rule order follows ComputeDifferenceIgnoringInheritedFirstLineStyle.
   branch({{0,true}},Difference::DescendantAffecting);
@@ -77,15 +89,35 @@ int main(){
   // Exact wrapper branches: pointer identity, null styles, then max of cached
   // inherited first-line and ordinary style differences.
   for(bool oldp:{false,true})for(bool newp:{false,true})for(bool same:{false,true})for(bool cached:{false,true})for(Difference first:differences)for(Difference regular:differences){
-    Difference output=cpp_compute(oldp,newp,same,cached,first,regular);
+    Difference output;
+    if(same) output=Difference::Equal;
+    else if(!oldp||!newp) output=Difference::Inherited;
+    else {
+      Difference first_component=cached?first:Difference::Equal;
+      output=static_cast<unsigned>(first_component)>static_cast<unsigned>(regular)?first_component:regular;
+    }
     std::vector<Ptr> args={bt(oldp),bt(newp),bt(same),bt(cached),diff_term(first),diff_term(regular)};
     rules.push_back(R(ap(sym("computeDifference"),args),diff_term(output)));
+  }
+  const Propagate propagations[]={Propagate::None,Propagate::Pseudos,Propagate::IndependentInherit,Propagate::Children,Propagate::Descendants};
+  for(Propagate current:propagations)for(Difference diff:differences){
+    Propagate output;
+    if(current==Propagate::Descendants||static_cast<unsigned>(diff)<static_cast<unsigned>(Difference::PseudoElement)) output=current;
+    else {
+      Propagate required=diff==Difference::DescendantAffecting?Propagate::Descendants:
+        diff==Difference::Inherited?Propagate::Children:
+        diff==Difference::IndependentInherited?Propagate::IndependentInherit:Propagate::Pseudos;
+      output=static_cast<unsigned>(current)>static_cast<unsigned>(required)?current:required;
+    }
+    rules.push_back(R(ap(sym("applyStyleDiff"),{prop_term(current),diff_term(diff)}),prop_term(output)));
   }
   RuleIndex ix(rules);
   Ptr sample=ap(sym("classifyDifference"),std::vector<Ptr>(19,sym("false")));
   auto sample_type=infer({},sample,sig,rules);assert(sample_type&&conv(*sample_type,D,ix));
   Ptr outer_sample=ap(sym("computeDifference"),{sym("true"),sym("true"),sym("false"),sym("true"),diff_term(Difference::Equal),diff_term(Difference::Inherited)});
   auto outer_type=infer({},outer_sample,sig,rules);assert(outer_type&&conv(*outer_type,D,ix));
+  Ptr apply_sample=ap(sym("applyStyleDiff"),{prop_term(Propagate::None),diff_term(Difference::Inherited)});
+  auto apply_type=infer({},apply_sample,sig,rules);assert(apply_type&&conv(*apply_type,P,ix));
   unsigned cases=0;const unsigned limit=1u<<19;
   for(unsigned mask=0;mask<limit;++mask){
     bool b[19];std::vector<Ptr> args;for(unsigned i=0;i<19;++i){b[i]=(mask>>i)&1;args.push_back(bt(b[i]));}
@@ -98,7 +130,13 @@ int main(){
     auto term=ap(sym("computeDifference"),{bt(oldp),bt(newp),bt(same),bt(cached),diff_term(first),diff_term(regular)});
     if(!conv(nf(nf(term,ix),ix),diff_term(cpp_compute(oldp,newp,same,cached,first,regular)),ix)){std::cerr<<"outer difference mismatch\n";return 3;}++outer_cases;
   }
+  unsigned propagation_cases=0;
+  for(Propagate current:propagations)for(Difference diff:differences){
+    auto term=ap(sym("applyStyleDiff"),{prop_term(current),diff_term(diff)});
+    if(!conv(nf(term,ix),prop_term(cpp_apply_style_diff(current,diff)),ix)){std::cerr<<"style diff propagation mismatch\n";return 4;}++propagation_cases;
+  }
   std::cout<<"ComputeDifferenceIgnoringInheritedFirstLineStyle classifier agrees on "<<cases<<" abstract old/new style feature states.\n";
   std::cout<<"ComputeDifference pointer/null/cached-first-line max wrapper agrees on "<<outer_cases<<" finite states.\n";
+  std::cout<<"ApplyComputedStyleDiff agrees on "<<propagation_cases<<" propagation/difference combinations.\n";
   std::cout<<"Scope: 19 classifier predicates are independent Boolean abstractions; generated field equality and cached first-line style lookup/computation remain opaque.\n";
 }

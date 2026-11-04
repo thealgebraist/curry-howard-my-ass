@@ -862,6 +862,15 @@ cached pseudo-style lookup and recursive style comparison are represented by
 input observations rather than evaluated. Generated field comparisons and
 style-recalc side effects remain outside the model.
 
+The example also models `Element::ApplyComputedStyleDiff`
+(`core/dom/element.cc:5808-5823`). An existing descendant-recalc level, or a
+difference below `kPseudoElementStyle`, leaves propagation unchanged.
+Otherwise, descendant-affecting, inherited, independent-inherited, and
+pseudo-element differences ensure the corresponding propagation level. The
+C++ and λΠ rules agree for all 30 pairs of five propagation levels and six
+difference severities. This models only the propagation field; query flags and
+later style/DOM side effects remain outside this helper model.
+
 Typed λΠ agrees with the C++ transcription on 640 states each for
 `TraverseChildren` and `TraversePseudoElements`, all eight mark-reattach
 boolean combinations, all 64 inputs to the `TraverseChild` disjunction, and

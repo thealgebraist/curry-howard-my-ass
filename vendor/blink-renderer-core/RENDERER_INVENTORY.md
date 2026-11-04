@@ -162,10 +162,11 @@ Current λΠ work is small compared with that source surface:
 * `examples/blink_computed_style_difference.cpp` models the ordered style
   difference classifier and the outer null/pointer/cached-first-line maximum
   logic from `ComputedStyle::ComputeDifference`. The C++/typed-λΠ comparison
-  covers 524,288 abstract classifier states and 576 outer-wrapper states. The
-  classifier predicates are independently varied, so some combinations may
-  not correspond to concrete `ComputedStyle` pairs; generated field equality,
-  cache evaluation, and style side effects are not modeled.
+  covers 524,288 abstract classifier states and 576 outer-wrapper states. It
+  also compares `ApplyComputedStyleDiff` over all 30 propagation/difference
+  combinations. The classifier predicates are independently varied, so some
+  combinations may not correspond to concrete `ComputedStyle` pairs; generated
+  field equality, cache evaluation, and style side effects are not modeled.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).
