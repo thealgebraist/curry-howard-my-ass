@@ -390,6 +390,12 @@ make test
    * Actual source-span slicing, cursor updates, and `FinishParsingChildren` effects are abstracted.
 
 
+73. **`examples/blink_html_fastpath_children_step.cpp`**:
+   * Models one `ParseChildren` loop iteration, preserving the order of text append before later exits. It distinguishes scan failure, plain/escaped text append, input end, closing-tag handoff, maximum-depth failure, child failure, and child append followed by continuation.
+   * The C++ transcription and typed λΠ rules cover 64 finite scan/control combinations. Text payloads and child parser results are explicit observations.
+   * Recursive parser calls, actual text/element node construction, and DOM mutation are outside scope.
+
+
 ---
 
 ## License

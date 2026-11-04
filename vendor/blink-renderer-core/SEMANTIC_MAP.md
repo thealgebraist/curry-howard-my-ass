@@ -551,6 +551,19 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path child-loop step
+
+`examples/blink_html_fastpath_children_step.cpp` models one iteration of
+`ParseChildren`. A failed `ScanText` returns immediately. Otherwise plain or
+escaped text append is recorded before control-flow checks; input end stops the
+loop, a following `</` hands control to the container closer, and a start tag
+checks the incremented nesting depth before parsing the child. A max-depth or
+child failure returns after any earlier text append; a successful child is
+appended and parsing continues. Typed λΠ rules and a C++ transcription cover
+64 finite combinations of scan kind, end/close state, depth state, and child
+result. Text contents, child recursion, node allocation, and DOM mutations are
+abstracted. Source: `html_document_parser_fastpath.cc:1347-1380`.
+
 ## HTML fragment fast-path container closure
 
 `examples/blink_html_fastpath_close_tag.cpp` models the post-child phase of
