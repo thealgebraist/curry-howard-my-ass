@@ -150,6 +150,8 @@ example; they do not claim behavioral equivalence with Blink.
 * [CSSConicGradientValue equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#2281)
 * [CSSConstantGradientValue equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#2379)
 * [CSSColorImageValue equality delegation](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#2457)
+* [CSSImageSetValue resolve-and-copy loop](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_image_set_value.cc#203)
+* [CSSImageSetValue original-or-copy return](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_image_set_value.cc#225)
 * [CSSImageSetTypeValue MIME support delegation](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_image_set_type_value.cc#28)
 * [Blink supported-image MIME set and feature gates](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/common/mime_util/mime_util.cc#26)
 * [Blink image MIME lowercasing and membership check](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/common/mime_util/mime_util.cc#117)

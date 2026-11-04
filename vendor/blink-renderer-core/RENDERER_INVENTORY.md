@@ -203,6 +203,11 @@ Current λΠ work is small compared with that source surface:
   load observations. The CSS image route carries the option's resolution
   override; the gradient route does not. Fifteen finite states are represented.
   Resource fetching and outer image-set caching remain outside scope.
+* `examples/blink_image_set_resolve_values.cpp` models the per-option
+  `ResolveGradients` decision and `ResolveValuesIfNeeded` copy-or-original
+  result. It preserves option order, resolution, and optional type fields across
+  seven finite cases. Resolver behavior is an explicit same-reference or
+  replacement observation; allocation and GC pointer details are abstracted.
 * `examples/blink_image_set_type_support.cpp` models the finite
   `CSSImageSetTypeValue::IsSupported` and option positive-resolution predicate.
   It covers ASCII case variants, representative MIME support, AVIF build gating,

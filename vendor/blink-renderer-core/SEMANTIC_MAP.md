@@ -1006,6 +1006,17 @@ override. The model abstracts resource/image results and does not include the ou
 cache call in `Load`; its cache state effects are modeled separately in
 `blink_image_set_cache.cpp`.
 
+`examples/blink_image_set_resolve_values.cpp` models
+`ResolveValuesAndCreateCopyIfNeeded` followed by `ResolveValuesIfNeeded`. For
+each option, the abstract `ResolveGradients` observation either returns the
+same image reference (preserving the original option) or a different reference
+(creating an option with the new image and the prior resolution/type fields).
+The list order is preserved. If no references change, the caller gets the
+original CSSImageSetValue; otherwise it gets the rebuilt list. Seven finite
+lists cover unchanged, mixed, and changed outcomes, including a replacement
+with the same finite image ID to distinguish reference change from value ID.
+Resolver internals and GC pointer identity are outside the model.
+
 `examples/blink_image_set_type_support.cpp` refines the option support
 predicate. `CSSImageSetOptionValue::IsSupported` accepts a missing type or a
 supported `CSSImageSetTypeValue`, and also requires positive computed

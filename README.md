@@ -337,6 +337,12 @@ make test
    * The same predicate is also composed into the option-list selection reduction in item 60. Other MIME types and the full Chromium build configuration remain outside scope.
 
 
+64. **`examples/blink_image_set_resolve_values.cpp`**:
+   * Models `CSSImageSetValue::ResolveValuesAndCreateCopyIfNeeded` and the `ResolveValuesIfNeeded` return choice. Each option receives an explicit `ResolveGradients` observation: same image reference or replacement image. The copied option preserves resolution and optional type; the list order is preserved.
+   * Seven finite lists compare C++ and typed λΠ, including no-change identity, a single replacement, mixed unchanged/changed options, multiple replacements, and replacement with the same finite image ID.
+   * Resolver internals, allocation behavior, and raw GC pointer identity are abstracted to the per-image same-reference/replacement observation and the final original/copy tag.
+
+
 ---
 
 ## License
