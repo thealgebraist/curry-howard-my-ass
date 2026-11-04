@@ -20,8 +20,13 @@ struct CSSPaintValue {
   const char* argument_constructor;
   const char* argument;
 };
+struct CSSColorValue {
+  unsigned color_space;
+  std::array<bool,4> none_flags;
+  std::array<float,4> components;
+};
 struct GradientStop {
-  const char* color;
+  CSSColorValue color;
   const char* offset;
 };
 struct GradientBase {
@@ -58,11 +63,6 @@ struct ConicGradient {
   const char* x;
   const char* y;
   const char* from_angle;
-};
-struct CSSColorValue {
-  unsigned color_space;
-  std::array<bool,4> none_flags;
-  std::array<float,4> components;
 };
 enum class GeneratorKind { Paint, Linear, Radial, Conic, Constant, ColorImage };
 using GeneratorPayload=std::variant<CSSPaintValue,LinearGradient,RadialGradient,ConicGradient,CSSColorValue>;
@@ -111,11 +111,20 @@ static std::string paint_custom_css_text(const CSSPaintValue& value) {
   text += ')';
   return text;
 }
+static Ptr css_color_term(const CSSColorValue& color) {
+  std::vector<Ptr> fields={sym(color.color_space==0?"cssSpaceSRGBLegacy":"cssSpaceDisplayP3")};
+  for(bool flag:color.none_flags)fields.push_back(bool_term(flag));
+  for(float component:color.components)fields.push_back(sym(component==0.f?"cssComponent0":"cssComponent1"));
+  return apps(sym("cssColor"),fields);
+}
+static CSSColorValue css_red(){return {0,{false,false,false,false},{1.f,0.f,0.f,1.f}};}
+static CSSColorValue css_blue(){return {0,{false,false,false,false},{0.f,0.f,1.f,1.f}};}
+static bool css_colors_equal(const CSSColorValue& x,const CSSColorValue& y){return x.color_space==y.color_space&&x.none_flags==y.none_flags&&x.components==y.components;}
 static Ptr gradient_stops_term(const std::vector<GradientStop>& stops) {
   Ptr result = sym("nilStops");
   for (auto it = stops.rbegin(); it != stops.rend(); ++it)
     result = apps(sym("consStop"),
-                  {apps(sym("gradientStop"), {sym(it->color), sym(it->offset)}), result});
+                  {apps(sym("gradientStop"), {css_color_term(it->color), sym(it->offset)}), result});
   return result;
 }
 static Ptr gradient_base_term(const GradientBase& value) {
@@ -150,12 +159,7 @@ static Ptr conic_gradient_term(const ConicGradient& value) {
     {gradient_base_term(value.base),optional_value_term(value.x),optional_value_term(value.y),
      optional_value_term(value.from_angle)});
 }
-static Ptr css_color_term(const CSSColorValue& color) {
-  std::vector<Ptr> fields={sym(color.color_space==0?"cssSpaceSRGBLegacy":"cssSpaceDisplayP3")};
-  for(bool flag:color.none_flags)fields.push_back(bool_term(flag));
-  for(float component:color.components)fields.push_back(sym(component==0.f?"cssComponent0":"cssComponent1"));
-  return apps(sym("cssColor"),fields);
-}
+
 static Ptr generated_equal_term(const ContainerSizes& left_container,
                                 const ContainerSizes& right_container,
                                 const ViewportSize& left_viewport,
@@ -186,7 +190,7 @@ int main() {
   const Ptr P = sym("CSSPaintName"), A = sym("CSSPaintArgument");
   const Ptr Q = sym("CSSPaintValue"), T = sym("CSSPaintText");
   const Ptr G = sym("CSSGradientBase"), S = sym("GradientStop"), SL = sym("GradientStopList");
-  const Ptr CS = sym("GradientColorSpace"), H = sym("HueInterpolationMethod"), Col = sym("GradientColor"), Off = sym("GradientOffset");
+  const Ptr CS = sym("GradientColorSpace"), H = sym("HueInterpolationMethod"), Col = sym("CSSColorValue"), Off = sym("GradientOffset");
   signature["Bool"] = type_sort();
   signature["true"] = B;
   signature["false"] = B;
@@ -234,8 +238,6 @@ int main() {
   for (const char* space : {"spaceNone", "spaceSRGB", "spaceLab"}) signature[space] = CS;
   signature["HueInterpolationMethod"] = type_sort();
   for (const char* hue : {"hueShorter", "hueLonger", "hueIncreasing", "hueDecreasing"}) signature[hue] = H;
-  signature["GradientColor"] = type_sort();
-  signature["colorRed"] = Col; signature["colorBlue"] = Col;
   signature["GradientOffset"] = type_sort();
   signature["offsetZero"] = Off; signature["offsetHalf"] = Off;
   signature["GradientStop"] = type_sort();
@@ -411,7 +413,6 @@ int main() {
   };
   add_finite_equality("gradientSpaceEqual", {"spaceNone","spaceSRGB","spaceLab"});
   add_finite_equality("hueMethodEqual", {"hueShorter","hueLonger","hueIncreasing","hueDecreasing"});
-  add_finite_equality("gradientColorEqual", {"colorRed","colorBlue"});
   add_finite_equality("gradientOffsetEqual", {"offsetZero","offsetHalf"});
   rules.push_back(rule(apps(sym("gradientStopEqual"),
                             {apps(sym("gradientStop"), {pvar(64),pvar(65)}),
@@ -576,6 +577,7 @@ int main() {
   for(unsigned i=0;i<4;++i){left_color_fields.push_back(pvar(2611+i));right_color_fields.push_back(pvar(2621+i));color_equalities.push_back(apps(sym("boolEqual"),{pvar(2611+i),pvar(2621+i)}));}
   for(unsigned i=0;i<4;++i){left_color_fields.push_back(pvar(2615+i));right_color_fields.push_back(pvar(2625+i));color_equalities.push_back(apps(sym("cssColorComponentEqual"),{pvar(2615+i),pvar(2625+i)}));}
   rules.push_back(rule(apps(sym("cssColorValueEqual"),{apps(sym("cssColor"),left_color_fields),apps(sym("cssColor"),right_color_fields)}),gradient_and(color_equalities)));
+  rules.push_back(rule(apps(sym("gradientColorEqual"),{pvar(2630),pvar(2631)}),apps(sym("cssColorValueEqual"),{pvar(2630),pvar(2631)})));
   rules.push_back(rule(apps(sym("constantGradientEqual"),{pvar(270),pvar(271)}),
                        apps(sym("cssColorValueEqual"),{pvar(270),pvar(271)})));
   rules.push_back(rule(apps(sym("colorImageEqual"),{pvar(272),pvar(273)}),
@@ -638,7 +640,7 @@ int main() {
                                                         "noneValue","noneValue","noneValue"})}),
                           signature, rules);
   assert(conic_type && conv(*conic_type, B, indexed_rules));
-  const CSSColorValue red_color{0,{false,false,false,false},{1.f,0.f,0.f,1.f}};
+  const CSSColorValue red_color=css_red();
   auto constant_type = infer({}, apps(sym("constantGradientEqual"),{css_color_term(red_color),css_color_term(red_color)}),
                              signature, rules);
   assert(constant_type && conv(*constant_type, B, indexed_rules));
@@ -750,10 +752,10 @@ int main() {
             << paint_image_compositions << " size/value states.\n";
 
   std::vector<std::vector<GradientStop>> stop_lists(1);
-  const std::vector<GradientStop> stop_domain={{"colorRed","offsetZero"},
-                                                {"colorRed","offsetHalf"},
-                                                {"colorBlue","offsetZero"},
-                                                {"colorBlue","offsetHalf"}};
+  const std::vector<GradientStop> stop_domain={{css_red(),"offsetZero"},
+                                                {css_red(),"offsetHalf"},
+                                                {css_blue(),"offsetZero"},
+                                                {css_blue(),"offsetHalf"}};
   for (const auto& stop : stop_domain) stop_lists.push_back({stop});
   for (const auto& first : stop_domain)
     for (const auto& second : stop_domain) stop_lists.push_back({first,second});
@@ -773,7 +775,7 @@ int main() {
                     std::string(left.hue_method)==right.hue_method &&
                     left.stops.size()==right.stops.size();
       for (size_t i=0; expected && i<left.stops.size(); ++i)
-        expected=std::string(left.stops[i].color)==right.stops[i].color &&
+        expected=css_colors_equal(left.stops[i].color,right.stops[i].color) &&
                  std::string(left.stops[i].offset)==right.stops[i].offset;
       Ptr term=apps(sym("gradientBaseEqual"),{gradient_base_term(left),gradient_base_term(right)});
       if (!conv(normalize(term,indexed_rules),bool_term(expected),indexed_rules)) {
@@ -794,7 +796,7 @@ int main() {
     {"prefixedLinear",{false,"spaceNone","hueShorter",{}},"noneValue","noneValue","noneValue","noneValue","angleB"},
     {"prefixedLinear",{false,"spaceNone","hueShorter",{}},"coordA","noneValue","noneValue","noneValue","noneValue"},
     {"prefixedLinear",{false,"spaceNone","hueShorter",{}},"coordB","coordA","noneValue","noneValue","noneValue"},
-    {"prefixedLinear",{false,"spaceNone","hueShorter",{{"colorRed","offsetZero"}}},"noneValue","noneValue","noneValue","noneValue","noneValue"},
+    {"prefixedLinear",{false,"spaceNone","hueShorter",{{css_red(),"offsetZero"}}},"noneValue","noneValue","noneValue","noneValue","noneValue"},
     {"standardLinear",{false,"spaceNone","hueShorter",{}},"coordA","noneValue","noneValue","noneValue","noneValue"},
     {"standardLinear",{false,"spaceNone","hueShorter",{}},"noneValue","noneValue","noneValue","noneValue","angleA"}
   };
@@ -804,7 +806,7 @@ int main() {
   auto stop_lists_equal=[](const std::vector<GradientStop>& a,const std::vector<GradientStop>& b){
     if(a.size()!=b.size()) return false;
     for(size_t i=0;i<a.size();++i)
-      if(std::string(a[i].color)!=b[i].color || std::string(a[i].offset)!=b[i].offset) return false;
+      if(!css_colors_equal(a[i].color,b[i].color) || std::string(a[i].offset)!=b[i].offset) return false;
     return true;
   };
   auto gradient_bases_equal=[&](const GradientBase& a,const GradientBase& b){
@@ -887,7 +889,7 @@ int main() {
     {base0,"coordA","coordB","angleA"},
     {base0,"coordA","coordB","angleB"},
     {base1,"coordA","coordB","angleA"},
-    {{false,"spaceNone","hueShorter",{{"colorRed","offsetZero"}}},"coordA","coordB","angleA"},
+    {{false,"spaceNone","hueShorter",{{css_red(),"offsetZero"}}},"coordA","coordB","angleA"},
     {base0,"noneValue","coordA","noneValue"},
     {base0,"coordB","noneValue","angleB"}
   };
@@ -905,8 +907,7 @@ int main() {
   std::cout<<"CSSConicGradientValue common-field/position/angle equality compares "
            <<conic_pairs<<" targeted finite value pairs.\n";
   unsigned constant_pairs=0,color_image_pairs=0;
-  const std::vector<CSSColorValue> color_values={red_color,{0,{false,false,false,false},{0.f,0.f,1.f,1.f}}};
-  auto css_colors_equal=[](const CSSColorValue& x,const CSSColorValue& y){return x.color_space==y.color_space&&x.none_flags==y.none_flags&&x.components==y.components;};
+  const std::vector<CSSColorValue> color_values={red_color,css_blue()};
   for(const auto& left:color_values) for(const auto& right:color_values){
     const bool expected=css_colors_equal(left,right);
     if(!conv(normalize(apps(sym("constantGradientEqual"),{css_color_term(left),css_color_term(right)}),indexed_rules),

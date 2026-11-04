@@ -191,7 +191,7 @@ Current λΠ work is small compared with that source surface:
 * `examples/blink_css_color_equality.cpp` models `CSSColor::Equals` and the
   underlying `Color::operator==` fields over 262,144 ordered pairs: two color
   spaces, four Boolean missing-component flags, and four components in `{0,1}`.
-  It remains separate from the image models, whose color fixtures use finite atoms.
+  The relation is reused for constant-gradient, color-image, and gradient-stop color fixtures in the generated-image model; those fixtures use a bounded red/blue subset.
 * `examples/blink_generated_image_equality.cpp` refines generated-image equality
   into optional container dimensions, six viewport dimensions, and generator-value
   equivalence. Its C++/λΠ loop spans 663,552 finite states; numeric domains are
@@ -200,15 +200,14 @@ Current λΠ work is small compared with that source surface:
   built from two simple names and zero/one simple argument. It derives `paint(...)`
   text and checks 36 value pairs plus 144 image-size compositions.
   It also models the common `CSSGradientValue::Equals` fields and stop-list
-  equality through two stops over 254,016 pairs; stop components are finite CSSValue
-  atoms with no null hints. It also models 144 targeted `CSSLinearGradientValue`
+  equality through two stops over 254,016 pairs; stop colors use structural CSSColor equality over bounded red/blue fixtures; offsets remain finite CSSValue atoms, with no null hints. It also models 144 targeted `CSSLinearGradientValue`
   pairs across deprecated, prefixed, and standard branches. A further 121 targeted
   `CSSRadialGradientValue` pairs cover legacy geometry, modern explicit sizes, and
   defaulted identifiers, retaining the source-directional gradient-type check.
   A 64-pair `CSSConicGradientValue` fixture path checks common fields and nullable
   x/y/from-angle values. Constant-gradient and color-image equality each cover
   two finite colors, with color-image equality delegating to the constant case.
-  CSS color internals and unrestricted CSSValue payload semantics remain outside scope.
+  CSS color fields are structural over bounded fixtures; unrestricted CSSValue payload semantics remain outside scope.
   A tagged generator-value relation composes the six represented subclasses with
   container/viewport equality over 6,724 finite StyleGeneratedImage states and
   checks the resulting inequality decision.

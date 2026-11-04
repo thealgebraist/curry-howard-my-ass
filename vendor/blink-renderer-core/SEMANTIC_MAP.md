@@ -947,7 +947,7 @@ and multiple paint arguments. A shared `CSSGradientValue::Equals` model covers
 repeat, color interpolation space, hue method, and recursive color-stop list
 equality through two stops. It compares 254,016 finite gradient-base pairs using
 three representative color spaces, all four hue methods, two repeat values, and
-red/blue colors with zero/half offsets. Stop colors and offsets are finite
+red/blue structural CSSColor values with zero/half offsets. Offsets are finite
 CSSValue atoms; null hint components are excluded.
 
 `CSSLinearGradientValue::Equals` is modeled over 144 targeted value pairs across
@@ -969,12 +969,14 @@ direction-dependent result. Size/position payloads and identifiers use finite
 atoms; this is not a full radial gradient CSSValue model.
 
 `CSSConicGradientValue::Equals` is modeled over 64 targeted pairs. It requires
-common gradient equality plus nullable x, y, and from-angle equality. The same
-model adds the simple delegation for `CSSConstantGradientValue::Equals` and
-`CSSColorImageValue::Equals`: both compare the represented color value, with
-color-image equality delegating to the constant-gradient implementation. The
-conic fixture set and red/blue color domain are finite; CSS color internals and
-full CSSValue dispatch remain outside scope.
+common gradient equality plus nullable x, y, and from-angle equality. Color-stop
+values now use the structural `CSSColor` relation (color space, four missing
+component flags, and four bounded components) for the red/blue fixtures. This
+matches `CSSGradientColorStop::operator==`, which compares color and offset CSS
+values independently. Offsets remain finite atoms. Constant-gradient and
+color-image equality use the same structural relation, with color-image equality
+delegating to the constant-gradient implementation. The fixture domains remain
+bounded and the complete CSSValue dispatch remains outside scope.
 
 The executable also connects these subclass relations through a tagged
 `CSSImageGeneratorValue` equality and composes that with container and viewport
@@ -990,9 +992,9 @@ Blink's value fields. `CSSColor::Equals` delegates to `Color::operator==`, which
 compares color space, four component-presence flags, and four stored component
 values. The executable compares 262,144 ordered pairs using two color spaces,
 all four-flag assignments, and exact component values in `{0,1}`. This is a
-separate model: gradient-stop and constant-image fixtures still use red/blue
-color atoms, so the new relation has not yet been substituted into those
-compositions. Other color spaces, arbitrary float values, and parsing or color
+model relation: it is also used by constant-gradient, color-image, and
+gradient-stop color comparisons in the generated-image model. Gradient-stop
+fixtures still use only the bounded red/blue subset. Other color spaces, arbitrary float values, and parsing or color
 construction remain outside scope.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
