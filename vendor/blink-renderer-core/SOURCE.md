@@ -118,3 +118,11 @@ Gitiles archives returned HTTP 503. Separate HTML, DOM, layout, and paint
 archives succeeded. Several individual CSS implementation files were fetched
 as listed. The λΠ models encode selected control-flow and one closed rendering
 example; they do not claim behavioral equivalence with Blink.
+
+* [StyleImage equality dispatch](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_image.h#61)
+* [Fetched image equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_fetched_image.cc#61)
+* [Generated image equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_generated_image.cc#46)
+* [Pending image equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_pending_image.h#105)
+* [Image-set equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_image_set.cc#42)
+* [Crossfade equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_crossfade_image.cc#29)
+* [Mask-source equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_mask_source_image.cc#154)

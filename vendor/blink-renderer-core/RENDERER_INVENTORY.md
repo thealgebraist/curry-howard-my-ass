@@ -184,6 +184,9 @@ Current λΠ work is small compared with that source surface:
   reattach trigger. Typed λΠ and C++ comparisons cover 11,449 directed node
   pairs and 34,348 bounded list pairs, including Counter/AltCounter asymmetry.
   Payload values are finite atoms and lists are covered through length two.
+* `examples/blink_style_image_equality.cpp` models all six `StyleImage` subclass
+  equality branches and the image-content reattach trigger over 147,456 kind/
+  relation assignments. Underlying field equalities remain abstract Boolean inputs.
 * `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
   `DiffAffectsScrollAnimations` predicate and its first-priority route into the
   computed-style difference severity. The C++/typed-λΠ comparisons cover all

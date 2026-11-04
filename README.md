@@ -181,109 +181,112 @@ make test
    * Models the `ContentData::operator==` linked-list traversal with typed nodes for text, alt-text, quote, none, image, counter, and alt-counter data. It compares 11,449 directed node pairs, preserving the base-counter-to-alt-counter asymmetry, then checks 34,348 bounded list pairs and the resulting `ContentDataEquivalent` reattach trigger.
    * String, `StyleImage`, counter-style, and tree-scope values are finite atoms; list comparisons cover lengths through two, with `NoneContentData` constrained to have no successor. The example does not model arbitrary list lengths or the internal semantics of those payload types.
 
-28. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
+28. **`examples/blink_style_image_equality.cpp`**:
+   * Models the six pinned `StyleImage` subclass equality branches, including directional pending-image comparisons, and composes inequality into the `ImageContentData` reattach trigger. Typed λΠ agrees with a C++ transcription on 147,456 kind/relation assignments. Subclass field relations remain abstract Boolean inputs; their underlying CSS values, resources, and image computations are not evaluated.
+
+29. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
    * Models the shared in-body end-tag branch for all 28 distinct block-element target tags, including the general scope scan, implied-end-tag pass, and pop-through-target transition.
    * Compares 35 finite C++/λΠ configurations: one scope hit for each target plus nested implied-tag, unrelated-top, marker-miss, and absent-target cases. Parse-error and DOM effects, arbitrary stack mixtures, and full tokenizer/parser control flow remain unmodeled.
 
-29. **`examples/blink_tokenizer_open_tag_bisimulation.cpp`**:
+30. **`examples/blink_tokenizer_open_tag_bisimulation.cpp`**:
    * Models the Data, TagOpen, and EndTagOpen dispatch branches over ten character classes, with seven tokenizer states and 70 finite transitions. It abstracts later tag-name, markup-declaration, bogus-comment, and character-reference processing, and assumes processing-instruction support is disabled.
 
-30. **`examples/blink_tokenizer_tag_name_bisimulation.cpp`**:
+31. **`examples/blink_tokenizer_tag_name_bisimulation.cpp`**:
    * Models bounded `HTMLTokenizer::NextTokenImpl` TagName scanning with explicit lowercase name accumulation, including representative uppercase and lowercase letters and unchanged nonalphabetic name characters.
    * Nine finite sequences compare a C++ transcription with typed λΠ across whitespace, slash, `>`, EOF, and exhausted-chunk boundaries. It omits the input-stream preprocessor, null replacement, full Unicode case handling, attributes, and token/DOM side effects.
 
-31. **`examples/blink_dom_insert_html_element.cpp`**:
+32. **`examples/blink_dom_insert_html_element.cpp`**:
    * Models normal `HTMLConstructionSite::InsertHTMLElement` attachment with explicit DOM parent IDs, open-element IDs, fresh node identity, and ordered finite token attribute name/value pairs copied onto the new node. Four finite DOM/stack/attribute states agree between the C++ transcription and typed λΠ. Custom-element creation, sanitization, foster parenting, insertion-location adjustment, and DOM callbacks are excluded.
 
-32. **`examples/blink_tree_builder_p_start_dom_insert.cpp`**:
+33. **`examples/blink_tree_builder_p_start_dom_insert.cpp`**:
    * Composes the block-start p-in-button-scope check/pop with attributed element insertion. Four finite states cover a top-p hit, a hit with an ordinary stack entry above p, a button-marker miss with a lower p, and no p; resulting DOM parent, node, and open stack agree between a C++ transcription and typed λΠ. Parse-error/fake-start reprocessing details and full Blink DOM behavior are abstracted.
 
-33. **`examples/blink_paint_chunker_bisimulation.cpp`**:
+34. **`examples/blink_paint_chunker_bisimulation.cpp`**:
    * Models PaintChunker grouping by property state, including forced chunk boundaries before and after foreign-layer/scrollbar items. Eight finite item sequences agree between the C++ transcription and typed λΠ; display-item construction and full paint artifact behavior are excluded.
 
-34. **`examples/blink_css_cascade_priority.cpp`**:
+35. **`examples/blink_css_cascade_priority.cpp`**:
    * Compares a semantic λΠ lexicographic key against Blink's packed `CascadePriority` comparison over 18 precedence, equality, and field-boundary pairs. It includes encoded origin/importance, tree and layer order, style flags, rule/declaration indices, and the already-applied bit; CSS rule collection and application remain outside scope.
 
-35. **`examples/blink_css_cascade_map.cpp`**:
+36. **`examples/blink_css_cascade_map.cpp`**:
    * Composes the fixed-prefix packed priority fields with per-property list insertion and first-eligible `FindRevertLayer`. Eleven insertion-prefix states and 99 prefix/bound lookups agree with the C++ transcription, including weaker insertion and new-before-old equal-priority ties.
 
-36. **`examples/blink_tokenizer_attribute_name_bisimulation.cpp`**:
+37. **`examples/blink_tokenizer_attribute_name_bisimulation.cpp`**:
    * Models AttributeName accumulation from an existing name prefix, including lowercase normalization, whitespace, slash, `=`, `>`, EOF, and quote/`<` parse-error append-and-continue behavior.
    * Fourteen finite input sequences compare a C++ transcription with typed λΠ. Duplicate attributes, source-range tracking, null/preprocessor behavior, attribute values, and token/DOM effects remain unmodeled.
 
-37. **`examples/blink_tokenizer_attribute_value_bisimulation.cpp`**:
+38. **`examples/blink_tokenizer_attribute_value_bisimulation.cpp`**:
    * Models before-value, double-quoted, single-quoted, unquoted, after-quoted, and self-closing transitions with explicit value accumulation, parse-error state, and token-emission outcomes.
    * Twenty finite traces compare C++ and typed λΠ. Ampersands terminate at an opaque character-reference handoff that records the quoted or unquoted return mode; entity decoding, null preprocessing, range tracking, and token/DOM internals are outside the model.
 
-38. **`examples/blink_css_revert_color.cpp`**:
+39. **`examples/blink_css_revert_color.cpp`**:
    * Composes strict `revert-layer` candidate selection, `ResolveRevertTo` fallback to `unset`, and inherited `color` handling. Twelve finite C++/λΠ cases cover candidate hits/misses, equal-layer skips, ties, CSS-wide values, parent/root behavior, and a selected priority rejected as not weaker.
 
-39. **`examples/blink_css_match_winner.cpp`**:
+40. **`examples/blink_css_match_winner.cpp`**:
    * Composes conjunctive tag/id/class matching with collection of only matching declarations, then winner selection for one property using a three-field abstract lexicographic priority.
    * Nine finite rule sets compare the C++ transcription with typed λΠ, including a no-match result, compound selectors, the second and third priority fields, and equal-priority later-input tie selection.
    * The priority fields are a named projection, not Blink's complete `MatchedRule` sort key or `CascadePriority`; parsing, combinators, attribute/pseudo selectors, layers, origins, importance, property application, and full stylesheet ordering remain outside scope.
 
-40. **`examples/blink_numeric_html_entity_bisimulation.cpp`**:
+41. **`examples/blink_numeric_html_entity_bisimulation.cpp`**:
    * Models numeric reference prefix/decimal/hex scanning, finite radix transitions, malformed-prefix rollback, semicolon and terminator outcomes, and exhausted-input rollback. Forty-nine per-character traces compare C++ and typed λΠ, including the U+10FFFF boundary, overflow-to-invalid latch, and later-digit retention.
    * Termination connects tested accumulators to replacement, an independent λΠ transcription of all 32 pinned U+0080–U+009F mapping entries (including unchanged C1 controls), U+007F/U+00A0 pass-through, and ordinary output. Radix transitions remain finite to the tested traces.
 
-41. **`examples/blink_html_named_entity.cpp`**:
+42. **`examples/blink_html_named_entity.cpp`**:
    * Retains a compact 11-entry λΠ trie for focused longest-prefix and attribute-guard cases.
    * Exact cursor rewind and `SegmentedString` mutations are not modeled; numeric references are handled separately.
 
-42. **`examples/blink_html_named_entity_states.cpp`**:
+43. **`examples/blink_html_named_entity_states.cpp`**:
    * Generates 9,854 named states from all 2,231 pinned CSV rows, with a distinct `walk_<id>` and `prefix_<id>` rewrite head for each state. `RuleIndex` dispatches their character transitions without scanning unrelated rewrite rules.
    * Twelve finite C++/typed-λΠ result comparisons cover semicolon-terminated matches, longest-prefix misses, semicolonless attribute acceptance/rejection, two-codepoint output, EOF prefixes, and no match. The latest `make` run generated 59,258 rules in 18 ms, indexed them in 6 ms, typechecked the observer by 24 ms total, and reduced cases in 0–4 ms.
    * This uses the full table to generate the semantic machine, but compares only selected inputs. It abstracts exact source rewind, `SegmentedString` chunk suspension, and tokenizer mutation; the C++ comparison helper is a standalone reference, not a direct execution of Blink's parser.
 
-43. **`examples/blink_process_entity_bisimulation.cpp`**:
+44. **`examples/blink_process_entity_bisimulation.cpp`**:
    * Composes finite decoder outcomes with `HTMLTokenizer::ProcessEntity` for Data/RCDATA: success appends one or two codepoints and sets the entity flag, failure appends literal `&`, and incomplete input suspends with the prior token buffer retained. Eight finite outcomes agree between the C++ transcription and typed λΠ.
    * Decoder outcomes are fixture constructors rather than direct calls into the numeric scanner or named trie; exact stream rewind and tokenizer runtime behavior remain outside the model.
 
-44. **`examples/blink_tokenizer_attribute_entity_bisimulation.cpp`**:
+45. **`examples/blink_tokenizer_attribute_entity_bisimulation.cpp`**:
    * Composes bounded named/numeric decoder observations with the attribute-value character-reference state. Ten finite cases cover decoded append/entity flag, literal ampersand fallback, incomplete-input suspension, and restoration to double-quoted, single-quoted, or unquoted state.
    * The C++ decoder uses selected names and numeric fixtures; typed rules encode those fixture outcomes. Full-table reduction, arbitrary codepoint arithmetic, exact cursor rewind, and stream lifecycle remain outside scope.
 
-45. **`examples/blink_css_selector_color.cpp`**:
+46. **`examples/blink_css_selector_color.cpp`**:
    * Composes restricted tag/id/class matching and matched-only declaration collection with three-field abstract priority selection, then applies `color` explicit/initial/inherit/unset/missing behavior using parent or root context.
    * Twelve finite C++/typed-λΠ cases compare match/miss, winner and tie behavior, CSS-wide keywords, and inherited/root outcomes. It does not cover full selector syntax, priority ordering, cascade origins/layers, actual CSS color values, or computed-style lifecycle.
 
-46. **`examples/blink_css_revert_origin.cpp`**:
+47. **`examples/blink_css_revert_origin.cpp`**:
    * Models `TargetOriginForRevert`, `CascadeMap::Find(property, origin)` candidate filtering, and `ResolveRevertTo` fallback using the origin/importance priority field plus rule index, with other `CascadePriority` fields fixed.
    * Eleven finite C++/typed-λΠ comparisons cover UA/user/hint/author/animation target origins, absent and no-origin candidates, weaker resolution, and equal/stronger priority fallback. It does not model CSS-wide value recursion, declaration collection, or full packed priority ordering.
 
-47. **`examples/blink_html_named_entity_remainder.cpp`**:
+48. **`examples/blink_html_named_entity_remainder.cpp`**:
    * Extends the all-table named-reference state model with `decoded`, `noEntity`, `guardReject`, and `needMore` outcomes, consumed spelling, numeric cursor offset, and remaining text. λΠ computes accepted remainder with generic list-prefix operations.
    * Twelve finite C++/typed-λΠ comparisons and one two-chunk continuation cover successful matches, overlong-prefix rollback, attribute guard rejection, incomplete prefixes, and preserved attribute context. Offsets are relative to candidate text after `&`; `SegmentedString` segment mutation and tokenizer state/token mutation remain outside scope.
 
-48. **`examples/blink_css_revert_origin_color.cpp`**:
+49. **`examples/blink_css_revert_origin_color.cpp`**:
    * Composes the `revert` target-origin scan and weaker-priority fallback with CSS-wide defaulting for inherited `color`, including explicit, initial, inherit, unset, missing-candidate, parent, and root cases.
    * Twelve finite C++/typed-λΠ comparisons use the origin/importance plus rule-index priority projection from the separate revert-origin model. Other `CascadePriority` fields, actual color-scheme state, `currentColor`, visited/animated color behavior, and style-tree effects are omitted.
 
-49. **`examples/blink_segmented_entity_source_bisimulation.cpp`**:
+50. **`examples/blink_segmented_entity_source_bisimulation.cpp`**:
    * Models bounded `SegmentedString` source chunks, cursor advancement, consumed offset, the `PushIfPossible` rewind and prepend fallback, and `Prepend(kUnconsume)` rollback.
    * Per-operation C++/typed-λΠ checks cover one/two-character rewind, segment-boundary and mismatch fallback, a longer rollback followed by longest-prefix replay, and Data/attribute suspension, append, resume, and completion. The traces are bounded ASCII cases; general trie lookup and entity decoding are separate.
 
-50. **`examples/blink_css_revert_origin_full_priority.cpp`**:
+51. **`examples/blink_css_revert_origin_full_priority.cpp`**:
    * Composes revert-origin selection and inherited `color` defaulting with a typed semantic key for every `CascadePriority` field in pinned high/low significance order; the C++ transcription independently compares the packed high and low words.
    * Eighteen composition cases and twelve priority boundary pairs cover origin/importance, tree and layer reversal, try/inline flags, rule/declaration indices, and already-applied. The λΠ field domain is finite; packed 96-bit arithmetic and full renderer behavior remain outside scope.
 
-51. **`examples/blink_named_entity_segmented_composition.cpp`**:
+52. **`examples/blink_named_entity_segmented_composition.cpp`**:
    * Its public `observe(CursorSource, InputEnd, context)` path generates `sourceWalk_<state>` rules that consume the typed segmented Source directly, including cross-segment transitions, unconsumed mismatch lookahead, longest-terminal correction, attribute guarding, and `streamingExhausted` versus `finalEOF`. Need-more preserves token/context and suspends; completion appends one/two codepoints and sets the entity flag, or appends literal `&` on failure.
    * Ten direct cursor-source cases cover split edges, overread and exact attribute guards, no-match, one/two-character Push rollback, longer Prepend rollback, and both exhaustion modes. Fourteen legacy finite comparisons remain as a separate observer cross-check. A typed context wrapper derives the named-entity attribute guard from Data/double-quoted/single-quoted/unquoted mode, then the result is applied directly to a cursor-preserving tokenizer state. Seven handoff fixtures and pending/append/resume in all four contexts compare output, entity flag, restored state, and exact cursor source. Double-quoted `amp;"`, single-quoted `NotEqualTilde;'`, and unquoted `notin;>` fixtures retain their value delimiters in the returned cursor. The latest build generated 177,709 rules. The typed `enterCharacterReference` transition consumes `&`, maps the originating Data/double-quoted/single-quoted/unquoted value state to a cursor context, and sends the remaining CursorSource into the direct walker. Direct checks compare the full CursorSource constructor, current segment before/remaining lists, queued segment partition, and global offset after rollback; backing String identity and intermediate cursor positions are omitted.
 
 
-52. **`examples/blink_tokenized_p_start_dom.cpp`**:
+53. **`examples/blink_tokenized_p_start_dom.cpp`**:
    * Scans bounded raw `<p ...>` source into a typed ordered `StartTagToken` (including quoted/unquoted values and a typed `&amp;` decode), then passes that token directly into p-scope pop and attributed DOM insertion. Seven finite inputs compare token and DOM/stack projections against a C++ transcription.
    * The same normalized token-to-DOM state feeds typed selector/color/layout/paint projections. Cases exercise fixed `p`, `.beta`, and `#alpha` selectors, modeled priority, color defaults, whitespace-separated class matching, and rejection of `betamax`. Body text before the next `<` is derived from raw input into one typed CharacterToken; the restricted Data-state decoder handles `&amp;`, and one case checks `a&amp;b` becomes `a&b` in DOM text and paint. The p-end transition closes the open-element stack. Text child IDs and the node counter are compared.
    * This is a bounded tokenizer transcription mapped to Blink source branches, not execution of Blink's tokenizer. Body coverage is plain Data-state text with only `&amp;`, without streaming boundaries, other named/numeric references, preprocessing, other tokenizer states, body markup beyond a following `</p>`, insertion-location changes, or actual Blink Node pointers. Class membership scans HTML ASCII whitespace tokens, following `selector_checker-inl.h:203-215` and `space_split_string.cc:37-70`; selector syntax, full `CascadePriority`/`StyleCascade`, color-scheme selection, `currentColor`, style lifecycle, glyph shaping/geometry, actual text display-item creation, Unicode, duplicate-attribute behavior, parse-error reconsumption, custom/sanitizer paths, and general layout/paint remain outside scope. Other source anchors include `html_tokenizer.cc:278-293,173-189,1799-1846,852-1044`, `html_tree_builder.cc:875-881,2690-2872,2217-2310`, `html_construction_site.cc:245-271,986-988,1078-1118,1240-1248,1458-1462`, `computed_style.cc:800-803`, `layout_object.cc:3133-3156`, and `text_fragment_painter.cc:329-355`.
 
-53. **`examples/blink_pending_text_bisimulation.cpp`**:
+54. **`examples/blink_pending_text_bisimulation.cpp`**:
    * Models the finite state transition in `HTMLConstructionSite::PendingText::Append` and `FlushPendingText`: appends at equal parent/next-child locations concatenate chunks and retain the minimum whitespace mode; a changed location flushes before starting a new pending buffer. Flush effects distinguish empty/invalid discard, insertion of a new Text node, and appending data to a previous Text sibling.
    * Seven finite C++/typed-λΠ cases cover same-location accumulation, parent and next-child boundaries, all three previous-sibling categories, valid/invalid locations, and whitespace-mode minimization. Source anchors are `html_construction_site.h:264-303`, `html_construction_site.cc:245-271,1081-1118`.
    * This is an extracted transition model. Text chunks are opaque finite atoms; it does not model Blink String canonicalization, actual Node identity or mutation, insertion-location adjustment for templates/foster parenting, or task-queue ordering. Same-location accumulation, insertion, and Text-sibling coalescing are also connected to the raw `<p>…</p>` fixture above; this example's complete seven-case location/mode transition set remains separate.
 
-54. **`examples/blink_dom_text_flush_bisimulation.cpp`**:
+55. **`examples/blink_dom_text_flush_bisimulation.cpp`**:
    * Models the child-list mutation at `HTMLConstructionSite::FlushPendingText` for a null `next_child`: an empty/invalid buffer leaves children and next ID unchanged; a valid non-empty buffer inserts a new identified Text child unless the last child is already Text, in which case its data grows and its identity is preserved.
    * Seven finite C++/typed-λΠ cases cover empty lists, trailing Text children, Text after element children, non-Text tails, invalid locations, and empty buffers. Source evidence is `html_construction_site.cc:245-271`, where Blink constructs a Text node, examines `lastChild()` when there is no next child, appends to a prior Text node, or inserts the new child.
    * This models visible child-list identities rather than Blink pointer identity. It fixes insertion at the end of one parent; adjusted/template/foster locations, String canonicalization, task ordering, and all other DOM mutation paths are omitted.
