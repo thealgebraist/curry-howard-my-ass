@@ -402,6 +402,12 @@ make test
    * `ScanEscapedText`, newline-whitespace canonicalization, SIMD scanning, and source-string identity are not modeled.
 
 
+75. **`examples/blink_html_fastpath_scan_escaped_text.cpp`**:
+   * Models `ScanEscapedText` over a symbolic stream where character-reference decoding is an explicit input: append literal/decoded text, normalize CR and CRLF to LF, stop before `<`, and report NUL or reference failure.
+   * Recursive typed λΠ rules and a C++ transcription cover 12 finite input sequences, including one- and two-code-unit reference output.
+   * Entity parsing/consumption, concrete source offsets, string canonicalization, and buffer allocation remain abstract.
+
+
 ---
 
 ## License

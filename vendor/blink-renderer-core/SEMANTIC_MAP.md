@@ -551,6 +551,18 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path escaped-text scan
+
+`examples/blink_html_fastpath_scan_escaped_text.cpp` models the slow
+`ScanEscapedText` loop as a recursive λΠ fold. Literal text and decoded
+character-reference output append to the buffer; CR and CRLF each append LF;
+`<` is left at the cursor and returns the accumulated text; NUL and decoder
+failure return failure. Twelve finite C++/λΠ comparisons include one- and
+two-unit decoder outputs. `ScanHTMLCharacterReference` itself is supplied as an
+explicit decoded/failure observation; its parsing and cursor consumption,
+source offsets, string storage, and buffer allocation are outside this layer.
+Source: `html_document_parser_fastpath.cc:907-939`.
+
 ## HTML fragment fast-path text scan
 
 `examples/blink_html_fastpath_scan_text.cpp` models the non-vectorized core
