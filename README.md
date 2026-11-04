@@ -191,6 +191,14 @@ make test
    * Nine finite rule sets compare the C++ transcription with typed λΠ, including a no-match result, compound selectors, the second and third priority fields, and equal-priority later-input tie selection.
    * The priority fields are a named projection, not Blink's complete `MatchedRule` sort key or `CascadePriority`; parsing, combinators, attribute/pseudo selectors, layers, origins, importance, property application, and full stylesheet ordering remain outside scope.
 
+32. **`examples/blink_numeric_html_entity_bisimulation.cpp`**:
+   * Models numeric reference prefix/decimal/hex scanning, finite radix accumulation, malformed-prefix rollback, semicolon and terminator outcomes, and exhausted-input rollback. Eight traces compare C++ and typed λΠ. A separate finite classifier covers replacement, representative Windows-1252 endpoint mappings, and ordinary values; Unicode mapping is not integrated with arbitrary numeric accumulators, and overflow classification is bounded.
+
+33. **`examples/blink_html_named_entity.cpp`**:
+   * Loads and validates all 2,231 pinned CSV rows, then embeds 11 selected entries in a generated λΠ trie because reducing the full trie stalls in the current rewrite kernel.
+   * Twelve C++/typed-λΠ cases cover longest prefix (`not` versus `notin;`), semicolonless attribute rejection, semicolon acceptance, two-codepoint output, no match, and incomplete-prefix end-of-input rollback.
+   * Exact cursor rewind and `SegmentedString` mutations are not modeled. The semantic table is the stated 11-row subset, not the full named-reference set; numeric references are handled separately.
+
 ---
 
 ## License

@@ -136,6 +136,19 @@ Current λΠ work is small compared with that source surface:
   self-closing states. Twenty finite traces compare value accumulation,
   parse-error flags, character-reference handoff mode, and emission/transition
   outcomes. Character-reference resolution remains opaque.
+* `examples/blink_numeric_html_entity_bisimulation.cpp` models numeric
+  character-reference prefix, decimal/hex accumulation, malformed-prefix
+  rollback, terminators, and exhausted-input rollback. Eight finite traces
+  agree between C++ and typed λΠ. A separate typed finite classifier covers
+  replacement, representative U+0080/U+009F mappings, and ordinary values; it
+  is not connected to arbitrary accumulator values. Overflow above U+10FFFF
+  and the full numeric-to-Unicode transformation are not modeled end to end.
+* `examples/blink_html_named_entity.cpp` parses and validates all 2,231 rows of
+  the pinned names CSV, but embeds only 11 selected records in the λΠ trie;
+  normalization of the full trie stalled beyond 45 seconds in the available
+  rewrite kernel. Twelve finite C++/λΠ cases cover longest-prefix selection,
+  the semicolonless attribute guard, two-codepoint output, no match, and
+  incomplete-prefix EOF rollback. Exact source cursor rewind is not modeled.
 * `examples/blink_dom_insert_html_element.cpp` models normal HTML element
   attachment using explicit DOM node parent IDs, open-element IDs, a fresh ID
   counter, and ordered finite token attribute name/value pairs copied to the
