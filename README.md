@@ -238,8 +238,8 @@ make test
    * Eighteen composition cases and twelve priority boundary pairs cover origin/importance, tree and layer reversal, try/inline flags, rule/declaration indices, and already-applied. The λΠ field domain is finite; packed 96-bit arithmetic and full renderer behavior remain outside scope.
 
 43. **`examples/blink_named_entity_segmented_composition.cpp`**:
-   * Composes the generated all-name trie with a bounded segmented-source cursor and tokenizer result record. It models need-more suspension with token/context preservation, decoded one/two-codepoint append plus entity flag, and literal `&` fallback on no-match/attribute guard.
-   * Fourteen finite full-table inputs compare trie outcomes and logical source/offset effects; Data and attribute `not` + appended `in;` resume traces compare tokenizer state. `RuleIndex` indexes 59,285 rewrite rules. Trie observation flattens the chunks, and source checks quotient away post-rewind segment shape and intermediate cursors.
+   * Its public `observe(Source, InputEnd, context)` path generates `walk_<state>` rules that consume the typed segmented Source directly, including cross-chunk transitions, unconsumed mismatch lookahead, longest-terminal correction, attribute guard, and `streamingExhausted` versus `finalEOF`. Need-more preserves token/context and suspends; completion appends one/two codepoints and sets the entity flag, or appends literal `&` on failure.
+   * Seven direct Source-walk cases cover split edges, Data/attribute `notit;`, no-match, and both exhaustion modes; fourteen legacy finite comparisons remain as a separate observer cross-check, with token checks for one/two-codepoint success, attr rejection, no-match, and Data/attribute append/resume. `RuleIndex` indexes 118,513 rules. The traversal consumes Source directly; comparisons still project final source to logical remainder and global offset, omitting post-rewind segment shape and intermediate cursors.
 
 ---
 

@@ -174,11 +174,14 @@ Current λΠ work is small compared with that source surface:
   longest-prefix replay, plus Data/attribute append/resume traces. It uses
   bounded ASCII fixtures and does not include general trie decoding.
 * `examples/blink_named_entity_segmented_composition.cpp` composes the
-  2,231-name generated trie with segmented-source outcome projection and
-  tokenizer state/token-buffer transitions. Fourteen finite lookup/source
-  cases plus Data and attribute `not` + `in;` append/resume traces cover
-  suspension, one/two-codepoint success, entity flagging, and literal `&`
-  fallback. Trie input is flattened; checks compare logical remaining text and
+  2,231-name generated trie with direct typed-Source traversal, explicit
+  `streamingExhausted`/`finalEOF` status, and tokenizer state/token-buffer
+  transitions. Seven direct finite Source cases cover chunk-split edges,
+  mismatch lookahead, longest-match correction, attribute guard, and both end
+  modes; fourteen legacy observer comparisons remain for cross-checking. Data
+  and attribute `not` + `in;` append/resume traces cover suspension,
+  one/two-codepoint success, entity flagging, and literal `&` fallback. The
+  trie consumes Source directly; result checks compare logical remainder and
   global offset, not post-rewind segment partition or intermediate cursors.
 * `examples/blink_css_revert_origin.cpp` models CSS `revert` target-origin
   selection, `CascadeMap::Find(property, origin)` filtering, and the
