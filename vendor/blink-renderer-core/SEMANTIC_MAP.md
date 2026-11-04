@@ -854,6 +854,16 @@ source observations independently; some may not be realizable by a concrete
 pair of ComputedStyle values, and source DCHECK consistency conditions are not
 encoded.
 
+`examples/blink_diff_affects_scroll_animations.cpp` refines the scroll-animation
+input to the difference classifier. It models the six comparisons in
+`DiffAffectsScrollAnimations` (`computed_style.cc:284-300`): scroll timeline
+name/axis, view timeline name/axis/inset, and timeline scope. The λΠ disjunction
+and C++ transcription agree on all 64 combinations of inequality observations.
+The example then composes this result into the first-priority branch of
+`ComputeDifference` with other branch observations held at a baseline that
+reaches the ordinary non-inherited result. Both methods agree on all 64 such
+compositions. Values and `base::ValuesEquivalent` semantics remain opaque.
+
 `examples/blink_needs_reattach_layout_tree.cpp` models the ordered predicate in
 `ComputedStyle::NeedsReattachLayoutTree` (`core/style/computed_style.cc:431-526`).
 The first rule treats identical style pointers as no reattach; otherwise either

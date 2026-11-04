@@ -69,6 +69,7 @@ refer to files from the full sparse checkout. Stable source links:
 * [Element independent inherited-property propagation caller](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/dom/element.cc#5894)
 * [Element independent inherited-property copy eligibility](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/dom/element.cc#5746)
 * [ComputedStyle difference classification and first-line aggregation](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.cc#421)
+* [DiffAffectsScrollAnimations timeline field comparisons](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.cc#284)
 * [ComputedStyle difference severity ordering](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.h#377)
 * [Element::ApplyComputedStyleDiff propagation update](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/dom/element.cc#5808)
 * [ComputedStyle::NeedsReattachLayoutTree predicate](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.cc#431)

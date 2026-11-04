@@ -176,6 +176,12 @@ Current λΠ work is small compared with that source surface:
   first-line, overlay, and list-style triggers. Conditions derived from
   ComputedStyle fields and element subtype are abstract inputs, and layout-tree
   rebuilding is not modeled.
+* `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
+  `DiffAffectsScrollAnimations` predicate and its first-priority route into the
+  computed-style difference severity. The C++/typed-λΠ comparisons cover all
+  64 field-change combinations and the same 64 composed baseline states.
+  Timeline values and `ValuesEquivalent` behavior are abstracted as inequality
+  inputs.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).
