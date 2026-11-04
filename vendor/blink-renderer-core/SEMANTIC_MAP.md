@@ -551,6 +551,19 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path container closure
+
+`examples/blink_html_fastpath_close_tag.cpp` models the post-child phase of
+`ParseContainerElement`. A prior child-parser failure remains the reported
+result because `Fail` retains the first failure. Clean EOF before a close tag
+returns the container-end failure. Once `</` is reached, the remaining span
+must contain more than the expected tag-name length; the fixed-length name
+must match exactly or under ASCII lowercase mapping, and after skipped
+whitespace the next code unit must be `>`. The model compares typed λΠ rules
+with a C++ transcription across 36 child-state/name-match/length/delimiter
+combinations. It abstracts source slicing/cursor changes and
+`FinishParsingChildren`. Sources: `html_document_parser_fastpath.cc:1312-1319,1679-1715`; `SpanMatchesLowercase` is at `:288-305`.
+
 ## HTML fragment fast-path child dispatch
 
 `examples/blink_html_fastpath_child_dispatch.cpp` models the parent-specific

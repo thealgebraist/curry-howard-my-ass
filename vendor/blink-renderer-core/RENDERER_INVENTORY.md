@@ -33,6 +33,10 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_close_tag.cpp` models container closing-tag
+  result selection, including first-error preservation, short-name rejection,
+  exact/ASCII-case name match, and required `>` after whitespace. Thirty-six
+  finite branch states compare with a C++ transcription.
 * `examples/blink_html_fastpath_child_dispatch.cpp` models parent-dependent
   tag dispatch, including flow/phrasing restrictions, list/select special child
   sets, option text-only handling, void tags, and nested `a`/`li` rejection.

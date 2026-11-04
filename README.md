@@ -384,6 +384,12 @@ make test
    * This models one child dispatch step; tag scanning, attributes, recursive child parsing, and DOM construction are abstracted.
 
 
+72. **`examples/blink_html_fastpath_close_tag.cpp`**:
+   * Models `ParseContainerElement` after child parsing: earlier child failure is preserved, clean EOF gets the container EOF result, short close-name input is rejected, names match exactly or by ASCII lowercase equivalence, and a matching name requires `>` after skipped whitespace.
+   * The typed λΠ rules and C++ transcription cover 36 finite child-state/name-match/length/delimiter combinations.
+   * Actual source-span slicing, cursor updates, and `FinishParsingChildren` effects are abstracted.
+
+
 ---
 
 ## License
