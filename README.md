@@ -179,10 +179,10 @@ make test
 
 27. **`examples/blink_content_data_equivalence.cpp`**:
    * Models the `ContentData::operator==` linked-list traversal with typed nodes for text, alt-text, quote, none, image, counter, and alt-counter data. It compares 11,449 directed node pairs, preserving the base-counter-to-alt-counter asymmetry, then checks 34,348 bounded list pairs and the resulting `ContentDataEquivalent` reattach trigger.
-   * String, `StyleImage`, counter-style, and tree-scope values are finite atoms; list comparisons cover lengths through two, with `NoneContentData` constrained to have no successor. The example does not model arbitrary list lengths or the internal semantics of those payload types.
+   * Strings, counter-style, and tree-scope values are finite atoms; the linked-list fixtures cover lengths through two, with `NoneContentData` constrained to have no successor. `ImageContentData` payload equality is additionally refined over all six `StyleImage` kinds and 12 abstract field relations (147,456 states); those underlying field equalities remain unevaluated.
 
 28. **`examples/blink_style_image_equality.cpp`**:
-   * Models the six pinned `StyleImage` subclass equality branches, including directional pending-image comparisons, and composes inequality into the `ImageContentData` reattach trigger. Typed λΠ agrees with a C++ transcription on 147,456 kind/relation assignments. Subclass field relations remain abstract Boolean inputs; their underlying CSS values, resources, and image computations are not evaluated.
+   * Models the six pinned `StyleImage` subclass equality branches, including directional pending-image comparisons, and composes inequality into the `ImageContentData` reattach trigger. The relation model is also composed directly into `blink_content_data_equivalence.cpp` as the `ImageContentData` payload equality. Subclass field relations remain abstract Boolean inputs; their underlying CSS values, resources, and image computations are not evaluated.
 
 29. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
    * Models the shared in-body end-tag branch for all 28 distinct block-element target tags, including the general scope scan, implied-end-tag pass, and pop-through-target transition.

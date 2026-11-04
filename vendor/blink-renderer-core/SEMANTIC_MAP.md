@@ -900,7 +900,7 @@ five counter fields match, while AltCounter requires an AltCounter peer and
 matching generated text. This follows the two `Equals` overrides at
 `content_data.h:267-356` and `content_data.cc:149-160`.
 
-C++ and typed λΠ agree on all 11,449 directed node-payload pairs, then on 34,348
+The model compares C++ and typed λΠ on 11,449 directed node-payload pairs, then on 34,348
 bounded list comparisons and the resulting content-change reattach trigger.
 List cases include all singleton pairs, all head pairs with a shared tail, all
 tail pairs with a shared head, and length mismatch cases through two nodes;
@@ -915,12 +915,14 @@ branches: fetched/fetched, fetched/pending, generated/generated, pending/any,
 image-set/image-set, crossfade/crossfade, mask-source/pending, and
 mask-source/mask-source. Pending cases preserve source-directed behavior; for
 example, pending/generated may compare through CSSValue equivalence while
-generated/pending is false. C++ and typed λΠ agree on all 6×6×2^12 = 147,456
-kind/relation assignments, and these cases compose into the image-content
+generated/pending is false. The executable compares C++ and typed λΠ over all 6×6×2^12 = 147,456
+kind/relation assignments, with these cases composed into the image-content
 reattach trigger. The 12 field relations are abstract booleans: CSSValue,
 resource, URL, resolution, generated-image, and image-set internals are not
-evaluated. This refinement is documented beside the content-list model; it is
-not yet wired into that model's image payload equality.
+evaluated. The payload relation is now included in `blink_content_data_equivalence.cpp`
+and composed with an image-content reattach decision. The general linked-list
+fixtures still use finite image atoms; only the image-payload path consumes the
+12 explicit field-relation inputs.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
