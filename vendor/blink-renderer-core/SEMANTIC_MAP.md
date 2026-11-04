@@ -821,6 +821,26 @@ masks, and the two old-style dependency booleans. The caller's `parent_style &&
 old_style` guard, inherited-property copying, and later style diff handling are
 not modeled.
 
+`examples/blink_style_recalc_copy.cpp` models the boolean boundary around the
+independent-inheritance style-copy optimization. `Element::RecalcOwnStyle` at
+`core/dom/element.cc:5894-5915` requires parent style, old style, and a true
+`IndependentInherit` predicate before calling `PropagateInheritedProperties`.
+That helper at `element.cc:5746-5795` rejects pseudo elements, dirty style,
+element animations, custom style callbacks, absent computed style, style
+animations/transitions, variable references/declarations, link state, applied
+text decorations, and parent-derived color. Parent style inside the helper is
+asserted with `DCHECK`; the model treats the caller's parent-style guard as an
+input and does not turn the assertion into a runtime branch.
+
+The typed λΠ function and C++ transcription agree over all 32,768 assignments
+to three caller guards and twelve helper conditions. A true result represents
+eligibility to clone and update the old style with independent inherited
+properties. A false result does not alone prove resolver entry: `RecalcOwnStyle`
+separately checks for a parent style or the document-root/layout-view case
+before calling `StyleForLayoutObject`. The generated set of copied properties,
+the builder's actual record transformation, the `DCHECK` contract, and
+subsequent style-difference handling remain unmodeled.
+
 Typed λΠ agrees with the C++ transcription on 640 states each for
 `TraverseChildren` and `TraversePseudoElements`, all eight mark-reattach
 boolean combinations, all 64 inputs to the `TraverseChild` disjunction, and

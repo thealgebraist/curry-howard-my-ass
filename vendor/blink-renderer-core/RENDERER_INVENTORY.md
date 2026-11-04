@@ -152,6 +152,13 @@ Current λΠ work is small compared with that source surface:
   dependency set excludes cached hover, content visibility, and container-unit
   highlight styles, matching its separate source expression. Recursive Element
   traversal and style-engine scheduling remain outside scope.
+* `examples/blink_style_recalc_copy.cpp` models the independent-inheritance
+  shortcut boundary in `Element::RecalcOwnStyle` and
+  `PropagateInheritedProperties`. The typed λΠ/C++ comparison exhausts 32,768
+  combinations of three caller guards and twelve style eligibility conditions.
+  Shortcut decline is distinguished from resolver entry, which also depends on
+  a separate parent-style/root-layout condition. It does not model generated
+  inherited-property fields or later style diff processing.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).
