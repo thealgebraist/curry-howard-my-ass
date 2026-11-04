@@ -75,6 +75,8 @@ refer to files from the full sparse checkout. Stable source links:
 * [ComputedStyle::NeedsReattachLayoutTree predicate](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.cc#312)
 * [LayoutTextCombine supported writing modes](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/layout/layout_text_combine.h#137)
 * [WritingMode values and typographic-mode predicates](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/platform/text/writing_mode.h#44)
+* [ComputedStyle scroll-marker-group value equivalence](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.h#2578)
+* [ScrollMarkerGroup position/mode value equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/scroll_marker_group.h#25)
 * [ComputedStyle::NeedsReinsertLayoutTree position/float predicate](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.cc#406)
 * [Element layout ApplyStyleChanges selection](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/dom/element.cc#6218)
 * [CascadeOrigin enum and ordering codes](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/cascade_origin.h#15)

@@ -887,6 +887,16 @@ check. Typed λΠ and C++ agree on all 100 combinations of old/new text-combine
 presence and five old/new writing modes after composing these conditions into
 the complete reattach decision with other triggers held false.
 
+The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
+uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
+compares position and mode (`computed_style.h:2578`, `scroll_marker_group.h:25`).
+The model represents absence plus the four `{after,before} × {links,tabs}` values.
+The C++ structural comparison and typed λΠ agree on all 25 old/new pairs; the
+resulting inequality is then supplied to the `NeedsReattachLayoutTree` decision
+with all other conditions false. Distinct heap pointers with equal immutable
+position/mode fields map to the same value constructor, matching value rather
+than allocation-identity comparison.
+
 The same example models the outer `ComputeDifference` cases (`computed_style.cc:421-450`):
 pointer identity yields equal, a missing style yields inherited, and otherwise
 the result is the maximum of the ordinary and optional cached inherited
