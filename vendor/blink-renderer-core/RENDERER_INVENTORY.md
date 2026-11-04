@@ -92,11 +92,26 @@ Current λΠ work is small compared with that source surface:
   `initial`, and `unset` outcomes for Blink's inherited `color` longhand, with
   parent-present and root cases. A C++ branch transcription and typed λΠ
   reduction agree on 24 finite cases; values are abstract color IDs.
+* `examples/blink_style_recalc_gate.cpp` models the suppression-first
+  `ShouldRecalcStyleFor` decision and the `ForChildren` propagation projection
+  for `kRecalcChildren`/`kRecalcDescendants` plus the style-container-query
+  flag. Its C++ transcription agrees with λΠ on 160 node/change inputs and 20
+  child-change inputs; other flags and Element traversal remain outside scope.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).
   Tag-name, markup, bogus-comment, and character-reference states are opaque;
   this is not full tokenizer behavior.
+* `examples/blink_tokenizer_tag_name_bisimulation.cpp` extends the tokenizer
+  boundary into bounded TagName accumulation and normalization. Nine finite
+  sequences compare upper/lower letters and a preserved nonalphabetic name
+  character across whitespace, slash, `>`, EOF, and exhausted-chunk outcomes.
+  Unicode case mapping and input-stream preprocessing remain outside the model.
+* `examples/blink_dom_insert_html_element.cpp` models normal HTML element
+  attachment using explicit DOM node parent IDs, open-element IDs, and a fresh
+  ID counter. Four finite DOM/stack states agree between the C++ reference and
+  λΠ. Foster parenting, insertion adjustment, sanitizer, and callbacks are not
+  represented.
 * `examples/blink_layout_dirty_bisimulation.cpp` models the clean-to-dirty
   transition of one layout object and propagation of child-dirty flags through
   a finite rooted container chain. Fixtures assume no relayout-boundary early

@@ -146,12 +146,22 @@ make test
 18. **`examples/blink_css_color_defaulting.cpp`**:
    * Models `color` defaulting for missing, `inherit`, `initial`, and `unset`, with or without a parent style. A native C++ branch transcription agrees with λΠ on 24 finite cases. Color values are abstract IDs and initial black is encoded as zero.
 
-19. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
+19. **`examples/blink_style_recalc_gate.cpp`**:
+   * Models `ShouldRecalcStyleFor` suppression, propagation, dirty-node and style-container-query-dependent branches, plus the selected `ForChildren` propagation/flag projection. A C++ transcription agrees on 160 gate states and 20 child-change states; other flags and real DOM traversal are omitted.
+
+20. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
    * Models the shared in-body end-tag branch for all 28 distinct block-element target tags, including the general scope scan, implied-end-tag pass, and pop-through-target transition.
    * Compares 35 finite C++/λΠ configurations: one scope hit for each target plus nested implied-tag, unrelated-top, marker-miss, and absent-target cases. Parse-error and DOM effects, arbitrary stack mixtures, and full tokenizer/parser control flow remain unmodeled.
 
-20. **`examples/blink_tokenizer_open_tag_bisimulation.cpp`**:
+21. **`examples/blink_tokenizer_open_tag_bisimulation.cpp`**:
    * Models the Data, TagOpen, and EndTagOpen dispatch branches over ten character classes, with seven tokenizer states and 70 finite transitions. It abstracts later tag-name, markup-declaration, bogus-comment, and character-reference processing, and assumes processing-instruction support is disabled.
+
+22. **`examples/blink_tokenizer_tag_name_bisimulation.cpp`**:
+   * Models bounded `HTMLTokenizer::NextTokenImpl` TagName scanning with explicit lowercase name accumulation, including representative uppercase and lowercase letters and unchanged nonalphabetic name characters.
+   * Nine finite sequences compare a C++ transcription with typed λΠ across whitespace, slash, `>`, EOF, and exhausted-chunk boundaries. It omits the input-stream preprocessor, null replacement, full Unicode case handling, attributes, and token/DOM side effects.
+
+23. **`examples/blink_dom_insert_html_element.cpp`**:
+   * Models normal `HTMLConstructionSite::InsertHTMLElement` attachment with explicit DOM parent IDs, open-element IDs, and fresh node identity. Four finite DOM/stack states agree between the C++ transcription and typed λΠ. Foster parenting, insertion-location adjustment, sanitizer behavior, and DOM callbacks are excluded.
 
 ---
 

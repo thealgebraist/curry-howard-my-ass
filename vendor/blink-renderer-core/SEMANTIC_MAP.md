@@ -343,3 +343,95 @@ preprocessing, full tag-name scanning, entity decoding, comments and doctypes,
 attribute states, processing-instruction mode variation, token emission
 internals, and tree-builder/DOM effects. The C++ side is a transcription, not
 execution of Blink's linked `HTMLTokenizer`.
+
+## HTML construction site: normal element insertion
+
+`examples/blink_dom_insert_html_element.cpp` models a normal-path projection
+of `HTMLConstructionSite::InsertHTMLElement` at
+`core/html/parser/html_construction_site.cc:986-989`. Blink creates the HTML
+element and stack item, then calls `AttachOrFosterParent`. In that helper
+(`html_construction_site.cc:368-384`), the current insertion location is
+captured before the optional open-element stack push. On the modeled
+non-foster-parent path, `Attach` inserts the child at that captured parent.
+The λΠ state represents the DOM as node records with explicit parent IDs, an
+open-element stack of IDs, and a fresh-ID counter. Its transition appends a
+node with the old stack top as parent (or a root sentinel when empty), pushes
+the new ID, and increments the counter. The C++ transcription and typed λΠ
+transition agree on four finite DOM/stack states, including nested insertion,
+sibling insertion at a common parent, and empty-stack fallback.
+
+This omits `ShouldFosterParent` and `FosterParent`, adjusted insertion
+locations, `ShouldInsertChild`, fragment/root insertion points, sanitizer and
+depth handling, flushing pending text, actual Node/Element allocation,
+`BeginParsingChildren`/self-closing lifecycle, script/custom-element policy,
+and callbacks. The comparison models parent linkage and stack/fresh-ID effects
+for normal append only; it does not model full DOM construction or execution
+of Blink's `HTMLConstructionSite`.
+
+## HTML tokenizer boundary: TagName scanning
+
+`examples/blink_tokenizer_tag_name_bisimulation.cpp` models the TagName state
+body in `HTMLTokenizer::NextTokenImpl` at
+`core/html/parser/html_tokenizer.cc:407-424`. The tokenizer appends
+`ToLowerCaseIfAlpha(cc)` while the character is not in `kTagNameSpecial`
+(`html_tokenizer.cc:79`), then branches on slash, `>`, EOF, or tokenizer
+whitespace. The λΠ `scanTagName` transition explicitly snocs each normalized
+character onto a name list; upper- and lowercase inputs for the represented
+letter classes both append the lowercase constructor, while a representative
+nonalphabetic name character is preserved.
+
+The delimiters yield the corresponding immediate branch observations:
+whitespace consumes and enters `BeforeAttributeName`, slash consumes and
+enters `SelfClosingStartTag`, `>` emits the current token and resumes Data,
+and EOF reports a parse error then reconsumes in Data. EOF is modeled as
+pending for the next Data-state call rather than consumed in TagName. An
+exhausted finite input chunk returns a `TagName`/`awaitMore` result with the
+accumulated name intact. Nine finite character sequences, including `DiV` →
+`div`, were compared between a C++ transcription and typed λΠ.
+
+The alphabet is bounded to six representative ASCII letters plus a
+nonalphabetic character. The model does not encode Unicode case conversion,
+NUL replacement, CR/LF preprocessing, or `SegmentedString` boundaries within
+the tokenizer's scan loop. It also omits token attributes, start-versus-end
+tag identity, EOF's subsequent Data-state emission, token buffering/emission
+internals, and tree-builder/DOM effects. The C++ side is a transcription, not
+execution of Blink's tokenizer.
+
+## Style recalculation gate
+
+`examples/blink_style_recalc_gate.cpp` models selected branches of
+`StyleRecalcChange::ShouldRecalcStyleFor` and `ForChildren` from pinned
+Chromium commit `99d77c2af39f60ee06a5516ad5428e4d2aa61da4`. In
+`core/css/style_recalc_change.cc:59-70`, `ShouldRecalcStyleFor` checks
+`kSuppressRecalc` first (false), then `RecalcChildren()` (true), then
+`Node::NeedsStyleRecalc()`, then `RecalcFlagDependent(node)`. In
+`style_recalc_change.h:198-199`, `RecalcChildren` means propagation greater
+than `kUpdatePseudoElements`, so `kRecalcChildren` and `kRecalcDescendants`
+both force this node predicate to true. The model preserves the distinction
+when propagating to children: `ForChildren` at `style_recalc_change.h:116-119`
+retains `kRecalcDescendants`, while other propagation values become `kNo`.
+
+For the flag-dependent branch, the model includes only
+`kRecalcStyleContainerChildren` (`style_recalc_change.h:33-38`): for an
+Element with an existing computed style, `RecalcFlagDependent` checks
+`DependsOnStyleContainerQueries()` (`style_recalc_change.cc:30-57`). A Text
+node is the non-Element category and returns false at the `DynamicTo<Element>`
+guard. The two modeled flags are `kSuppressRecalc` (documented at
+`style_recalc_change.h:59-61` as suppressing the current node and lost for
+children) and the style-container-children flag. `FlagsForChildren` removes
+`kRecalcStyleContainerChildren` at `style_recalc_change.cc:156-163` and clears
+`kSuppressRecalc` for children at lines 178-188. Thus the finite projection
+models suppression, child versus descendant propagation, an already-dirty
+node, and an Element-only style-query dependency.
+
+The typed λΠ decision and an independently written C++ transcription agree on
+160 combinations (five propagation levels, four modeled flag sets, Element
+or Text, dirty/clean, dependency true/false). The separate `ForChildren`
+projection agrees on 20 propagation/flag combinations. This is not full style
+recalculation equivalence: other container-query, hover, content-visibility,
+reattach and mark-reattach flags are omitted; nodes with no old computed style
+are omitted; `ShouldUpdatePseudoElement`, `TraverseChild`, child dirty flags,
+layout-subtree update flags, and `StyleEngine`/`Element` traversal are not
+modeled. At `ShouldRecalcStyleFor`, the child and descendant propagation
+levels intentionally yield the same true result; only `ForChildren` carries
+the descendant distinction onward.
