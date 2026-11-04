@@ -205,6 +205,9 @@ Current λΠ work is small compared with that source surface:
   x/y/from-angle values. Constant-gradient and color-image equality each cover
   two finite colors, with color-image equality delegating to the constant case.
   CSS color internals and unrestricted CSSValue payload semantics remain outside scope.
+  A tagged generator-value relation composes the six represented subclasses with
+  container/viewport equality over 6,724 finite StyleGeneratedImage states and
+  checks the resulting inequality decision.
 * `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
   `DiffAffectsScrollAnimations` predicate and its first-priority route into the
   computed-style difference severity. The C++/typed-λΠ comparisons cover all

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 using namespace lp;
@@ -57,6 +58,13 @@ struct ConicGradient {
   const char* x;
   const char* y;
   const char* from_angle;
+};
+enum class GeneratorKind { Paint, Linear, Radial, Conic, Constant, ColorImage };
+using GeneratorPayload=std::variant<CSSPaintValue,LinearGradient,RadialGradient,ConicGradient,std::string>;
+struct GeneratorValue {
+  GeneratorKind kind;
+  GeneratorPayload payload;
+  Ptr term;
 };
 
 static Ptr fn(Ptr a, Ptr b) { return arrow(std::move(a), std::move(b)); }
@@ -273,6 +281,18 @@ int main() {
   signature["conicGradientEqual"] = fn(sym("ConicGradient"),fn(sym("ConicGradient"),B));
   signature["constantGradientEqual"] = fn(Col,fn(Col,B));
   signature["colorImageEqual"] = fn(Col,fn(Col,B));
+  signature["GeneratorValue"] = type_sort();
+  signature["paintGenerator"] = fn(Q,sym("GeneratorValue"));
+  signature["linearGenerator"] = fn(sym("LinearGradient"),sym("GeneratorValue"));
+  signature["radialGenerator"] = fn(sym("RadialGradient"),sym("GeneratorValue"));
+  signature["conicGenerator"] = fn(sym("ConicGradient"),sym("GeneratorValue"));
+  signature["constantGenerator"] = fn(Col,sym("GeneratorValue"));
+  signature["colorImageGenerator"] = fn(Col,sym("GeneratorValue"));
+  signature["generatorValueEqual"] = fn(sym("GeneratorValue"),fn(sym("GeneratorValue"),B));
+  signature["generatedImageValuesEqual"] = curried_type(B,
+    {C,C,V,V,sym("GeneratorValue"),sym("GeneratorValue")});
+  signature["generatedImageValuesChanged"] = curried_type(B,
+    {C,C,V,V,sym("GeneratorValue"),sym("GeneratorValue")});
 
   for (bool a : {false, true})
     for (bool b : {false, true})
@@ -526,6 +546,22 @@ int main() {
                        apps(sym("gradientColorEqual"),{pvar(270),pvar(271)})));
   rules.push_back(rule(apps(sym("colorImageEqual"),{pvar(272),pvar(273)}),
                        apps(sym("constantGradientEqual"),{pvar(272),pvar(273)})));
+  for (const auto& [tag,equality] : std::vector<std::pair<const char*,const char*>>{
+         {"paintGenerator","paintValueEqual"},{"linearGenerator","linearGradientEqual"},
+         {"radialGenerator","radialGradientEqual"},{"conicGenerator","conicGradientEqual"},
+         {"constantGenerator","constantGradientEqual"},{"colorImageGenerator","colorImageEqual"}})
+    rules.push_back(rule(apps(sym("generatorValueEqual"),
+                              {app(sym(tag),pvar(280)),app(sym(tag),pvar(281))}),
+                         apps(sym(equality),{pvar(280),pvar(281)})));
+  rules.push_back(rule(apps(sym("generatorValueEqual"),{pvar(282),pvar(283)}),sym("false")));
+  std::vector<Ptr> generated_values_args={pvar(290),pvar(291),pvar(292),pvar(293),pvar(294),pvar(295)};
+  Ptr generated_values_equal=gradient_and({
+    apps(sym("containerSizesEqual"),{pvar(290),pvar(291)}),
+    apps(sym("viewportSizeEqual"),{pvar(292),pvar(293)}),
+    apps(sym("generatorValueEqual"),{pvar(294),pvar(295)})});
+  rules.push_back(rule(apps(sym("generatedImageValuesEqual"),generated_values_args),generated_values_equal));
+  rules.push_back(rule(apps(sym("generatedImageValuesChanged"),generated_values_args),
+                       app(sym("notB"),apps(sym("generatedImageValuesEqual"),generated_values_args))));
 
   RuleIndex indexed_rules(rules);
   auto optional_type = infer({}, apps(sym("optionalSizeEqual"), {sym("noneSize"), sym("noneSize")}), signature, rules);
@@ -574,6 +610,13 @@ int main() {
   auto color_image_type = infer({}, apps(sym("colorImageEqual"),{sym("colorRed"),sym("colorRed")}),
                                 signature, rules);
   assert(color_image_type && conv(*color_image_type, B, indexed_rules));
+  Ptr paint_generator_sample=app(sym("paintGenerator"),
+    paint_value_term({"paintNameA","alpha","noPaintArgument",nullptr}));
+  auto generated_semantic_type = infer({}, apps(sym("generatedImageValuesEqual"),
+    {container_term({std::nullopt,0u}),container_term({std::nullopt,0u}),
+     viewport_term({0,0,0,0,0,0}),viewport_term({0,0,0,0,0,0}),
+     paint_generator_sample,paint_generator_sample}),signature,rules);
+  assert(generated_semantic_type && conv(*generated_semantic_type,B,indexed_rules));
 
   std::vector<ContainerSizes> containers;
   const std::vector<std::optional<unsigned>> optional_values={std::nullopt, 0u, 1u};
@@ -840,4 +883,71 @@ int main() {
   }
   std::cout<<"CSSConstantGradientValue and CSSColorImageValue delegated color equality compare "
            <<constant_pairs<<" and "<<color_image_pairs<<" pairs respectively.\n";
+
+  std::vector<GeneratorValue> generator_values;
+  auto add_generator=[&](GeneratorKind kind,GeneratorPayload payload){
+    Ptr term;
+    switch(kind){
+      case GeneratorKind::Paint: term=app(sym("paintGenerator"),paint_value_term(std::get<CSSPaintValue>(payload)));break;
+      case GeneratorKind::Linear: term=app(sym("linearGenerator"),linear_gradient_term(std::get<LinearGradient>(payload)));break;
+      case GeneratorKind::Radial: term=app(sym("radialGenerator"),radial_gradient_term(std::get<RadialGradient>(payload)));break;
+      case GeneratorKind::Conic: term=app(sym("conicGenerator"),conic_gradient_term(std::get<ConicGradient>(payload)));break;
+      case GeneratorKind::Constant: term=app(sym("constantGenerator"),sym(std::get<std::string>(payload)));break;
+      case GeneratorKind::ColorImage: term=app(sym("colorImageGenerator"),sym(std::get<std::string>(payload)));break;
+    }
+    generator_values.push_back({kind,std::move(payload),std::move(term)});
+  };
+  for(const auto& value:paint_values) add_generator(GeneratorKind::Paint,value);
+  for(const auto& value:linear_gradients) add_generator(GeneratorKind::Linear,value);
+  for(const auto& value:radial_gradients) add_generator(GeneratorKind::Radial,value);
+  for(const auto& value:conic_gradients) add_generator(GeneratorKind::Conic,value);
+  for(const char* color:color_values){
+    add_generator(GeneratorKind::Constant,std::string(color));
+    add_generator(GeneratorKind::ColorImage,std::string(color));
+  }
+  auto generator_equal=[&](const GeneratorValue& a,const GeneratorValue& b){
+    if(a.kind!=b.kind) return false;
+    switch(a.kind){
+      case GeneratorKind::Paint:{
+        const auto& x=std::get<CSSPaintValue>(a.payload);const auto& y=std::get<CSSPaintValue>(b.payload);
+        return std::string(x.name)==y.name&&paint_custom_css_text(x)==paint_custom_css_text(y);
+      }
+      case GeneratorKind::Linear:return linear_equals(std::get<LinearGradient>(a.payload),std::get<LinearGradient>(b.payload));
+      case GeneratorKind::Radial:return radial_equals(std::get<RadialGradient>(a.payload),std::get<RadialGradient>(b.payload));
+      case GeneratorKind::Conic:{
+        const auto& x=std::get<ConicGradient>(a.payload);const auto& y=std::get<ConicGradient>(b.payload);
+        return gradient_bases_equal(x.base,y.base)&&optional_equal(x.x,y.x)&&
+          optional_equal(x.y,y.y)&&optional_equal(x.from_angle,y.from_angle);
+      }
+      case GeneratorKind::Constant:case GeneratorKind::ColorImage:
+        return std::get<std::string>(a.payload)==std::get<std::string>(b.payload);
+    }
+    return false;
+  };
+  const std::vector<std::pair<ContainerSizes,ContainerSizes>> image_container_pairs={
+    {{std::nullopt,0u},{std::nullopt,0u}},{{std::nullopt,0u},{0u,0u}}};
+  const std::vector<std::pair<ViewportSize,ViewportSize>> image_viewport_pairs={
+    {{{0,0,0,0,0,0}},{{0,0,0,0,0,0}}},{{{0,0,0,0,0,0}},{{1,0,0,0,0,0}}}};
+  unsigned composed_image_pairs=0,composed_reattach_pairs=0;
+  for(const auto& left_generator:generator_values) for(const auto& right_generator:generator_values)
+    for(const auto& [left_container,right_container]:image_container_pairs)
+      for(const auto& [left_viewport,right_viewport]:image_viewport_pairs){
+        const bool sizes_equal=left_container.width==right_container.width&&
+          left_container.height==right_container.height&&left_viewport==right_viewport;
+        const bool expected=sizes_equal&&generator_equal(left_generator,right_generator);
+        std::vector<Ptr> args={container_term(left_container),container_term(right_container),
+          viewport_term(left_viewport),viewport_term(right_viewport),left_generator.term,right_generator.term};
+        Ptr equal_term=apps(sym("generatedImageValuesEqual"),args);
+        if(!conv(normalize(equal_term,indexed_rules),bool_term(expected),indexed_rules)){
+          std::cerr<<"composed StyleGeneratedImage equality mismatch\n";return 12;
+        }
+        ++composed_image_pairs;
+        Ptr changed_term=apps(sym("generatedImageValuesChanged"),args);
+        if(!conv(normalize(changed_term,indexed_rules),bool_term(!expected),indexed_rules)){
+          std::cerr<<"composed StyleGeneratedImage change trigger mismatch\n";return 13;
+        }
+        ++composed_reattach_pairs;
+      }
+  std::cout<<"Composed StyleGeneratedImage size plus tagged CSS generator equality compares "
+           <<composed_image_pairs<<" states and "<<composed_reattach_pairs<<" change decisions.\n";
 }

@@ -976,6 +976,15 @@ color-image equality delegating to the constant-gradient implementation. The
 conic fixture set and red/blue color domain are finite; CSS color internals and
 full CSSValue dispatch remain outside scope.
 
+The executable also connects these subclass relations through a tagged
+`CSSImageGeneratorValue` equality and composes that with container and viewport
+size equality for `StyleGeneratedImage`. Its C++/λΠ comparison loop spans 6,724
+finite cases over 41 represented paint/linear/radial/conic/constant/color-image
+values, paired with equal/unequal container and viewport samples. Cross-subclass
+pairs reduce to false through the tag dispatch. The inequality is checked through
+a generated-image change predicate. These fixtures integrate the represented
+subclass models but do not widen their finite CSSValue payload domains.
+
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
 compares position and mode (`computed_style.h:2578`, `scroll_marker_group.h:25`).
