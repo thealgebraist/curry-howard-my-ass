@@ -551,6 +551,19 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path attributes
+
+`examples/blink_html_fastpath_attributes.cpp` models the decision in
+`ParseAttributes` after each name has been scanned: names longer than two code
+units beginning with `on` fail with the event-handler result; exact `is` fails
+with the generic attribute result; then the parser accepts only `>` and `/>`,
+and rejects duplicate canonical local names. The typed λΠ terms implement a
+recursive special-name scan and duplicate predicate over lists, compared with a
+C++ transcription for all six-name lists through length three and three
+terminators (777 states). Case folding/name validity, value scanning, and
+`ParserSetAttributes` are outside scope. Source:
+`html_document_parser_fastpath.cc:1463-1561`.
+
 ## HTML fragment fast-path context dispatch
 
 `examples/blink_html_fastpath_context.cpp` models the context-tag switch in

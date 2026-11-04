@@ -33,6 +33,11 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_attributes.cpp` models the fast parser's
+  event-handler and `is` attribute bailouts, terminator validation, and
+  duplicate canonical-name check. A typed λΠ recursive scan covers canonical
+  attribute lists through length three and the two accepted endings; scanning
+  names/values and DOM assignment remain abstract.
 * `examples/blink_html_fastpath_context.cpp` models `Run` context dispatch for
   the fast HTML fragment parser: all 17 `SUPPORTED_TAGS` entries, the `body`
   special case, foreign namespaces, and unlisted tags. It distinguishes the

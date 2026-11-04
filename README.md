@@ -360,6 +360,12 @@ make test
    * Exact tag-name hash collisions, element creation, child parsing, and DOM effects are abstracted. The source’s post-hash exact QName check is reflected in the supported-tag classification.
 
 
+68. **`examples/blink_html_fastpath_attributes.cpp`**:
+   * Models the observable `ParseAttributes` decision after attribute names are scanned: reject `on*` event-handler attributes, reject `is`, reject malformed termination and duplicate canonical names, and otherwise accept `>` or `/>`.
+   * A structural typed λΠ scan and duplicate detector are compared with a C++ transcription over canonical name lists of length zero through three, using six names and three terminators (777 finite states).
+   * Attribute-name scanning/case normalization, attribute values, and DOM assignment are abstracted; the model covers the ordered guards and duplicate-name fallback only.
+
+
 ---
 
 ## License
