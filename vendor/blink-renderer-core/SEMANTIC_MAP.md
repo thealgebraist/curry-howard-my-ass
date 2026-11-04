@@ -954,3 +954,7 @@ Peano numeral. The λΠ model is a semantic tuple comparison, not 96-bit packing
 and does not establish behavior for arbitrary field values. CSS color-scheme,
 `currentColor`, visited/animated color behavior, declaration collection,
 tree-scope semantics, and renderer lifecycle remain outside the model.
+
+## Typed tokenizer start tag through p-start DOM insertion
+
+`examples/blink_tokenized_p_start_dom.cpp` adds a bounded typed tokenizer bridge from raw `<p ...>` source to `StartTagToken(pTag, Attrs)`, then supplies that token to the p-scope pop and normal insertion projection. Three inputs cover no attributes, ordered multiple attributes including an `&amp;` value decoded by a typed λΠ relation, and reversed source attribute order. The C++ scanner independently emits the token and final DOM/stack projection; the comparison checks both the full token and insertion state. Source mapping: `html_tokenizer.cc:852-1044` scans attribute names/values and tag end; `html_token.h:292-310` accumulates token attributes; `html_tree_builder.cc:875-881` performs the p-start fake-end-tag check then insertion; `html_construction_site.cc:986-988,1240-1248,1458-1462` inserts, creates, and attaches attributes. This is a new bounded transcription mapped to Blink branches, not execution of Blink's tokenizer. It excludes Unicode normalization, duplicate attributes, complete parse-error/reconsume behavior, custom/sanitizer effects, and full DOM lifecycle.

@@ -231,6 +231,14 @@ Current λΠ work is small compared with that source surface:
   the C++ transcription and typed λΠ agree. Synthetic end-tag parse-error and
   reprocessing control flow, custom/sanitizer behavior, and foster parenting
   are outside the model.
+* `examples/blink_tokenized_p_start_dom.cpp` composes bounded raw `<p ...>`
+  source scanning into typed `StartTagToken(pTag, Attrs)`, then passes the
+  scanned attributes through p-scope pop and DOM insertion. Three inputs cover
+  empty attributes, multiple ordered attributes including a typed `&amp;`
+  decode, and alternate source order. The C++ comparison checks the complete
+  token term and final DOM/stack state. This is a mapped transcription, not
+  execution of Blink's tokenizer; Unicode, duplicate attrs, parse-error
+  reconsume, custom/sanitizer effects, and full DOM lifecycle are excluded.
 * `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
   by property state and forced boundaries around foreign-layer/scrollbar
   display items. Eight finite sequences agree between the C++ transcription
