@@ -349,6 +349,11 @@ make test
    * Fetcher-key identity, resource loading, DSF values, and `StyleImage`/`ImageResourceContent` internals are abstracted to status constructors.
 
 
+66. **`examples/blink_html_fastpath_gate.cpp`**:
+   * Models Blink’s ordered `CanUseFastPath` fragment-parser gates: shadow-root behavior, tracing, parser content policy, and form ancestry, including the template-context exception.
+   * The C++ transcription and typed λΠ decision cover all 32 combinations of those five Boolean inputs. The model covers eligibility only; context-tag dispatch, fragment parsing, and DOM effects remain outside scope.
+
+
 ---
 
 ## License

@@ -33,6 +33,10 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_gate.cpp` models the ordered fragment fast-path
+  eligibility guards in `CanUseFastPath`, including the template exception to
+  form-ancestor rejection. It covers all 32 Boolean input combinations; it
+  does not model context dispatch or parsing after acceptance.
 * `examples/blink_parser_lifecycle.cpp` models five branches from
   `HTMLDocumentParser::PumpTokenizerIfPossible` as typed `ParserAction` terms.
 * `examples/blink_parser_bisimulation.cpp` models a finite deterministic

@@ -551,6 +551,16 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path eligibility
+
+`examples/blink_html_fastpath_gate.cpp` models the ordered guard decision in
+`CanUseFastPath`: included shadow roots reject first, followed by enabled
+tracing, disallowed parser content policy, then form ancestry unless the context
+is a template element. The final branch permits the fast path. A C++
+transcription and typed λΠ reduction cover all 32 Boolean combinations. This is
+only the entry eligibility decision; supported context-tag dispatch, parser
+state, fragment construction, and DOM mutation are not covered. Source: `html_document_parser_fastpath.cc:1733-1770`.
+
 ## Numeric HTML character references
 
 `examples/blink_numeric_html_entity_bisimulation.cpp` models the numeric path
