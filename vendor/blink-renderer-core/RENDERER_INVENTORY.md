@@ -191,6 +191,12 @@ Current λΠ work is small compared with that source surface:
   both right-hand image kinds (50 composed states). Nested CSSValue relations
   are represented by finite atoms; arbitrary crossfade values and rendering
   behavior remain outside scope.
+* `examples/blink_image_set_cache.cpp` models `IsCachePending`, `CacheImage`,
+  and permitted `CachedImage` reads for shared and fetcher-keyed storage. Seven
+  shared states and 49 two-fetcher states cover 336 pending queries, 672 cache
+  updates, and 4,032 composed update/query cases. Scale values include an
+  adjacent-float strict-epsilon boundary. GC/weak-key lifetime and concurrent
+  access are not modeled.
 * `examples/blink_image_set_load_dispatch.cpp` models
   `StyleImageLoader::ResolveImageSet`: null selection and unsupported CSS value
   kinds return null; `CSSImageValue` and `CSSGradientValue` go through distinct

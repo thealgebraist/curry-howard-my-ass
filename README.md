@@ -325,6 +325,12 @@ make test
    * Resource fetching, the CSSImageValue cache implementation, gradient container/viewport evaluation, and the outer CSSImageSetValue cache call are not modeled.
 
 
+62. **`examples/blink_image_set_cache.cpp`**:
+   * Models `CSSImageSetValue::IsCachePending`, `CacheImage`, and permitted `CachedImage` reads for both shared and fetcher-keyed cache modes. A cache update is composed with pending checks for either fetcher and each represented scale.
+   * Seven shared-cache states and 49 two-fetcher cache states cover 336 pending queries, 672 cache updates, 4,032 update-then-pending queries, and permitted cache reads. Scale fixtures include 1.0, its next representable `float`, and 2.0 to expose the strict `abs(a-b) < epsilon` boundary.
+   * Effective cache mode is an input standing for `fetcher != nullptr && StyleResourceFetcherIdentityCheckEnabled()`. Weak-key expiration, GC identity, concurrent mutation, and general float values are outside scope.
+
+
 ---
 
 ## License

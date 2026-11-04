@@ -987,13 +987,24 @@ pairs reduce to false through the tag dispatch. The inequality is checked throug
 a generated-image change predicate. These fixtures integrate the represented
 subclass models but do not widen their finite CSSValue payload domains.
 
+`examples/blink_image_set_cache.cpp` models `IsCachePending`, `CacheImage`,
+and `CachedImage` after a non-pending guard. It distinguishes the shared
+single-entry cache from the fetcher-keyed map selected by the effective runtime
+mode. Cache updates replace the shared entry or the selected fetcher entry;
+subsequent pending observations are composed over both fetchers. The finite
+float domain includes 1.0, its next representable float, and 2.0, so the model
+captures the strict `abs(a-b) < float epsilon` boundary in `EqualResolutions`.
+Fetcher presence/runtime-feature gating is supplied as the effective mode;
+weak-key expiration, GC identity, and concurrent mutation are omitted.
+
 `examples/blink_image_set_load_dispatch.cpp` composes the selected-option
 observation with the subsequent `StyleImageLoader::ResolveImageSet` branch.
 No selection and unsupported CSS value kinds return null. `CSSImageValue`
 reaches its cache path with the selected resolution override; `CSSGradientValue`
 reaches its generated-image path, whose shown `Load` branch does not consume that
-override. The model abstracts resource/image results and does not include the
-outer `CSSImageSetValue::CacheImage` call in `Load`.
+override. The model abstracts resource/image results and does not include the outer
+cache call in `Load`; its cache state effects are modeled separately in
+`blink_image_set_cache.cpp`.
 
 `examples/blink_image_set_selection.cpp` models the first `GetBestOption`
 computation for an initially empty `options_` cache. It filters by MIME support
