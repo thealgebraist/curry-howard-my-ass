@@ -18,6 +18,16 @@ struct ReattachConditions {
   bool text_combine_writing_mode_support_changed;
   bool first_line_pseudo_added, overlay_changed, list_style_position_changed;
 };
+enum class WritingMode : unsigned { HorizontalTb, VerticalRl, VerticalLr, SidewaysRl, SidewaysLr };
+static bool cpp_text_combine_supported(WritingMode mode) {
+  return mode==WritingMode::VerticalRl||mode==WritingMode::VerticalLr;
+}
+static bool cpp_text_combine_mode_change(bool new_has_text_combine,
+                                         WritingMode old_mode,
+                                         WritingMode new_mode) {
+  return new_has_text_combine &&
+         cpp_text_combine_supported(old_mode)!=cpp_text_combine_supported(new_mode);
+}
 
 static bool cpp_needs_reattach(const ReattachConditions& c) {
   if (c.same_style_pointer) return false;
@@ -55,6 +65,11 @@ int main() {
   Ptr type = B;
   for (unsigned i = 0; i < 19; ++i) type = fn(B, type);
   sig["needsReattach"] = type;
+  Ptr W=sym("WritingMode");sig["WritingMode"]=type_sort();
+  const char* mode_names[]={"horizontalTb","verticalRl","verticalLr","sidewaysRl","sidewaysLr"};
+  const WritingMode modes[]={WritingMode::HorizontalTb,WritingMode::VerticalRl,WritingMode::VerticalLr,WritingMode::SidewaysRl,WritingMode::SidewaysLr};
+  for(const char* n:mode_names)sig[n]=W;
+  sig["textCombineModeChanged"]=fn(B,fn(W,fn(W,B)));
 
   auto pattern = [](int special_index, bool special_value,
                     int other_index = -1, bool other_value = false) {
@@ -76,12 +91,19 @@ int main() {
   std::vector<Ptr> fallback;
   for (unsigned i = 0; i < 19; ++i) fallback.push_back(pvar(i));
   rules.push_back(R(ap(sym("needsReattach"), fallback), sym("false")));
+  const bool lambda_supported[]={false,true,true,false,false};
+  for(bool new_has:{false,true})for(unsigned old_i=0;old_i<5;++old_i)for(unsigned new_i=0;new_i<5;++new_i){
+    bool changed=new_has&&(lambda_supported[old_i]!=lambda_supported[new_i]);
+    rules.push_back(R(ap(sym("textCombineModeChanged"),{bt(new_has),sym(mode_names[old_i]),sym(mode_names[new_i])}),bt(changed)));
+  }
 
   RuleIndex ix(rules);
   std::vector<Ptr> sample_args(19, sym("false"));
   Ptr sample = ap(sym("needsReattach"), sample_args);
   auto result_type = infer({}, sample, sig, rules);
   assert(result_type && conv(*result_type, B, ix));
+  Ptr text_combine_sample=ap(sym("textCombineModeChanged"),{sym("true"),sym("horizontalTb"),sym("verticalRl")});
+  auto text_combine_type=infer({},text_combine_sample,sig,rules);assert(text_combine_type&&conv(*text_combine_type,B,ix));
 
   unsigned compared = 0;
   for (unsigned mask = 0; mask < (1u << 19); ++mask) {
@@ -103,7 +125,18 @@ int main() {
     }
     ++compared;
   }
+  unsigned text_combine_cases=0;
+  for(bool old_has:{false,true})for(bool new_has:{false,true})for(WritingMode old_mode:modes)for(WritingMode new_mode:modes){
+    const bool toggled=old_has!=new_has;
+    const bool mode_trigger=cpp_text_combine_mode_change(new_has,old_mode,new_mode);
+    std::vector<Ptr> args(19,sym("false"));args[6]=bt(toggled);args[15]=ap(sym("textCombineModeChanged"),{bt(new_has),sym(mode_names[static_cast<unsigned>(old_mode)]),sym(mode_names[static_cast<unsigned>(new_mode)])});
+    auto term=ap(sym("needsReattach"),args);
+    const bool expected=toggled||mode_trigger;
+    Ptr actual=nf(nf(nf(term,ix),ix),ix);
+    if(!conv(actual,bt(expected),ix)){std::cerr<<"text-combine reattach composition mismatch\n";return 3;}++text_combine_cases;
+  }
   std::cout << "NeedsReattachLayoutTree agrees on " << compared
             << " abstract source-condition assignments.\n";
+  std::cout << "Text-combine writing-mode subpredicate and reattach composition agree on " << text_combine_cases << " mode/state combinations.\n";
   std::cout << "Scope: 19 source observations are varied independently; compound element/style predicates are inputs, not evaluated fields.\n";
 }

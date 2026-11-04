@@ -865,7 +865,7 @@ reaches the ordinary non-inherited result. Both methods agree on all 64 such
 compositions. Values and `base::ValuesEquivalent` semantics remain opaque.
 
 `examples/blink_needs_reattach_layout_tree.cpp` models the ordered predicate in
-`ComputedStyle::NeedsReattachLayoutTree` (`core/style/computed_style.cc:431-526`).
+`ComputedStyle::NeedsReattachLayoutTree` (`core/style/computed_style.cc:312-404`).
 The first rule treats identical style pointers as no reattach; otherwise either
 missing style requires it. The remaining positive conditions abstract display,
 first-letter/content/text-combine changes, scroll-marker relationships,
@@ -877,6 +877,15 @@ list-style-position comparisons. The typed λΠ and C++ predicates agree on all
 independent, this exhaustive state space includes combinations not reachable
 from actual styles/elements; it validates the branch expression over its stated
 abstraction, not all concrete style pairs. It does not rebuild layout objects.
+
+The text-combine condition is refined over actual `WritingMode` constructors in
+the same example. `LayoutTextCombine::IsSupportedMode` is true only for
+`vertical-rl` and `vertical-lr`; horizontal and sideways modes are false. The
+reattach clause requires a mode-support change only when the new style has
+text-combine enabled, in addition to the separate old/new text-combine toggle
+check. Typed λΠ and C++ agree on all 100 combinations of old/new text-combine
+presence and five old/new writing modes after composing these conditions into
+the complete reattach decision with other triggers held false.
 
 The same example models the outer `ComputeDifference` cases (`computed_style.cc:421-450`):
 pointer identity yields equal, a missing style yields inherited, and otherwise

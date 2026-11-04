@@ -175,7 +175,8 @@ Current λΠ work is small compared with that source surface:
   null style, display/content, marker-group, appearance, legend, text-combine,
   first-line, overlay, and list-style triggers. Conditions derived from
   ComputedStyle fields and element subtype are abstract inputs, and layout-tree
-  rebuilding is not modeled.
+  rebuilding is not modeled. The text-combine clause is further composed from
+  all five concrete writing modes and old/new text-combine presence (100 states).
 * `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
   `DiffAffectsScrollAnimations` predicate and its first-priority route into the
   computed-style difference severity. The C++/typed-λΠ comparisons cover all
