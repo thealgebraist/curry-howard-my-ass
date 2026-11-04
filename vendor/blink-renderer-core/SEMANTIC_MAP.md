@@ -962,3 +962,24 @@ tree-scope semantics, and renderer lifecycle remain outside the model.
 The same example now continues from the normalized output of `sem(caseId)` into a fixed CSS and rendering slice. It extracts the inserted `p` node's tag and ordered attributes, collects declarations matching `p`, `.beta`, and `#alpha`, chooses the largest modeled numeric priority, and resolves the selected `initial`/`inherit`/explicit color against an abstract parent color. Class matching scans tokens separated by HTML ASCII whitespace, corresponding to `EasySelectorChecker::MatchesClassName` in `selector_checker-inl.h:203-215` and `SpaceSplitString::Data::CreateVector` in `core/dom/space_split_string.cc:37-70`: the cases match `beta` inside `alpha\tbeta gamma` and reject the substring `betamax`. The C++ comparison uses the same bounded inputs and resulting node; on the fixture where both `.beta` and `#alpha` match, reversing declaration order preserves the higher-priority ID declaration. The selected color feeds a typed styled-node, block-box, and paint-block projection. The same raw input now supplies a bounded start-tag token, text token up to the next `<`, and restricted `</p>` end-tag token. A quote-aware tag/body scan skips `>` inside quoted attribute values; a fixture with `title='x>y'` checks the boundary. The text token is passed through a tree-builder insertion relation into a flattened text-content field on the same DOM element, then `ProcessEndTagForInBody(kP)` is modeled as a stack pop before the resulting state enters CSS/layout/paint; C++ and typed λΠ compare the intermediate DOM state and final stack. Non-empty text flows through `textRun` to an abstract `paintText` item, while an empty token yields no text item. A changed color sets the simple-paint projection only when text is present. Six finite cases agree between the C++ transcription and typed λΠ.
 
 Source correspondence for character insertion is `html_tree_builder.cc:520-575,2690-2872` (`ProcessToken`, `ProcessCharacter`, and in-body processing) and `html_construction_site.cc:1078-1105` (`InsertTextNode`). The restricted p end-tag branch is `html_tree_builder.cc:2217-2235,2296-2308` (`ProcessEndTagForInBody`). `text_fragment_painter.cc:329-355` paints visible inline text fragments. The `computed_style.cc:800-803` color-field flag and `layout_object.cc:3133-3156` conditional simple-paint invalidation motivate the boolean projection; a non-empty token stands in for a text layout with inline fragments. The `paintText` term does not model glyph shaping, geometry, visibility, actual display-item identity, or general repaint behavior. Only a text run followed by the literal `</p>` end tag is accepted; other markup, entity references in body text, multiple character tokens, and tokenizer chunking are not modeled. Character content is flattened into a field on the element model; separate DOM Text-node identity and coalescing are omitted. CSS syntax, complete selector matching, `CascadePriority`/`StyleCascade`, color scheme, `currentColor`, style-tree lifecycle, layout algorithms, and Blink paint artifact internals remain outside the model.
+
+## Pending text accumulation and flush
+
+`examples/blink_pending_text_bisimulation.cpp` extracts the accumulator and
+flush transition used by `HTMLConstructionSite::InsertTextNode`. The typed
+state tracks parent and next-child identity, accumulated text, and whitespace
+mode. An append at the same location concatenates the chunk and keeps the
+lower `WhitespaceMode` by the source's `std::min` operation. A different
+location flushes the old buffer first, then starts a new buffer.
+`FlushPendingText` discards empty text or an invalid insertion location;
+otherwise it appends to the previous Text sibling if that sibling is Text, or
+inserts a new Text node. Seven finite C++/λΠ cases check these transitions.
+
+The source boundary is `core/html/parser/html_construction_site.h:264-303`
+(`PendingText::Append`/`Discard`) and
+`core/html/parser/html_construction_site.cc:245-271,1081-1118`
+(`FlushPendingText`/`InsertTextNode`). Chunks are opaque finite atoms and
+location/node identities are small natural numbers. String canonicalization,
+template/foster insertion adjustment, actual DOM mutation and task ordering
+remain outside the model. This extracted slice is not yet connected to the
+raw-input example, which still stores text as a flattened paragraph field.

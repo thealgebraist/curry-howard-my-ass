@@ -256,6 +256,15 @@ Current λΠ work is small compared with that source surface:
   as a DOM Text node with separate identity or coalescing; glyph shaping,
   geometry, full layout, and Blink paint artifact internals remain outside scope. Full selector syntax,
   cascade priorities, and color scheme are also unmodeled.
+* `examples/blink_pending_text_bisimulation.cpp` models Blink's pending-text
+  accumulation at a parent/next-child insertion location and flush effects.
+  Seven finite typed-λΠ/C++ cases cover same-location appends, location
+  changes, whitespace-mode minimization, invalid/empty discard, insertion of a
+  new Text node, and appending to an existing Text sibling. The source
+  accumulator and flush are in `html_construction_site.h:264-303` and
+  `html_construction_site.cc:245-271,1081-1118`. Actual DOM identity,
+  canonicalization, template/foster adjustment, and task ordering remain
+  outside this projection; it is not yet composed with the raw-input example.
 * `examples/blink_paint_chunker_bisimulation.cpp` models PaintChunker grouping
   by property state and forced boundaries around foreign-layer/scrollbar
   display items. Eight finite sequences agree between the C++ transcription
