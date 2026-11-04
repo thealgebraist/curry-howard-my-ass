@@ -149,6 +149,16 @@ Current λΠ work is small compared with that source surface:
   rewrite kernel. Twelve finite C++/λΠ cases cover longest-prefix selection,
   the semicolonless attribute guard, two-codepoint output, no match, and
   incomplete-prefix EOF rollback. Exact source cursor rewind is not modeled.
+* `examples/blink_process_entity_bisimulation.cpp` models Data/RCDATA
+  `ProcessEntity` effects over finite decoder outcomes. Eight cases compare
+  success append (one/two codepoints plus entity flag), literal ampersand
+  fallback, and pending-input suspension with typed λΠ. Decoder algorithms and
+  exact stream mutations remain separate.
+* `examples/blink_tokenizer_attribute_entity_bisimulation.cpp` composes bounded
+  decoder outcomes with attribute-value append/fallback/suspension and quoted,
+  single-quoted, or unquoted return states. Ten cases agree between the C++
+  transcription and typed λΠ; full tables, arbitrary numeric decoding, and
+  exact cursor rewind remain outside this slice.
 * `examples/blink_dom_insert_html_element.cpp` models normal HTML element
   attachment using explicit DOM node parent IDs, open-element IDs, a fresh ID
   counter, and ordered finite token attribute name/value pairs copied to the

@@ -583,6 +583,42 @@ how the tokenizer preserves an incomplete reference for a later chunk and
 returns to its character-reference state; those buffer/state mutations remain
 outside this model.
 
+## Data/RCDATA character-reference application
+
+`examples/blink_process_entity_bisimulation.cpp` models the observable effects
+of `HTMLTokenizer::ProcessEntity` (`core/html/parser/html_tokenizer.cc:173-189`)
+as invoked from the Data and RCDATA reference states at lines 298-301 and
+323-326. A successful result appends one or two decoded values to the character
+buffer and sets the entity flag; failure appends literal `&`; insufficient
+input suspends while retaining the prior buffer. The caller's return state is
+observed as Data or RCDATA. Eight finite outcomes compare between a C++
+transcription and typed λΠ.
+
+The decoder outputs are finite constructors selected from numeric and named
+fixtures. The scanner and entity trie are not reduced inside this composition,
+so it does not prove that arbitrary input reaches the supplied result. Exact
+`SegmentedString` rewind, preprocessing, token emission lifecycle, and complete
+entity coverage remain outside scope.
+
+## Attribute-value character-reference application
+
+`examples/blink_tokenizer_attribute_entity_bisimulation.cpp` composes a bounded
+`ConsumeHTMLEntity` transcription with
+`kCharacterReferenceInAttributeValueState` (`core/html/parser/html_tokenizer.cc:1049-1078`).
+It records the current attribute value, entity flag, result state, and action.
+Success appends decoded values and sets the flag; failure appends literal `&`;
+insufficient input suspends without changing the value; completion restores the
+double-quoted, single-quoted, or unquoted state from the additional allowed
+character (`\"`, `'`, or `>`). Ten finite cases cover semicolonless-name
+rejection before ASCII alphanumeric/`=`, punctuation acceptance, numeric
+success/failure, two-codepoint output, and the return-state choices.
+
+The C++ decoder uses selected entity names and bounded numeric inputs; the
+typed decoder is a table of those finite decoder outcomes composed with the
+attribute transition. Neither side models arbitrary numeric accumulation in
+this file, exact consumed/unconsumed suffixes, full `SegmentedString` chunking,
+attribute range tracking, or the full tokenizer lifecycle.
+
 ## Style recalculation gate
 
 `examples/blink_style_recalc_gate.cpp` models selected branches of

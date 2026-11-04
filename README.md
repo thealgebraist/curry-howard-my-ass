@@ -199,6 +199,14 @@ make test
    * Twelve C++/typed-λΠ cases cover longest prefix (`not` versus `notin;`), semicolonless attribute rejection, semicolon acceptance, two-codepoint output, no match, and incomplete-prefix end-of-input rollback.
    * Exact cursor rewind and `SegmentedString` mutations are not modeled. The semantic table is the stated 11-row subset, not the full named-reference set; numeric references are handled separately.
 
+34. **`examples/blink_process_entity_bisimulation.cpp`**:
+   * Composes finite decoder outcomes with `HTMLTokenizer::ProcessEntity` for Data/RCDATA: success appends one or two codepoints and sets the entity flag, failure appends literal `&`, and incomplete input suspends with the prior token buffer retained. Eight finite outcomes agree between the C++ transcription and typed λΠ.
+   * Decoder outcomes are fixture constructors rather than direct calls into the numeric scanner or named trie; exact stream rewind and tokenizer runtime behavior remain outside the model.
+
+35. **`examples/blink_tokenizer_attribute_entity_bisimulation.cpp`**:
+   * Composes bounded named/numeric decoder observations with the attribute-value character-reference state. Ten finite cases cover decoded append/entity flag, literal ampersand fallback, incomplete-input suspension, and restoration to double-quoted, single-quoted, or unquoted state.
+   * The C++ decoder uses selected names and numeric fixtures; typed rules encode those fixture outcomes. Full-table reduction, arbitrary codepoint arithmetic, exact cursor rewind, and stream lifecycle remain outside scope.
+
 ---
 
 ## License
