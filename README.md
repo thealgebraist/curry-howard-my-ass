@@ -414,6 +414,12 @@ make test
    * The scan’s character-by-character loop, numeric conversion, entity table lookup, and concrete cursor offsets are abstracted as input observations.
 
 
+77. **`examples/blink_html_fastpath_tag_name.cpp`**:
+   * Models `ScanTagname`: lowercase ASCII names can return through the fast path; otherwise ASCII uppercase is mapped to lowercase. A post-name delimiter is required, and ASCII whitespace is skipped while retaining the resulting cursor category.
+   * The typed λΠ scanner and C++ transcription cover 12 finite name/ending observations, including empty name, mixed case, slash/greater-than endings, whitespace endings, EOF, and invalid delimiter.
+   * Actual cursor offsets and subsequent tag dispatch are outside this scanner model.
+
+
 ---
 
 ## License

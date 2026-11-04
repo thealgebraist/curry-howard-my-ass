@@ -33,6 +33,10 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_tag_name.cpp` models lowercase tag-name scan,
+  uppercase normalization, delimiter validation, and post-name whitespace
+  skipping. Twelve finite observations compare with a C++ transcription;
+  cursor offsets and child dispatch are separate.
 * `examples/blink_html_fastpath_reference_dispatch.cpp` models the
   `ScanHTMLCharacterReference` gate and dispatch to numeric, four common-name,
   or uncommon-name paths, including failure and fallback cursor rewind. Fifteen

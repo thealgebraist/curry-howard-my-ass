@@ -551,6 +551,18 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path tag-name scan
+
+`examples/blink_html_fastpath_tag_name.cpp` models `ScanTagname` over ASCII
+letters and an abstract following-code-unit class. All-lowercase names use the
+source fast path; uppercase letters cause a restart from the beginning and an
+ASCII lowercase mapping. The name must be followed by whitespace, `>`, or `/`;
+whitespace is skipped and the remaining cursor class is retained in the result.
+EOF and invalid delimiters fail. Twelve finite name/ending observations compare
+with a C++ transcription. Empty names are returned by the scanner and are
+rejected later by `ParseElement`; this scanner model does not collapse those
+stages. Source: `html_document_parser_fastpath.cc:942-977,790-794`.
+
 ## HTML fragment fast-path character-reference dispatch
 
 `examples/blink_html_fastpath_reference_dispatch.cpp` models the gate and
