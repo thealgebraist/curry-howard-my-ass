@@ -71,6 +71,7 @@ refer to files from the full sparse checkout. Stable source links:
 * [ComputedStyle difference classification and first-line aggregation](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.cc#421)
 * [ComputedStyle difference severity ordering](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.h#377)
 * [Element::ApplyComputedStyleDiff propagation update](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/dom/element.cc#5808)
+* [ComputedStyle::NeedsReattachLayoutTree predicate](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.cc#431)
 * [ComputedStyle::NeedsReinsertLayoutTree position/float predicate](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/computed_style.cc#406)
 * [Element layout ApplyStyleChanges selection](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/dom/element.cc#6218)
 * [CascadeOrigin enum and ordering codes](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/cascade_origin.h#15)

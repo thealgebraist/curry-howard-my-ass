@@ -854,6 +854,20 @@ source observations independently; some may not be realizable by a concrete
 pair of ComputedStyle values, and source DCHECK consistency conditions are not
 encoded.
 
+`examples/blink_needs_reattach_layout_tree.cpp` models the ordered predicate in
+`ComputedStyle::NeedsReattachLayoutTree` (`core/style/computed_style.cc:431-526`).
+The first rule treats identical style pointers as no reattach; otherwise either
+missing style requires it. The remaining positive conditions abstract display,
+first-letter/content/text-combine changes, scroll-marker relationships,
+effective overscroll, custom display-layout names, appearance-dependent
+`<progress>` and base appearance behavior, `<legend>` float/out-of-flow state,
+text-combine writing-mode support, newly added `::first-line`, overlay, and
+list-style-position comparisons. The typed λΠ and C++ predicates agree on all
+524,288 assignments to these 19 named observations. Since the observations are
+independent, this exhaustive state space includes combinations not reachable
+from actual styles/elements; it validates the branch expression over its stated
+abstraction, not all concrete style pairs. It does not rebuild layout objects.
+
 The same example models the outer `ComputeDifference` cases (`computed_style.cc:421-450`):
 pointer identity yields equal, a missing style yields inherited, and otherwise
 the result is the maximum of the ordinary and optional cached inherited

@@ -169,6 +169,13 @@ Current λΠ work is small compared with that source surface:
   predicates are independently varied, so some combinations may not correspond
   to concrete `ComputedStyle` pairs; generated field equality, cache evaluation,
   layout-tree mutation, and visual invalidation side effects are not modeled.
+* `examples/blink_needs_reattach_layout_tree.cpp` models the ordered
+  `ComputedStyle::NeedsReattachLayoutTree` decision. Its C++/typed-λΠ comparison
+  covers 524,288 assignments to 19 source-condition observations, including
+  null style, display/content, marker-group, appearance, legend, text-combine,
+  first-line, overlay, and list-style triggers. Conditions derived from
+  ComputedStyle fields and element subtype are abstract inputs, and layout-tree
+  rebuilding is not modeled.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).
