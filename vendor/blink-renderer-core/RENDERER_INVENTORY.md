@@ -192,8 +192,9 @@ Current λΠ work is small compared with that source surface:
   into optional container dimensions, six viewport dimensions, and generator-value
   equivalence. Its C++/λΠ loop spans 663,552 finite states; numeric domains are
   restricted to absent/0/1 for container sizes and 0/1 for viewport components.
-  A paint-specific extension also models `CSSPaintValue::Equals` over finite
-  name/custom-CSS-text atoms and composes it with representative image sizes.
+  A paint-specific extension models `CSSPaintValue::Equals` for six finite values
+  built from two simple names and zero/one simple argument. It derives `paint(...)`
+  text and checks 36 value pairs plus 144 image-size compositions.
 * `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
   `DiffAffectsScrollAnimations` predicate and its first-priority route into the
   computed-style difference severity. The C++/typed-λΠ comparisons cover all

@@ -937,11 +937,12 @@ generator values. The λΠ model represents optional dimensions with `noneSize` 
 equivalence as an explicit Boolean input. The executable compares 663,552 finite
 size/value states, including the generated-image reattach decision. A paint-
 specific route also models `CSSPaintValue::Equals`, which compares `GetName()`
-and `CustomCSSText()`, using finite name and custom-CSS-text atoms. Sixteen atom
-pairs compare directly; 64 cases compose that equality with representative
-container and viewport comparisons. Their cross-product may include pairs that
-are not constructible CSSPaintValues. This omits arbitrary doubles, NaN or
-signed-zero behavior, lazy size lookup effects, general string serialization,
+and `CustomCSSText()`. It constructs six finite values from simple names
+(`alpha`, `beta`) and zero or one serialized argument (`red`, `blue`), then
+derives each `paint(...)` string. Thirty-six value pairs compare directly; 144
+cases compose paint equality with representative equal/unequal container and
+viewport sizes. The model omits arbitrary doubles, NaN or signed-zero behavior,
+lazy size lookup effects, general argument serialization, multiple arguments,
 and gradient equality.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`

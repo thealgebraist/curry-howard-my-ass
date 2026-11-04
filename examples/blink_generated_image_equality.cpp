@@ -3,7 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <optional>
-#include <string_view>
+#include <string>
 #include <vector>
 
 using namespace lp;
@@ -13,6 +13,12 @@ struct ContainerSizes {
   std::optional<unsigned> height;
 };
 using ViewportSize = std::array<unsigned, 6>;
+struct CSSPaintValue {
+  const char* name_constructor;
+  const char* name;
+  const char* argument_constructor;
+  const char* argument;
+};
 
 static Ptr fn(Ptr a, Ptr b) { return arrow(std::move(a), std::move(b)); }
 static Rule rule(Ptr lhs, Ptr rhs) { return {std::move(lhs), std::move(rhs)}; }
@@ -39,6 +45,20 @@ static Ptr viewport_term(const ViewportSize& size) {
   for (unsigned value : size) dims.push_back(dimension_term(value));
   return apps(sym("viewportSize"), dims);
 }
+static Ptr paint_value_term(const CSSPaintValue& value) {
+  return apps(sym("cssPaintValue"),
+              {sym(value.name_constructor), sym(value.argument_constructor)});
+}
+static std::string paint_custom_css_text(const CSSPaintValue& value) {
+  std::string text = "paint(";
+  text += value.name;
+  if (value.argument) {
+    text += ", ";
+    text += value.argument;
+  }
+  text += ')';
+  return text;
+}
 static Ptr generated_equal_term(const ContainerSizes& left_container,
                                 const ContainerSizes& right_container,
                                 const ViewportSize& left_viewport,
@@ -53,12 +73,12 @@ static Ptr generated_paint_equal_term(const ContainerSizes& left_container,
                                      const ContainerSizes& right_container,
                                      const ViewportSize& left_viewport,
                                      const ViewportSize& right_viewport,
-                                     const char* left_name, const char* right_name,
-                                     const char* left_css_text, const char* right_css_text) {
+                                     const CSSPaintValue& left_paint,
+                                     const CSSPaintValue& right_paint) {
   return apps(sym("generatedPaintImageEqual"),
               {container_term(left_container), container_term(right_container),
                viewport_term(left_viewport), viewport_term(right_viewport),
-               sym(left_name), sym(right_name), sym(left_css_text), sym(right_css_text)});
+               paint_value_term(left_paint), paint_value_term(right_paint)});
 }
 
 int main() {
@@ -66,7 +86,8 @@ int main() {
   std::vector<Rule> rules;
   const Ptr B = sym("Bool"), D = sym("Dimension"), O = sym("OptionalSize");
   const Ptr C = sym("ContainerSizes"), V = sym("ViewportSize");
-  const Ptr P = sym("CSSPaintName"), T = sym("CSSPaintText");
+  const Ptr P = sym("CSSPaintName"), A = sym("CSSPaintArgument");
+  const Ptr Q = sym("CSSPaintValue"), T = sym("CSSPaintText");
   signature["Bool"] = type_sort();
   signature["true"] = B;
   signature["false"] = B;
@@ -85,9 +106,16 @@ int main() {
   signature["CSSPaintName"] = type_sort();
   signature["paintNameA"] = P;
   signature["paintNameB"] = P;
+  signature["CSSPaintArgument"] = type_sort();
+  signature["noPaintArgument"] = A;
+  signature["paintArgumentRed"] = A;
+  signature["paintArgumentBlue"] = A;
+  signature["CSSPaintValue"] = type_sort();
+  signature["cssPaintValue"] = fn(P, fn(A, Q));
   signature["CSSPaintText"] = type_sort();
-  signature["paintTextA"] = T;
-  signature["paintTextB"] = T;
+  const char* paint_texts[]={"paintTextAlphaNone", "paintTextAlphaRed", "paintTextAlphaBlue",
+                             "paintTextBetaNone", "paintTextBetaRed", "paintTextBetaBlue"};
+  for (const char* text : paint_texts) signature[text] = T;
   signature["andB"] = fn(B, fn(B, B));
   signature["notB"] = fn(B, B);
   signature["dimensionEqual"] = fn(D, fn(D, B));
@@ -96,9 +124,12 @@ int main() {
   signature["viewportSizeEqual"] = fn(V, fn(V, B));
   signature["generatedImageEqual"] = fn(C, fn(C, fn(V, fn(V, fn(B, B)))));
   signature["generatedImageNeedsReattach"] = fn(C, fn(C, fn(V, fn(V, fn(B, B)))));
-  signature["paintValueEqual"] = fn(P, fn(P, fn(T, fn(T, B))));
-  signature["generatedPaintImageEqual"] = fn(C, fn(C, fn(V, fn(V, fn(P, fn(P, fn(T, fn(T, B))))))));
-  signature["generatedPaintImageNeedsReattach"] = fn(C, fn(C, fn(V, fn(V, fn(P, fn(P, fn(T, fn(T, B))))))));
+  signature["paintNameEqual"] = fn(P, fn(P, B));
+  signature["paintTextEqual"] = fn(T, fn(T, B));
+  signature["paintCustomCSSText"] = fn(P, fn(A, T));
+  signature["paintValueEqual"] = fn(Q, fn(Q, B));
+  signature["generatedPaintImageEqual"] = fn(C, fn(C, fn(V, fn(V, fn(Q, fn(Q, B))))));
+  signature["generatedPaintImageNeedsReattach"] = fn(C, fn(C, fn(V, fn(V, fn(Q, fn(Q, B))))));
 
   for (bool a : {false, true})
     for (bool b : {false, true})
@@ -152,18 +183,34 @@ int main() {
                        app(sym("notB"), apps(sym("generatedImageEqual"), generated_args))));
 
   for (const char* name : {"paintNameA", "paintNameB"})
-    for (const char* text : {"paintTextA", "paintTextB"})
-      rules.push_back(rule(apps(sym("paintValueEqual"),
-                                {sym(name), sym(name), sym(text), sym(text)}), sym("true")));
+    for (const char* arg : {"noPaintArgument", "paintArgumentRed", "paintArgumentBlue"}) {
+      const char* text = (std::string(name)=="paintNameA")
+        ? (std::string(arg)=="noPaintArgument" ? paint_texts[0]
+           : std::string(arg)=="paintArgumentRed" ? paint_texts[1] : paint_texts[2])
+        : (std::string(arg)=="noPaintArgument" ? paint_texts[3]
+           : std::string(arg)=="paintArgumentRed" ? paint_texts[4] : paint_texts[5]);
+      rules.push_back(rule(apps(sym("paintCustomCSSText"), {sym(name),sym(arg)}), sym(text)));
+    }
+  for (const char* name : {"paintNameA", "paintNameB"})
+    rules.push_back(rule(apps(sym("paintNameEqual"), {sym(name),sym(name)}), sym("true")));
+  rules.push_back(rule(apps(sym("paintNameEqual"), {pvar(40),pvar(41)}), sym("false")));
+  for (const char* text : paint_texts)
+    rules.push_back(rule(apps(sym("paintTextEqual"), {sym(text),sym(text)}), sym("true")));
+  rules.push_back(rule(apps(sym("paintTextEqual"), {pvar(42),pvar(43)}), sym("false")));
   rules.push_back(rule(apps(sym("paintValueEqual"),
-                            {pvar(40), pvar(41), pvar(42), pvar(43)}), sym("false")));
-  std::vector<Ptr> generated_paint_args={pvar(50),pvar(51),pvar(52),pvar(53),
-                                         pvar(54),pvar(55),pvar(56),pvar(57)};
+                            {apps(sym("cssPaintValue"), {pvar(44),pvar(45)}),
+                             apps(sym("cssPaintValue"), {pvar(46),pvar(47)})}),
+                       apps(sym("andB"),
+                         {apps(sym("paintNameEqual"), {pvar(44),pvar(46)}),
+                          apps(sym("paintTextEqual"),
+                            {apps(sym("paintCustomCSSText"), {pvar(44),pvar(45)}),
+                             apps(sym("paintCustomCSSText"), {pvar(46),pvar(47)})})})));
+  std::vector<Ptr> generated_paint_args={pvar(50),pvar(51),pvar(52),pvar(53),pvar(54),pvar(55)};
   Ptr generated_paint_rhs=apps(sym("andB"),
     {apps(sym("containerSizesEqual"), {pvar(50),pvar(51)}),
      apps(sym("andB"),
        {apps(sym("viewportSizeEqual"), {pvar(52),pvar(53)}),
-        apps(sym("paintValueEqual"), {pvar(54),pvar(55),pvar(56),pvar(57)})})});
+        apps(sym("paintValueEqual"), {pvar(54),pvar(55)})})});
   rules.push_back(rule(apps(sym("generatedPaintImageEqual"), generated_paint_args), generated_paint_rhs));
   rules.push_back(rule(apps(sym("generatedPaintImageNeedsReattach"), generated_paint_args),
                        app(sym("notB"), apps(sym("generatedPaintImageEqual"), generated_paint_args))));
@@ -177,8 +224,8 @@ int main() {
   assert(generated_type && conv(*generated_type, B, indexed_rules));
   auto paint_type = infer({}, generated_paint_equal_term({std::nullopt,0u}, {std::nullopt,0u},
                                                           {0,0,0,0,0,0}, {0,0,0,0,0,0},
-                                                          "paintNameA", "paintNameA",
-                                                          "paintTextA", "paintTextA"),
+                                                          {"paintNameA","alpha","noPaintArgument",nullptr},
+                                                          {"paintNameA","alpha","noPaintArgument",nullptr}),
                           signature, rules);
   assert(paint_type && conv(*paint_type, B, indexed_rules));
 
@@ -228,15 +275,20 @@ int main() {
             << " corresponding states.\n";
   std::cout << "Container dimensions use absent/0/1 values and six viewport dimensions use 0/1; "
                "CSSImageGeneratorValue equivalence is an input.\n";
+  const std::vector<CSSPaintValue> paint_values={
+    {"paintNameA","alpha","noPaintArgument",nullptr},
+    {"paintNameA","alpha","paintArgumentRed","red"},
+    {"paintNameA","alpha","paintArgumentBlue","blue"},
+    {"paintNameB","beta","noPaintArgument",nullptr},
+    {"paintNameB","beta","paintArgumentRed","red"},
+    {"paintNameB","beta","paintArgumentBlue","blue"}
+  };
   unsigned paint_value_pairs=0, paint_image_compositions=0;
-  const char* paint_names[]={"paintNameA","paintNameB"};
-  const char* paint_texts[]={"paintTextA","paintTextB"};
-  for (const char* left_name : paint_names) for (const char* right_name : paint_names)
-    for (const char* left_text : paint_texts) for (const char* right_text : paint_texts) {
-      const bool expected=std::string_view(left_name)==right_name &&
-                         std::string_view(left_text)==right_text;
+  for (const auto& left_paint : paint_values) for (const auto& right_paint : paint_values) {
+      const bool expected=std::string(left_paint.name)==right_paint.name &&
+                          paint_custom_css_text(left_paint)==paint_custom_css_text(right_paint);
       Ptr value_equal=apps(sym("paintValueEqual"),
-                           {sym(left_name),sym(right_name),sym(left_text),sym(right_text)});
+                           {paint_value_term(left_paint),paint_value_term(right_paint)});
       if (!conv(normalize(value_equal,indexed_rules),bool_term(expected),indexed_rules)) {
         std::cerr << "CSSPaintValue string equality mismatch\n";
         return 4;
@@ -253,7 +305,7 @@ int main() {
             left_container.width==right_container.width && left_container.height==right_container.height &&
             left_viewport==right_viewport;
           auto term=generated_paint_equal_term(left_container,right_container,left_viewport,right_viewport,
-                                               left_name,right_name,left_text,right_text);
+                                               left_paint,right_paint);
           if (!conv(normalize(term,indexed_rules),bool_term(generated_expected),indexed_rules)) {
             std::cerr << "generated paint image equality mismatch\n";
             return 5;
@@ -261,7 +313,7 @@ int main() {
           Ptr reattach=apps(sym("generatedPaintImageNeedsReattach"),
                             {container_term(left_container),container_term(right_container),
                              viewport_term(left_viewport),viewport_term(right_viewport),
-                             sym(left_name),sym(right_name),sym(left_text),sym(right_text)});
+                             paint_value_term(left_paint),paint_value_term(right_paint)});
           if (!conv(normalize(reattach,indexed_rules),bool_term(!generated_expected),indexed_rules)) {
             std::cerr << "generated paint reattach mismatch\n";
             return 6;
