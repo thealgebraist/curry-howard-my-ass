@@ -562,13 +562,18 @@ compare representative decimal and hex traces with a C++ transcription.
 Named-entity lookup is excluded.
 
 Blink checks `result > UCHAR_MAX_VALUE` and latches `kInvalidUnicode` at
-`html_entity_parser.cc:261-262`; this model does not connect unbounded
-accumulation to that overflow sentinel. `AppendLegalEntityFor` at lines
-138-149 replaces zero, surrogates, and values above U+10FFFF, then applies a
-Windows-1252 extension for U+0080-U+009F. The typed model includes a separate
-finite classifier for replacement, U+0080 and U+009F representative mappings,
-and ordinary values, but does not link that classifier to every accumulator
-result. It therefore does not establish complete code-point decoding.
+`html_entity_parser.cc:261-262`. The pinned `DEPS:2443-2445` selects ICU
+revision `b09986242cfb165b9111ade98be6b042ef973b86`; ICU defines
+`UCHAR_MAX_VALUE` as `0x10FFFF`. The λΠ model now compares each transition
+against an independently declared finite radix table and covers exact-limit,
+over-limit, and later-digit traces for both decimal and hex. The invalid
+sentinel remains latched across subsequent digits in those traces.
+`AppendLegalEntityFor` at `html_entity_parser.cc:138-149` replaces zero,
+surrogates, and values above U+10FFFF, then applies a Windows-1252 extension
+for U+0080-U+009F. Tested scan outputs connect to replacement for zero,
+surrogate, and invalid; U+0080/U+009F representative mappings; and ordinary
+values. The finite transition set does not establish arbitrary radix
+accumulation or cover all 32 Windows-1252 entries.
 `SegmentedString` rollback mechanics and tokenizer call-site append/error
 behavior are also outside this slice.
 

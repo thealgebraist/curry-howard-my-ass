@@ -1,72 +1,84 @@
 #include "../src/lambda_pi.hpp"
 #include <cassert>
 #include <cstdint>
+#include <optional>
+#include <set>
+#include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 using namespace lp;
-enum class Mode { Initial, Number, HexPrefix, Dec, Hex, Done, Await };
-struct Result { Mode mode; uint32_t value; bool consumed_terminator; size_t pos; };
+enum class Mode { Initial, Number, HexPrefix, Decimal, Hex, Done, Await };
+struct Scan { Mode mode=Mode::Initial; int64_t value=0; bool accepted=false, semicolon=false; unsigned cursor=0; };
+struct Arithmetic { bool hex; int64_t before; unsigned digit; int64_t after; };
 static int dec(char c){return c>='0'&&c<='9'?c-'0':-1;}
 static int hexv(char c){if(c>='0'&&c<='9')return c-'0';if(c>='a'&&c<='f')return c-'a'+10;if(c>='A'&&c<='F')return c-'A'+10;return -1;}
-static uint32_t legal(uint32_t v){static constexpr uint32_t win[32]={0x20ac,0x81,0x201a,0x192,0x201e,0x2026,0x2020,0x2021,0x2c6,0x2030,0x160,0x2039,0x152,0x8d,0x17d,0x8f,0x90,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,0x2dc,0x2122,0x161,0x203a,0x153,0x9d,0x17e,0x178};if(v==0||v>0x10ffff||(v>=0xd800&&v<=0xdfff))return 0xfffd;if(v>=0x80&&v<=0x9f)return win[v-0x80];return v;}
-enum class LegalClass { Zero, Surrogate, AboveMax, Win80, Win9f, Ordinary };
-static const char* lc(LegalClass x){switch(x){case LegalClass::Zero:return"zeroPoint";case LegalClass::Surrogate:return"surrogatePoint";case LegalClass::AboveMax:return"aboveMaxPoint";case LegalClass::Win80:return"win80Point";case LegalClass::Win9f:return"win9fPoint";default:return"ordinaryPoint";}}
-static const char* mapped(LegalClass x){switch(x){case LegalClass::Zero:case LegalClass::Surrogate:case LegalClass::AboveMax:return"replacementPoint";case LegalClass::Win80:return"euroPoint";case LegalClass::Win9f:return"yDiaeresisPoint";default:return"ordinaryResult";}}
-static Result cpp_scan(std::string_view in){Mode m=Mode::Initial;uint32_t v=0;size_t i=0;
- while(i<in.size()) {char c=in[i];switch(m){
-  case Mode::Initial: if(c=='#'){m=Mode::Number;++i;continue;} return {Mode::Done,0,false,i};
-  case Mode::Number: if(c=='x'||c=='X'){m=Mode::HexPrefix;++i;continue;} if(dec(c)>=0){m=Mode::Dec;continue;} return {Mode::Done,0,false,0};
-  case Mode::HexPrefix: if(hexv(c)>=0){m=Mode::Hex;continue;} return {Mode::Done,0,false,0};
-  case Mode::Dec: if(dec(c)>=0){v=v*10+static_cast<unsigned>(dec(c));++i;continue;} if(c==';'){++i;return {Mode::Done,legal(v),true,i};} return {Mode::Done,legal(v),false,i};
-  case Mode::Hex: if(hexv(c)>=0){v=v*16+static_cast<unsigned>(hexv(c));++i;continue;} if(c==';'){++i;return {Mode::Done,legal(v),true,i};} return {Mode::Done,legal(v),false,i};
-  default: return {m,v,false,i};
- }} if(m==Mode::Number||m==Mode::HexPrefix||m==Mode::Dec||m==Mode::Hex)return {Mode::Await,0,false,0};return {Mode::Await,v,false,i};
+static uint32_t append_legal(int64_t c){
+ static constexpr uint32_t w[32]={0x20ac,0x81,0x201a,0x192,0x201e,0x2026,0x2020,0x2021,0x2c6,0x2030,0x160,0x2039,0x152,0x8d,0x17d,0x8f,0x90,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,0x2dc,0x2122,0x161,0x203a,0x153,0x9d,0x17e,0x178};
+ if(c<=0||c>0x10ffff||(c>=0xd800&&c<=0xdfff))return 0xfffd;
+ if(c>=0x80&&c<=0x9f)return w[c-0x80];return static_cast<uint32_t>(c);
 }
-static Ptr fn(Ptr a,Ptr b){return arrow(std::move(a),std::move(b));} static Rule rule(Ptr a,Ptr b){return{std::move(a),std::move(b)};}
-static Ptr nat(unsigned n){Ptr r=sym("z");while(n--)r=app(sym("s"),r);return r;}
-static Ptr mode(Mode m){static const char* n[]={"initial","number","hexPrefix","decimal","hexadecimal","done","await"};return sym(n[static_cast<unsigned>(m)]);}
-static Ptr digit(char c){if(c>='0'&&c<='9')return sym((std::string("d")+c).c_str());if(c>='a'&&c<='f')return sym((std::string("h")+char(c-'a'+'A')).c_str());if(c>='A'&&c<='F')return sym((std::string("h")+c).c_str());if(c=='#')return sym("hash");if(c=='x')return sym("lowerX");if(c=='X')return sym("upperX");if(c==';')return sym("semi");return sym("other");}
-static Ptr input_term(std::string_view s){Ptr r=sym("end");for(auto i=s.rbegin();i!=s.rend();++i)r=apps(sym("cons"),digit(*i),r);return r;}
-static Ptr output(const Result& r){return apps(sym("result"),mode(r.mode),nat(r.value),sym(r.consumed_terminator?"true":"false"),nat(static_cast<unsigned>(r.pos)));}
-int main(){
- Signature sig;std::vector<Rule> rs;auto p=[](int i){return pvar(i);};Ptr n=sym("Nat"),d=sym("Digit"),inp=sym("Input"),state=sym("ScanState"),bit=sym("Bool");
- sig["Nat"]=type_sort();sig["z"]=n;sig["s"]=fn(n,n);sig["Bool"]=type_sort();sig["true"]=bit;sig["false"]=bit;
- for(const char* x:{"initial","number","hexPrefix","decimal","hexadecimal","done","await"})sig[x]=sym("Mode");sig["Mode"]=type_sort();
- sig["Digit"]=type_sort();sig["Input"]=type_sort();sig["end"]=inp;sig["cons"]=fn(d,fn(inp,inp));
- std::vector<std::pair<const char*,unsigned>> ds={{"d0",0},{"d1",1},{"d2",2},{"d3",3},{"d4",4},{"d5",5},{"d6",6},{"d7",7},{"d8",8},{"d9",9},{"hA",10},{"hB",11},{"hC",12},{"hD",13},{"hE",14},{"hF",15}};
- for(auto [name,v]:ds){sig[name]=d;sig[(std::string("val")+name).c_str()]=n;}
- for(const char* x:{"hash","lowerX","upperX","semi","other"})sig[x]=d;
- sig["ScanState"]=type_sort();sig["scan"]=fn(state,fn(n,fn(inp,state))); // encoded result state
- sig["st"]=fn(sym("Mode"),fn(n,fn(bit,fn(n,state))));sig["result"]=fn(sym("Mode"),fn(n,fn(bit,fn(n,state))));
- sig["addDigit10"]=fn(n,fn(n,n));sig["addDigit16"]=fn(n,fn(n,n));sig["arith10"]=fn(n,fn(n,n));sig["arith16"]=fn(n,fn(n,n));sig["legal"]=fn(n,n);
- sig["step"]=fn(state,fn(d,state));sig["run"]=fn(state,fn(inp,state));sig["inputAt"]=fn(n,inp);sig["expectedAt"]=fn(n,state);sig["valueOf"]=fn(state,n);sig["posOf"]=fn(state,n);
- sig["dval"]=fn(d,n);sig["hexval"]=fn(d,n);sig["isDec"]=fn(d,bit);sig["isHex"]=fn(d,bit);
- sig["LegalClass"]=type_sort();for(auto x:{LegalClass::Zero,LegalClass::Surrogate,LegalClass::AboveMax,LegalClass::Win80,LegalClass::Win9f,LegalClass::Ordinary})sig[lc(x)]=sym("LegalClass");sig["LegalResult"]=type_sort();for(const char* x:{"replacementPoint","euroPoint","yDiaeresisPoint","ordinaryResult"})sig[x]=sym("LegalResult");sig["classifyLegal"]=fn(sym("LegalClass"),sym("LegalResult"));
- Ptr yes=sym("true"),no=sym("false");
- rs.push_back(rule(apps(sym("addDigit10"),p(0),p(1)),apps(sym("arith10"),p(0),p(1))));rs.push_back(rule(apps(sym("addDigit16"),p(0),p(1)),apps(sym("arith16"),p(0),p(1))));
- for(auto [a,digitv]:std::vector<std::pair<unsigned,unsigned>>{{0,0},{0,1},{1,2},{12,8},{0,9},{0,6},{6,5}})rs.push_back(rule(apps(sym("arith10"),nat(a),nat(digitv)),nat(a*10+digitv)));
- for(auto [a,digitv]:std::vector<std::pair<unsigned,unsigned>>{{0,4},{0,8},{8,0},{0,10}})rs.push_back(rule(apps(sym("arith16"),nat(a),nat(digitv)),nat(a*16+digitv)));
+static Scan cpp_step(Scan s,char c){
+ auto add=[&](bool hex,unsigned d){if(s.value<0)return;int64_t next=s.value*(hex?16:10)+d;s.value=next>0x10ffff?-1:next;};
+ switch(s.mode){
+ case Mode::Initial:if(c=='#'){s.mode=Mode::Number;++s.cursor;}else{s.mode=Mode::Done;}return s;
+ case Mode::Number:if(c=='x'||c=='X'){s.mode=Mode::HexPrefix;++s.cursor;}else if(dec(c)>=0){s.mode=Mode::Decimal;add(false,dec(c));++s.cursor;}else{s.mode=Mode::Done;s.value=0;s.cursor=0;}return s;
+ case Mode::HexPrefix:if(hexv(c)>=0){s.mode=Mode::Hex;add(true,hexv(c));++s.cursor;}else{s.mode=Mode::Done;s.value=0;s.cursor=0;}return s;
+ case Mode::Decimal:if(dec(c)>=0){add(false,dec(c));++s.cursor;}else{s.mode=Mode::Done;s.value=append_legal(s.value);s.accepted=true;if(c==';'){s.semicolon=true;++s.cursor;}}return s;
+ case Mode::Hex:if(hexv(c)>=0){add(true,hexv(c));++s.cursor;}else{s.mode=Mode::Done;s.value=append_legal(s.value);s.accepted=true;if(c==';'){s.semicolon=true;++s.cursor;}}return s;
+ case Mode::Done:case Mode::Await:return s;
+ }return s;
+}
+static Scan cpp_finish(Scan s){if(s.mode!=Mode::Done){s.mode=Mode::Await;s.value=0;s.accepted=false;s.semicolon=false;s.cursor=0;}return s;}
 
- for(auto [name,v]:ds){Ptr x=sym(name);rs.push_back(rule(app(sym("dval"),x),nat(v)));rs.push_back(rule(app(sym("hexval"),x),nat(v)));rs.push_back(rule(app(sym("isDec"),x),v<10?yes:no));rs.push_back(rule(app(sym("isHex"),x),yes));}
- for(const char* x:{"hash","lowerX","upperX","semi","other"}){rs.push_back(rule(app(sym("isDec"),sym(x)),no));rs.push_back(rule(app(sym("isHex"),sym(x)),no));}
- for(auto x:{LegalClass::Zero,LegalClass::Surrogate,LegalClass::AboveMax,LegalClass::Win80,LegalClass::Win9f,LegalClass::Ordinary})rs.push_back(rule(app(sym("classifyLegal"),sym(lc(x))),sym(mapped(x))));
- // State is result(mode, value, consumed-semicolon, cursor). Unconsumed terminators
- // return the cursor before that character; EOF becomes Await (streaming boundary).
- rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym("initial"),p(0),p(1),p(2)),sym("hash")),apps(sym("result"),sym("number"),p(0),p(1),app(sym("s"),p(2)))));
- rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym("number"),p(0),p(1),p(2)),sym("lowerX")),apps(sym("result"),sym("hexPrefix"),p(0),p(1),app(sym("s"),p(2)))));rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym("number"),p(0),p(1),p(2)),sym("upperX")),apps(sym("result"),sym("hexPrefix"),p(0),p(1),app(sym("s"),p(2)))));
- for(auto [name,v]:ds)if(v<10)rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym("number"),p(0),p(1),p(2)),sym(name)),apps(sym("result"),sym("decimal"),apps(sym("addDigit10"),p(0),app(sym("dval"),sym(name))),no,app(sym("s"),p(2)))));
- for(const char* m:{"decimal","hexadecimal","hexPrefix"}){for(auto [name,v]:ds){Ptr statex=sym(m);if(std::string_view(m)=="hexPrefix")statex=sym("hexPrefix");rs.push_back(rule(apps(sym("step"),apps(sym("result"),statex,p(0),p(1),p(2)),sym(name)),apps(sym("result"),std::string_view(m)=="decimal"?sym("decimal"):sym("hexadecimal"),apps(sym(std::string_view(m)=="decimal"?"addDigit10":"addDigit16"),p(0),app(sym(std::string_view(m)=="decimal"?"dval":"hexval"),sym(name))),no,app(sym("s"),p(2)))));}}
- rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym("decimal"),p(0),p(1),p(2)),sym("semi")),apps(sym("result"),sym("done"),p(0),yes,app(sym("s"),p(2)))));rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym("hexadecimal"),p(0),p(1),p(2)),sym("semi")),apps(sym("result"),sym("done"),p(0),yes,app(sym("s"),p(2)))));
- for(const char* m:{"decimal","hexadecimal"})rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym(m),p(0),p(1),p(2)),p(3)),apps(sym("result"),sym("done"),p(0),no,p(2))));
- for(const char* bad:{"other","semi","hash","lowerX","upperX"}){rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym("number"),p(0),p(1),p(2)),sym(bad)),apps(sym("result"),sym("done"),sym("z"),no,sym("z"))));rs.push_back(rule(apps(sym("step"),apps(sym("result"),sym("hexPrefix"),p(0),p(1),p(2)),sym(bad)),apps(sym("result"),sym("done"),sym("z"),no,sym("z"))));}
- rs.push_back(rule(apps(sym("valueOf"),apps(sym("result"),p(0),p(1),p(2),p(3))),p(1)));rs.push_back(rule(apps(sym("posOf"),apps(sym("result"),p(0),p(1),p(2),p(3))),p(3)));
- rs.push_back(rule(apps(sym("run"),apps(sym("result"),sym("done"),p(0),p(1),p(2)),sym("end")),apps(sym("result"),sym("done"),p(0),p(1),p(2))));
- rs.push_back(rule(apps(sym("run"),p(0),sym("end")),apps(sym("result"),sym("await"),sym("z"),no,sym("z"))));
- rs.push_back(rule(apps(sym("run"),p(0),apps(sym("cons"),p(1),p(2))),apps(sym("run"),apps(sym("step"),p(0),p(1)),p(2))));
- const std::vector<std::string_view> cases={"#12;","#xA;","#12z","#9","#","#x","#xZ","#xA!"};
- for(size_t i=0;i<cases.size();++i){Result c=cpp_scan(cases[i]);rs.push_back(rule(app(sym("inputAt"),nat(i)),input_term(cases[i])));rs.push_back(rule(app(sym("expectedAt"),nat(i)),output(c)));Ptr start=apps(sym("result"),sym("initial"),sym("z"),no,sym("z"));Ptr term=apps(sym("run"),start,app(sym("inputAt"),nat(i)));auto ty=infer({},term,sig,rs);assert(ty&&conv(*ty,state,rs));assert(conv(nf(term,rs),output(c),rs));}
- for(auto x:{LegalClass::Zero,LegalClass::Surrogate,LegalClass::AboveMax,LegalClass::Win80,LegalClass::Win9f,LegalClass::Ordinary}){Ptr term=app(sym("classifyLegal"),sym(lc(x)));assert(conv(nf(term,rs),sym(mapped(x)),rs));}
- assert(legal(0)==0xfffd&&legal(0xd800)==0xfffd&&legal(0x110000)==0xfffd&&legal(0x80)==0x20ac&&legal(0x9f)==0x178);
- std::println("Blink numeric HTML entity scanner: {} finite decimal/hex traces and 6 legal-codepoint classes agree with typed λΠ",cases.size());
+// Explicit finite transition table, independent of the C++ scanner's execution.
+static const std::vector<Arithmetic> arithmetic={
+ {false,0,0,0},{false,0,1,1},{false,0,9,9},{false,1,2,12},{false,12,8,128},{false,0,6,6},{false,6,5,65},
+ {false,0,5,5},{false,5,5,55},{false,55,2,552},{false,552,9,5529},{false,5529,6,55296},
+ {false,1,1,11},{false,11,1,111},{false,111,4,1114},{false,1114,1,11141},{false,11141,1,111411},
+ {false,111411,1,1114111},{false,111411,2,-1},{false,1114111,0,-1},{false,-1,7,-1},{false,-1,5,-1},
+ {true,0,8,8},{true,8,0,128},{true,0,9,9},{true,9,15,159},{true,0,4,4},{true,4,1,65},
+ {true,0,1,1},{true,1,0,16},{true,16,15,271},{true,271,15,4351},{true,4351,15,69631},
+ {true,69631,15,1114111},{true,1,1,17},{true,17,0,272},{true,272,0,4352},{true,4352,0,69632},{true,69632,0,-1},{true,-1,15,-1}
+};
+static Ptr fn(Ptr a,Ptr b){return arrow(std::move(a),std::move(b));}
+static Rule rule(Ptr a,Ptr b){return{std::move(a),std::move(b)};}
+static Ptr nat(unsigned n){Ptr r=sym("z");while(n--)r=app(sym("s"),r);return r;}
+static std::string value_name(int64_t v){return v<0?"invalid":"v"+std::to_string(v);}
+static Ptr value(int64_t v){return sym(value_name(v));}
+static const char* mode_name(Mode m){static constexpr const char* names[]={"initial","number","hexPrefix","decimal","hexadecimal","done","await"};return names[static_cast<unsigned>(m)];}
+static std::string digit_name(char c){if(dec(c)>=0)return "d"+std::string(1,c);if(hexv(c)>=10)return "h"+std::string(1,char(c>='a'?c-'a'+'A':c));if(c=='#')return"hash";if(c=='x')return"lowerX";if(c=='X')return"upperX";if(c==';')return"semi";return"other";}
+static Ptr cp_term(uint32_t cp){if(cp==0xfffd)return sym("replacement");if(cp==0x20ac)return sym("euro");if(cp==0x178)return sym("yDiaeresis");return value(cp);}
+static Ptr scan_term(Scan s){Ptr v=s.mode==Mode::Done&&s.accepted?cp_term(static_cast<uint32_t>(s.value)):value(s.mode==Mode::Done?0:s.value);return apps(sym("scanState"),sym(mode_name(s.mode)),v,sym(s.accepted?"yes":"no"),sym(s.semicolon?"yes":"no"),nat(s.cursor));}
+static Ptr digit_term(char c){return sym(digit_name(c));}
+int main(){
+ const std::vector<std::string_view> cases={"#0;","#128;","#x9F;","#65;","#55296;","#1114112;","#11141120;","#x110000;","#x110000F;","#1114111;","#x10FFFF;","#12z","#xZ","#","#x","#9"};
+ Signature sig;std::vector<Rule> rs;auto p=[](int i){return pvar(i);};
+ Ptr natty=sym("Nat"),dig=sym("Digit"),state=sym("State"),bit=sym("Bool"),vty=sym("Value");
+ sig["Nat"]=type_sort();sig["z"]=natty;sig["s"]=fn(natty,natty);sig["Bool"]=type_sort();sig["yes"]=bit;sig["no"]=bit;sig["Mode"]=type_sort();
+ for(const char* m:{"initial","number","hexPrefix","decimal","hexadecimal","done","await"})sig[m]=sym("Mode");
+ sig["Digit"]=type_sort();for(const char* d:{"hash","lowerX","upperX","semi","other"})sig[d]=dig;for(unsigned i=0;i<10;++i)sig["d"+std::to_string(i)]=dig;for(const char* d:{"hA","hB","hC","hD","hE","hF"})sig[d]=dig;
+ sig["Value"]=type_sort();std::set<int64_t> vals={0,1,4,5,6,8,9,10,11,12,16,17,55,65,111,128,159,256,271,272,552,1114,4096,4351,4352,5529,43520,65536,69631,69632,111411,1114110,1114111,1114112,-1};
+ for(const auto& a:arithmetic){vals.insert(a.before);vals.insert(a.after);}for(auto x:vals)sig[value_name(x)]=vty;for(const char* c:{"replacement","euro","yDiaeresis"})sig[c]=vty;
+ sig["scanState"]=fn(sym("Mode"),fn(vty,fn(bit,fn(bit,fn(natty,state)))));sig["acc10"]=fn(vty,fn(dig,vty));sig["acc16"]=fn(vty,fn(dig,vty));sig["legal"]=fn(vty,vty);sig["step"]=fn(state,fn(dig,state));sig["finish"]=fn(state,state);
+ auto yes=sym("yes"),no=sym("no");
+ for(const auto& a:arithmetic){Ptr d=sym(a.hex?(a.digit<10?"d"+std::to_string(a.digit):"h"+std::string(1,char('A'+a.digit-10))):"d"+std::to_string(a.digit));rs.push_back(rule(apps(sym(a.hex?"acc16":"acc10"),value(a.before),d),value(a.after)));}
+ // Once invalid, all later digits preserve the sentinel.
+ for(unsigned d=0;d<10;++d){Ptr x=sym(("d"+std::to_string(d)).c_str());rs.push_back(rule(apps(sym("acc10"),sym("invalid"),x),sym("invalid")));}
+ for(unsigned d=0;d<16;++d){Ptr x=sym((d<10?"d"+std::to_string(d):"h"+std::string(1,char('A'+d-10))).c_str());rs.push_back(rule(apps(sym("acc16"),sym("invalid"),x),sym("invalid")));}
+ rs.push_back(rule(app(sym("legal"),sym("invalid")),sym("replacement")));rs.push_back(rule(app(sym("legal"),sym("v0")),sym("replacement")));rs.push_back(rule(app(sym("legal"),sym("v55296")),sym("replacement")));rs.push_back(rule(app(sym("legal"),sym("v128")),sym("euro")));rs.push_back(rule(app(sym("legal"),sym("v159")),sym("yDiaeresis")));rs.push_back(rule(app(sym("legal"),p(0)),p(0)));
+ rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("initial"),p(0),p(1),p(2),p(3)),sym("hash")),apps(sym("scanState"),sym("number"),p(0),no,no,app(sym("s"),p(3)))));
+ rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("number"),p(0),p(1),p(2),p(3)),sym("lowerX")),apps(sym("scanState"),sym("hexPrefix"),p(0),no,no,app(sym("s"),p(3)))));rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("number"),p(0),p(1),p(2),p(3)),sym("upperX")),apps(sym("scanState"),sym("hexPrefix"),p(0),no,no,app(sym("s"),p(3)))));
+ for(unsigned d=0;d<10;++d){Ptr x=sym(("d"+std::to_string(d)).c_str());rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("number"),p(0),p(1),p(2),p(3)),x),apps(sym("scanState"),sym("decimal"),apps(sym("acc10"),sym("v0"),x),no,no,app(sym("s"),p(3)))));}
+ for(unsigned d=0;d<16;++d){Ptr x=sym((d<10?"d"+std::to_string(d):"h"+std::string(1,char('A'+d-10))).c_str());rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("hexPrefix"),p(0),p(1),p(2),p(3)),x),apps(sym("scanState"),sym("hexadecimal"),apps(sym("acc16"),sym("v0"),x),no,no,app(sym("s"),p(3)))));rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("decimal"),p(0),p(1),p(2),p(3)),x),apps(sym("scanState"),sym("decimal"),apps(sym("acc10"),p(0),x),no,no,app(sym("s"),p(3)))));rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("hexadecimal"),p(0),p(1),p(2),p(3)),x),apps(sym("scanState"),sym("hexadecimal"),apps(sym("acc16"),p(0),x),no,no,app(sym("s"),p(3)))));}
+ rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("decimal"),p(0),p(1),p(2),p(3)),sym("semi")),apps(sym("scanState"),sym("done"),app(sym("legal"),p(0)),yes,yes,app(sym("s"),p(3)))));rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("hexadecimal"),p(0),p(1),p(2),p(3)),sym("semi")),apps(sym("scanState"),sym("done"),app(sym("legal"),p(0)),yes,yes,app(sym("s"),p(3)))));
+ for(const char* m:{"decimal","hexadecimal"})rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym(m),p(0),p(1),p(2),p(3)),p(4)),apps(sym("scanState"),sym("done"),app(sym("legal"),p(0)),yes,no,p(3))));
+ for(const char* bad:{"other","semi","hash","lowerX","upperX","hA","hB","hC","hD","hE","hF"}){rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("number"),p(0),p(1),p(2),p(3)),sym(bad)),apps(sym("scanState"),sym("done"),sym("v0"),no,no,sym("z"))));rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("hexPrefix"),p(0),p(1),p(2),p(3)),sym(bad)),apps(sym("scanState"),sym("done"),sym("v0"),no,no,sym("z"))));}
+ rs.push_back(rule(apps(sym("step"),apps(sym("scanState"),sym("done"),p(0),p(1),p(2),p(3)),p(4)),apps(sym("scanState"),sym("done"),p(0),p(1),p(2),p(3))));
+ rs.push_back(rule(app(sym("finish"),apps(sym("scanState"),sym("done"),p(0),p(1),p(2),p(3))),apps(sym("scanState"),sym("done"),p(0),p(1),p(2),p(3))));rs.push_back(rule(app(sym("finish"),p(0)),apps(sym("scanState"),sym("await"),sym("v0"),no,no,sym("z"))));
+ Ptr start=apps(sym("scanState"),sym("initial"),sym("v0"),no,no,sym("z"));
+ auto check_typed=[&](Ptr term){auto ty=infer({},term,sig,rs);assert(ty&&conv(*ty,state,rs));};check_typed(apps(sym("step"),start,sym("hash")));
+ for(auto input:cases){Scan cpp;Ptr typed=start;for(char c:input){cpp=cpp_step(cpp,c);typed=nf(apps(sym("step"),typed,digit_term(c)),rs);if(!conv(typed,scan_term(cpp),rs)){std::println("mismatch {} char {} cpp {}",input,c,to_string(scan_term(cpp)));std::println("got {}",to_string(typed));return 1;}if(cpp.mode==Mode::Done)break;}cpp=cpp_finish(cpp);typed=nf(app(sym("finish"),typed),rs);assert(conv(typed,scan_term(cpp),rs));}
+ std::println("Blink numeric entity model: {} independent C++/typed λΠ step traces agree across exact U+10FFFF latch and final mapping",cases.size());
 }

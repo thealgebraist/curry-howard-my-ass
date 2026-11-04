@@ -23,7 +23,8 @@ By framing computation as **user-defined rewrite rules** over a bare $\lambda\Pi
 
 ## Features & C++23 Implementation
 
-* **~230 lines core**: The whole $\lambda\Pi/\mathcal{R}$ engine fits in a single readable header ([`src/lambda_pi.hpp`](src/lambda_pi.hpp)).
+* **Single-header core**: The $\lambda\Pi/\mathcal{R}$ engine is implemented in [`src/lambda_pi.hpp`](src/lambda_pi.hpp).
+* **Compiled rewrite lookup**: `RuleIndex` precomputes left-hand-side spines and groups rules by head symbol for large immutable rewrite systems. It preserves source order for overlapping rules; the original vector-based evaluator remains available.
 * **Modern C++23**:
   * `std::expected<Ptr, std::string>` for monadic type error propagation without exceptions.
   * `std::variant` + `std::visit` with pattern matching for AST nodes.
@@ -192,7 +193,8 @@ make test
    * The priority fields are a named projection, not Blink's complete `MatchedRule` sort key or `CascadePriority`; parsing, combinators, attribute/pseudo selectors, layers, origins, importance, property application, and full stylesheet ordering remain outside scope.
 
 32. **`examples/blink_numeric_html_entity_bisimulation.cpp`**:
-   * Models numeric reference prefix/decimal/hex scanning, finite radix accumulation, malformed-prefix rollback, semicolon and terminator outcomes, and exhausted-input rollback. Eight traces compare C++ and typed λΠ. A separate finite classifier covers replacement, representative Windows-1252 endpoint mappings, and ordinary values; Unicode mapping is not integrated with arbitrary numeric accumulators, and overflow classification is bounded.
+   * Models numeric reference prefix/decimal/hex scanning, finite radix transitions, malformed-prefix rollback, semicolon and terminator outcomes, and exhausted-input rollback. Sixteen per-character traces compare C++ and typed λΠ, including the U+10FFFF boundary, overflow-to-invalid latch, and later-digit retention.
+   * Termination connects the tested accumulators to replacement for zero/surrogate/invalid values, U+0080/U+009F Windows-1252 mappings, and ordinary output. The arithmetic and mapping tables remain finite and do not cover arbitrary accumulator traces or every Windows-1252 entry.
 
 33. **`examples/blink_html_named_entity.cpp`**:
    * Loads and validates all 2,231 pinned CSV rows, then embeds 11 selected entries in a generated λΠ trie because reducing the full trie stalls in the current rewrite kernel.

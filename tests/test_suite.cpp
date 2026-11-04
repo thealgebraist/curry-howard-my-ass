@@ -142,6 +142,45 @@ TEST_CASE(test_lambda_n_arithmetic) {
 }
 
 // ----------------------------------------------------------------------------
+// Test 2b: Compiled rewrite-rule lookup preserves vector semantics
+// ----------------------------------------------------------------------------
+TEST_CASE(test_indexed_rewrite_rules) {
+    Signature sig;
+    std::vector<Rule> rules;
+    sig["Nat"] = type_sort();
+    sig["zero"] = sym("Nat");
+    sig["succ"] = arrow(sym("Nat"), sym("Nat"));
+    sig["add"] = arrow(sym("Nat"), arrow(sym("Nat"), sym("Nat")));
+    rules.push_back({apps(sym("add"), sym("zero"), pvar(0)), pvar(0)});
+    rules.push_back({apps(sym("add"), app(sym("succ"), pvar(0)), pvar(1)),
+                     app(sym("succ"), apps(sym("add"), pvar(0), pvar(1)))});
+
+    // Unrelated rule heads exercise dispatch through the compiled index.
+    for (unsigned i = 0; i < 128; ++i) {
+        auto name = "noise" + std::to_string(i);
+        rules.push_back({app(sym(name), pvar(0)), pvar(0)});
+    }
+    RuleIndex indexed(rules);
+    Ptr term = apps(sym("add"), nat_term(3), nat_term(4));
+    Ptr expected = nat_term(7);
+    ASSERT_CONV(nf(term, rules), expected, rules);
+    ASSERT_CONV(nf(term, indexed), expected, indexed);
+
+    auto inferred = infer({}, term, sig, indexed);
+    ASSERT_TRUE(inferred.has_value());
+    ASSERT_CONV(*inferred, sym("Nat"), indexed);
+
+    // The index preserves source order when rules overlap.
+    sig["pick"] = arrow(sym("Nat"), sym("Nat"));
+    std::vector<Rule> ordered = {
+        {app(sym("pick"), pvar(0)), sym("zero")},
+        {app(sym("pick"), sym("zero")), app(sym("succ"), sym("zero"))}
+    };
+    RuleIndex ordered_index(ordered);
+    ASSERT_CONV(app(sym("pick"), sym("zero")), sym("zero"), ordered_index);
+}
+
+// ----------------------------------------------------------------------------
 // Test 3: Ackermann Function (Higher-order primitive recursion beyond PR)
 // ----------------------------------------------------------------------------
 TEST_CASE(test_ackermann) {

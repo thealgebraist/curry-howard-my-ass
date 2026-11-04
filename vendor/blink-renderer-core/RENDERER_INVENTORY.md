@@ -143,11 +143,12 @@ Current λΠ work is small compared with that source surface:
   outcomes. Character-reference resolution remains opaque.
 * `examples/blink_numeric_html_entity_bisimulation.cpp` models numeric
   character-reference prefix, decimal/hex accumulation, malformed-prefix
-  rollback, terminators, and exhausted-input rollback. Eight finite traces
-  agree between C++ and typed λΠ. A separate typed finite classifier covers
-  replacement, representative U+0080/U+009F mappings, and ordinary values; it
-  is not connected to arbitrary accumulator values. Overflow above U+10FFFF
-  and the full numeric-to-Unicode transformation are not modeled end to end.
+  rollback, terminators, and exhausted-input rollback. Sixteen per-character
+  finite traces agree between C++ and typed λΠ, including the U+10FFFF limit,
+  overflow latch, and ignored later digits. Tested values connect through
+  termination to replacement, representative U+0080/U+009F mappings, and
+  ordinary output. Arbitrary radix traces and the complete mapping table remain
+  outside the model.
 * `examples/blink_html_named_entity.cpp` parses and validates all 2,231 rows of
   the pinned names CSV, but embeds only 11 selected records in the λΠ trie;
   normalization of the full trie stalled beyond 45 seconds in the available

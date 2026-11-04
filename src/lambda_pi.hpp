@@ -10,6 +10,8 @@
 #include <expected>
 #include <format>
 #include <print>
+#include <cassert>
+#include <unordered_map>
 
 namespace lp {
 
@@ -103,10 +105,37 @@ inline Ptr roll(Ptr head, const std::vector<Ptr>& args, size_t start = 0) {
 }
 
 struct Rule { Ptr lhs, rhs; };
+// Optional compiled index for a rewrite system that has many rules. Keep the
+// source vector immutable for the lifetime of this index. Candidate ordering
+// follows the original vector, preserving first-match rewrite semantics.
+struct RuleIndex {
+    const std::vector<Rule>* rules;
+    const Rule* data;
+    size_t size;
+    std::vector<Spine> lhs_spines;
+    std::unordered_map<std::string, std::vector<size_t>> by_head;
+
+    explicit RuleIndex(const std::vector<Rule>& source)
+        : rules(&source), data(source.data()), size(source.size()) {
+        lhs_spines.reserve(source.size());
+        for (size_t i = 0; i < source.size(); ++i) {
+            lhs_spines.push_back(unroll(source[i].lhs));
+            if (const auto* head = std::get_if<Sym>(&lhs_spines.back().head->v))
+                by_head[head->name].push_back(i);
+        }
+    }
+
+    void validate() const {
+        assert(rules && rules->data() == data && rules->size() == size &&
+               "rewrite rules must remain unchanged after RuleIndex construction");
+    }
+};
 using Env = std::map<size_t, Ptr>;
 
 Ptr whnf(Ptr t, const std::vector<Rule>& rules);
 bool conv(Ptr t1, Ptr t2, const std::vector<Rule>& rules);
+Ptr whnf(Ptr t, const RuleIndex& rules);
+bool conv(Ptr t1, Ptr t2, const RuleIndex& rules);
 
 inline Ptr instantiate(Ptr t, const Env& env, size_t depth = 0) {
     return std::visit(match_visitor{
@@ -152,6 +181,39 @@ inline bool match_pat(Ptr pat, Ptr t, Env& env, const std::vector<Rule>& rules) 
     }, pat->v);
 }
 
+inline bool match_pat(Ptr pat, Ptr t, Env& env, const RuleIndex& rules) {
+    if (auto p = std::get_if<PVar>(&pat->v)) {
+        auto it = env.find(p->id);
+        if (it != env.end()) return conv(it->second, t, rules);
+        env[p->id] = t;
+        return true;
+    }
+    t = whnf(t, rules);
+    if (pat->v.index() != t->v.index()) return false;
+
+    return std::visit(match_visitor{
+        [&](const Sort& s1) { return s1.k == std::get<Sort>(t->v).k; },
+        [&](const BVar& v1) { return v1.idx == std::get<BVar>(t->v).idx; },
+        [&](const Sym& s1)  { return s1.name == std::get<Sym>(t->v).name; },
+        [&](const App& a1)  {
+            const auto& a2 = std::get<App>(t->v);
+            return match_pat(a1.fn, a2.fn, env, rules) &&
+                   match_pat(a1.arg, a2.arg, env, rules);
+        },
+        [&](const Pi& p1)   {
+            const auto& p2 = std::get<Pi>(t->v);
+            return match_pat(p1.dom, p2.dom, env, rules) &&
+                   match_pat(p1.cod, p2.cod, env, rules);
+        },
+        [&](const Lam& l1)  {
+            const auto& l2 = std::get<Lam>(t->v);
+            return match_pat(l1.dom, l2.dom, env, rules) &&
+                   match_pat(l1.body, l2.body, env, rules);
+        },
+        [&](const PVar&) { return false; }
+    }, pat->v);
+}
+
 inline Ptr whnf(Ptr t, const std::vector<Rule>& rules) {
     while (true) {
         if (auto a = std::get_if<App>(&t->v)) {
@@ -192,6 +254,47 @@ inline Ptr whnf(Ptr t, const std::vector<Rule>& rules) {
     return t;
 }
 
+inline Ptr whnf(Ptr t, const RuleIndex& rules) {
+    rules.validate();
+    while (true) {
+        if (auto a = std::get_if<App>(&t->v)) {
+            Ptr f = whnf(a->fn, rules);
+            if (auto l = std::get_if<Lam>(&f->v)) {
+                t = subst(l->body, a->arg, 0);
+                continue;
+            }
+        }
+
+        auto [head, args] = unroll(t);
+        const auto* symbol = std::get_if<Sym>(&head->v);
+        if (!symbol) break;
+        auto found = rules.by_head.find(symbol->name);
+        if (found == rules.by_head.end()) break;
+
+        bool rewritten = false;
+        for (size_t i : found->second) {
+            const auto& lhs_args = rules.lhs_spines[i].args;
+            if (args.size() < lhs_args.size()) continue;
+            Env env;
+            bool matched = true;
+            for (size_t j = 0; j < lhs_args.size(); ++j) {
+                if (!match_pat(lhs_args[j], args[j], env, rules)) {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched) {
+                t = roll(instantiate((*rules.rules)[i].rhs, env), args,
+                         lhs_args.size());
+                rewritten = true;
+                break;
+            }
+        }
+        if (!rewritten) break;
+    }
+    return t;
+}
+
 inline Ptr nf(Ptr t, const std::vector<Rule>& rules) {
     t = whnf(t, rules);
     return std::visit(match_visitor{
@@ -205,12 +308,50 @@ inline Ptr nf(Ptr t, const std::vector<Rule>& rules) {
     }, t->v);
 }
 
+inline Ptr nf(Ptr t, const RuleIndex& rules) {
+    t = whnf(t, rules);
+    return std::visit(match_visitor{
+        [&](const Sort&) -> Ptr { return t; },
+        [&](const BVar&) -> Ptr { return t; },
+        [&](const Sym&)  -> Ptr { return t; },
+        [&](const Pi& p)  -> Ptr { return pi(nf(p.dom, rules), nf(p.cod, rules)); },
+        [&](const Lam& l) -> Ptr { return lam(nf(l.dom, rules), nf(l.body, rules)); },
+        [&](const App& a)  -> Ptr { return app(nf(a.fn, rules), nf(a.arg, rules)); },
+        [&](const PVar&) -> Ptr { return t; }
+    }, t->v);
+}
+
 inline bool conv(Ptr t1, Ptr t2, const std::vector<Rule>& rules) {
     t1 = whnf(t1, rules);
     t2 = whnf(t2, rules);
     if (t1 == t2) return true;
     if (t1->v.index() != t2->v.index()) return false;
 
+    return std::visit(match_visitor{
+        [&](const Sort& s1) { return s1.k == std::get<Sort>(t2->v).k; },
+        [&](const BVar& v1) { return v1.idx == std::get<BVar>(t2->v).idx; },
+        [&](const Sym& s1)  { return s1.name == std::get<Sym>(t2->v).name; },
+        [&](const App& a1)  {
+            const auto& a2 = std::get<App>(t2->v);
+            return conv(a1.fn, a2.fn, rules) && conv(a1.arg, a2.arg, rules);
+        },
+        [&](const Pi& p1)   {
+            const auto& p2 = std::get<Pi>(t2->v);
+            return conv(p1.dom, p2.dom, rules) && conv(p1.cod, p2.cod, rules);
+        },
+        [&](const Lam& l1)  {
+            const auto& l2 = std::get<Lam>(t2->v);
+            return conv(l1.dom, l2.dom, rules) && conv(l1.body, l2.body, rules);
+        },
+        [&](const PVar& p1) { return p1.id == std::get<PVar>(t2->v).id; }
+    }, t1->v);
+}
+
+inline bool conv(Ptr t1, Ptr t2, const RuleIndex& rules) {
+    t1 = whnf(t1, rules);
+    t2 = whnf(t2, rules);
+    if (t1 == t2) return true;
+    if (t1->v.index() != t2->v.index()) return false;
     return std::visit(match_visitor{
         [&](const Sort& s1) { return s1.k == std::get<Sort>(t2->v).k; },
         [&](const BVar& v1) { return v1.idx == std::get<BVar>(t2->v).idx; },
@@ -248,7 +389,8 @@ inline std::string to_string(const Ptr& t) {
     }, t->v);
 }
 
-inline TypeResult infer(const Context& ctx, Ptr t, const Signature& sig, const std::vector<Rule>& rules) {
+template<class Rules>
+inline TypeResult infer(const Context& ctx, Ptr t, const Signature& sig, const Rules& rules) {
     if (auto s = std::get_if<Sort>(&t->v)) {
         if (s->k == SortKind::Type) return kind_sort();
         return std::unexpected("Kind has no sort");
