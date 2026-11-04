@@ -746,6 +746,37 @@ modeled. At `ShouldRecalcStyleFor`, the child and descendant propagation
 levels intentionally yield the same true result; only `ForChildren` carries
 the descendant distinction onward.
 
+## Query-dependent style recalculation
+
+`examples/blink_style_recalc_dependencies.cpp` models the complete boolean
+expression in `StyleRecalcChange::RecalcFlagDependent(const Node&)` and
+composes it with the suppression, propagation, and dirty-node order of
+`ShouldRecalcStyleFor`. Source anchors are
+`core/css/style_recalc_change.h:21-92,198-205,257-262` and
+`core/css/style_recalc_change.cc:30-70` in pinned Chromium commit
+`99d77c2af39f60ee06a5516ad5428e4d2aa61da4`.
+
+The λΠ flags group Blink's paired current-container/descendant flags into six
+families: size, style, scroll-state, anchored, descendant content-visibility,
+and clear-precomputed-hover. The C++ transcription and typed reduction compare
+all 64 grouped masks against seven old-style dependency categories, both node
+kinds, and old style present/absent (1,792 cases). They then compare the full
+`ShouldRecalcStyleFor` decision across five propagation levels, suppression,
+dirty/clean, node kinds, style presence, dependency categories, and all flag
+masks (35,840 cases). When old style is absent, only the four container-query
+families cause a node recalc. With old style present, size flags match either
+size-query dependence or highlight pseudo styles using container units; style,
+scroll-state, anchored, and cached-hover dependencies match their respective
+flags. The content-visibility flag contributes to `RecalcFlagDependent()`'s
+early presence check but has no per-node match in this method.
+
+This covers the per-node predicate, not all style recalc behavior. Each paired
+child/descendant flag is represented as one family bit; `FlagsForChildren`,
+`ShouldUpdatePseudoElement`, `TraverseChild`, mark-reattach interactions,
+`Element::RecalcStyle` control flow, container-query scheduling, and DOM/style
+tree traversal remain outside this model. The finite flag product is exhaustive
+for these grouped inputs, not a proof of the full renderer lifecycle.
+
 ## Paint chunk grouping
 
 `paint/paint_chunker.cc:30-89` updates current properties and creates a new

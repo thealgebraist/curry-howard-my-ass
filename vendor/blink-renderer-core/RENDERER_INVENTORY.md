@@ -123,6 +123,18 @@ Current λΠ work is small compared with that source surface:
   node/change inputs and 20 child-change inputs, including an Element without
   computed style; other flags and Element
   traversal remain outside scope.
+* `examples/blink_style_recalc_dependencies.cpp` models grouped query-dependent
+  `ShouldRecalcStyleFor` behavior. The λΠ/C++ comparison exhausts 64 grouped
+  flag masks across seven dependency categories, Element/Text kinds, and old
+  style present/absent (1,792 states), then checks the whole gate across five
+  propagation levels, suppression, and dirty/clean state (35,840 states).
+  Size flags match size-query dependencies or container-unit-dependent
+  highlight styles; style, scroll-state, anchored, and cached-hover dependencies
+  are checked separately. Content-visibility contributes to recalc-flag
+  presence but has no per-node dependency predicate in this source method.
+  Child/descendant variants are grouped by family; `FlagsForChildren`, pseudo
+  element decisions, reattachment behavior, and Element traversal remain
+  unmodeled.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).
