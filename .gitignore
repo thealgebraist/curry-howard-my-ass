@@ -2,6 +2,15 @@ test_suite
 mltt_vectors
 automath_logic
 inverse_galois
+scheme_interpreter
+cpp_template_evaluator
+blink_rendering_model
+blink_parser_lifecycle
+blink_parser_bisimulation
+blink_tree_builder_p_start_bisimulation
+blink_css_cascade_bisimulation
+blink_css_selector_bisimulation
+blink_css_combinator_bisimulation
 *.vo
 *.vok
 *.vos
@@ -9,3 +18,7 @@ inverse_galois
 *.o
 *.dSYM
 .DS_Store
+*.aux
+openai.key.txt
+server.txt
+vendor/chromium-src/

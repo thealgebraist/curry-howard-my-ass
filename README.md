@@ -83,6 +83,52 @@ make test
      * Definitional verification of group homomorphism conditions $\phi(\sigma_1 \circ \sigma_2) \equiv \phi(\sigma_1) \cdot \phi(\sigma_2)$ under the rewrite engine.
      * Fully typed proof terms witnessing `InverseGalois(C2, Q)` and `InverseGalois(S3, Q)`.
 
+4. **`examples/scheme_interpreter.cpp`**:
+   * A typed object-language evaluator built from λΠ signatures and term-rewriting equations.
+   * The Scheme source subset includes tagged literals, quote, variables, lambdas, unary application, conditionals, and primitive list operations.
+   * The evaluator is constructed as Scheme syntax, reified as data, and evaluated by the source-defined interpreter. The resulting interpreted closure then runs an identity application to `7`.
+   * The example verifies both self-interpretation and execution by the resulting interpreter closure through the λΠ kernel.
+
+5. **`examples/cpp_template_evaluator.cpp`**:
+   * Mirrors a restricted C++ type-level vocabulary (`std::integral_constant`, addition, multiplication, equality, and `std::conditional_t`) as syntax in λΠ.
+   * Evaluates the syntax with λΠ rewrite rules, checks its inferred type, and compares the result with a native C++ compile-time alias-template expression.
+   * This is a paired example for the listed template subset; it does not parse arbitrary C++ source or evaluate general C++ templates.
+
+6. **`examples/blink_rendering_model.cpp`**:
+   * Encodes a small, typed HTML-to-paint semantic path in λΠ: HTML input, DOM, computed style, layout tree, and paint artifact.
+   * The model uses explicit rewrite rules for one `<p>hello</p>` case with a block/black style. It is an initial semantic abstraction, not a translation of Blink's implementation or a browser.
+   * A pinned, partial source snapshot and provenance notes are in [`vendor/blink-renderer-core`](vendor/blink-renderer-core/SOURCE.md); the first source-to-model map is in [`SEMANTIC_MAP.md`](vendor/blink-renderer-core/SEMANTIC_MAP.md). It contains selected upstream docs and C++ files, not the full Blink renderer or its dependencies.
+
+7. **`examples/blink_parser_lifecycle.cpp`**:
+   * Encodes the stopped/paused gate and decision order of selected branches in Blink's `HTMLDocumentParser::PumpTokenizerIfPossible` as rewrite rules returning typed parser actions.
+   * It models branch outcomes for fragment abort, yielded tokenization, EOF completion, and delayed completion. It does not model the tokenizer, tree builder, scheduling machinery, or script execution.
+   * The shallow sparse checkout at [`vendor/chromium-src`](vendor/chromium-src) contains the full `third_party/blink/renderer` subtree at a pinned Chromium commit. [`RENDERER_INVENTORY.md`](vendor/blink-renderer-core/RENDERER_INVENTORY.md) records path counts and current semantic coverage.
+
+8. **`examples/blink_parser_bisimulation.cpp`**:
+   * Models the selected parser decision boundary as a finite deterministic coalgebra, with six control flags as states, parser actions as observations, and a terminal successor.
+   * An explicit relation covers all 64 flag valuations plus terminal. The λΠ checker verifies observation equality and successor closure for that relation; a native C++ transcription is also compared with both λΠ observers over all 64 inputs.
+   * This checks only the extracted one-step branch fragment. It does not execute Blink's linked `HTMLDocumentParser`, and the current λΠ kernel does not certify rewrite-rule termination.
+
+9. **`examples/blink_css_cascade_bisimulation.cpp`**:
+   * Models winner selection for one property among already matched declarations, using an order-preserving priority tuple for specificity, proximity, stylesheet position, rule position, and declaration position.
+   * Computes a finite relation between an imperative C++ scan and the λΠ maximum-priority semantics for five cases; origin, importance, tree order, inline style, and layer are fixed.
+   * Selectors and CSS parsing are assumed complete before this boundary. The example does not execute Blink's `StyleCascade` and does not establish coverage of the full CSS cascade.
+
+10. **`examples/blink_css_selector_bisimulation.cpp`**:
+   * Models the tag, id, and class tests used by Blink's easy selector checker, plus conjunctions of those simple selectors on one element.
+   * A finite coalgebra relates nine selector/element cases and a terminal state; the λΠ relation check and native C++ matcher agree on all cases.
+   * It assumes selectors are already parsed and uses one namespace and case-sensitive names. Combinators, attributes, pseudo-classes, shadow scopes, and the general selector algorithm are not modeled.
+
+11. **`examples/blink_css_combinator_bisimulation.cpp`**:
+   * Models right-to-left compounds of tag, id, and class selectors with child and descendant relations over finite element trees, following Blink's `CSSSelector` representation and easy-matcher path.
+   * The finite relation checks nine selector/tree cases and a terminal state against a native C++ matcher.
+   * Cases obey `EasySelectorChecker::IsEasy`'s restriction against child combinators after descendant combinators. Sibling relations, namespaces, and general selector matching remain unmodeled.
+
+12. **`examples/blink_tree_builder_p_start_bisimulation.cpp`**:
+   * Models the shared in-body start-tag path for `<p>` and the 24 other tags in its block-start case set: when `<p>` is in button scope, Blink processes a fake `</p>` before inserting the incoming element.
+   * A finite coalgebra checks `<p>` against eleven stack configurations and each distinct block-start tag against both an in-scope stack and a stack with `<p>` hidden under a marker: 59 token/stack cases plus a terminal state.
+   * Each start-tag name has its own λΠ constructor and remains distinct in the resulting stack. Scope markers are grouped into button, HTML, foreign-content, and document-fragment categories. The model also checks one non-top removal of `<p>`; general stack mutations, parse-error effects, and DOM mutation remain unmodeled.
+
 ---
 
 ## License
