@@ -887,6 +887,28 @@ check. Typed λΠ and C++ agree on all 100 combinations of old/new text-combine
 presence and five old/new writing modes after composing these conditions into
 the complete reattach decision with other triggers held false.
 
+`examples/blink_content_data_equivalence.cpp` refines the `ContentDataEquivalent`
+condition in `NeedsReattachLayoutTree`. `ComputedStyle::ContentDataEquivalent`
+delegates to `base::ValuesEquivalent` on the `ContentData` head pointers
+(`computed_style.h:1633`); the pinned `ContentData::operator==`
+(`content_data.h:412`) compares node values in order and requires both lists to
+end together. The typed node algebra covers all seven Blink subclasses. Text and
+alt-text values, quote variants, `none`, image equality classes, and finite
+counter metadata atoms are represented explicitly. It preserves the directed
+Counter/AltCounter behavior: a Counter node accepts an AltCounter node when the
+five counter fields match, while AltCounter requires an AltCounter peer and
+matching generated text. This follows the two `Equals` overrides at
+`content_data.h:267-356` and `content_data.cc:149-160`.
+
+C++ and typed λΠ agree on all 11,449 directed node-payload pairs, then on 34,348
+bounded list comparisons and the resulting content-change reattach trigger.
+List cases include all singleton pairs, all head pairs with a shared tail, all
+tail pairs with a shared head, and length mismatch cases through two nodes;
+`NoneContentData` is kept terminal per `SetNext`'s source precondition. These
+cases test the recursive list equation over the represented depth, not arbitrary
+list length. Strings, StyleImage equality, counter-style values, and TreeScope
+pointer identity are finite atoms, not evaluated Blink objects.
+
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
 compares position and mode (`computed_style.h:2578`, `scroll_marker_group.h:25`).

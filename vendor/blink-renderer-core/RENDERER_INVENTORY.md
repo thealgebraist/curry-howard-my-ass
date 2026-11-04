@@ -179,6 +179,11 @@ Current λΠ work is small compared with that source surface:
   all five concrete writing modes and old/new text-combine presence (100 states).
   `ScrollMarkerGroupEqual` is refined to `none` plus four position/mode values;
   all 25 old/new value pairs are checked and composed into the reattach result.
+* `examples/blink_content_data_equivalence.cpp` models tagged `ContentData`
+  equality and linked-list comparison, then routes inequality to the content
+  reattach trigger. Typed λΠ and C++ comparisons cover 11,449 directed node
+  pairs and 34,348 bounded list pairs, including Counter/AltCounter asymmetry.
+  Payload values are finite atoms and lists are covered through length two.
 * `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
   `DiffAffectsScrollAnimations` predicate and its first-priority route into the
   computed-style difference severity. The C++/typed-λΠ comparisons cover all
