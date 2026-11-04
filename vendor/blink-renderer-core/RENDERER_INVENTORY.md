@@ -247,17 +247,16 @@ Current λΠ work is small compared with that source surface:
   agree with the C++ reference; the
   both-selectors-hit case also checks declaration-order-independent winner
   selection. The `.beta` selector checks whitespace-separated class tokens
-  and rejects the substring `betamax`. The C++ projection splits body data
-  into three fixture chunks. The first two CharacterTokens accumulate and
-  flush to a new identified Text child; the third is flushed separately and
-  coalesces into that Text child with its ID preserved. Typed `nodeText`
-  concatenates child data for the style/layout/paint projection. All six cases
-  compare the resulting DOM and parser state, including child ID and next ID;
+  and rejects the substring `betamax`. The C++ and typed λΠ projections derive one body CharacterToken from raw data
+  before the next `<`; the bounded Data-state decoder handles `&amp;`. Seven cases
+  compare the resulting DOM and parser state, including child ID and next ID,
+  and one verifies `a&amp;b` becomes `a&b` in the Text child and paint projection.
+  Typed `nodeText` concatenates child data for style/layout/paint;
   non-empty data reaches `textRun` and abstract `paintText`,
   while an empty token emits no text item. A
   changed-color simple-paint flag is projected only when text is present.
   Only a text run followed by `</p>` is accepted; other markup, body entity
-  references, actual tokenizer stream chunking, location-change flushes, and
+  references except `&amp;`, streaming boundaries/suspensions, location-change flushes, and
   actual Blink Node pointers remain unmodeled. Text child IDs are abstract;
   glyph shaping,
   geometry, full layout, and Blink paint artifact internals remain outside scope. Full selector syntax,
