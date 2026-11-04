@@ -59,8 +59,13 @@ struct ConicGradient {
   const char* y;
   const char* from_angle;
 };
+struct CSSColorValue {
+  unsigned color_space;
+  std::array<bool,4> none_flags;
+  std::array<float,4> components;
+};
 enum class GeneratorKind { Paint, Linear, Radial, Conic, Constant, ColorImage };
-using GeneratorPayload=std::variant<CSSPaintValue,LinearGradient,RadialGradient,ConicGradient,std::string>;
+using GeneratorPayload=std::variant<CSSPaintValue,LinearGradient,RadialGradient,ConicGradient,CSSColorValue>;
 struct GeneratorValue {
   GeneratorKind kind;
   GeneratorPayload payload;
@@ -144,6 +149,12 @@ static Ptr conic_gradient_term(const ConicGradient& value) {
   return apps(sym("conicGradient"),
     {gradient_base_term(value.base),optional_value_term(value.x),optional_value_term(value.y),
      optional_value_term(value.from_angle)});
+}
+static Ptr css_color_term(const CSSColorValue& color) {
+  std::vector<Ptr> fields={sym(color.color_space==0?"cssSpaceSRGBLegacy":"cssSpaceDisplayP3")};
+  for(bool flag:color.none_flags)fields.push_back(bool_term(flag));
+  for(float component:color.components)fields.push_back(sym(component==0.f?"cssComponent0":"cssComponent1"));
+  return apps(sym("cssColor"),fields);
 }
 static Ptr generated_equal_term(const ContainerSizes& left_container,
                                 const ContainerSizes& right_container,
@@ -237,6 +248,18 @@ int main() {
   signature["gradientSpaceEqual"] = fn(CS, fn(CS, B));
   signature["hueMethodEqual"] = fn(H, fn(H, B));
   signature["gradientColorEqual"] = fn(Col, fn(Col, B));
+  const Ptr ColorSpace=sym("CSSColorSpace"), ColorComponent=sym("CSSColorComponent"), Color=sym("CSSColorValue");
+  signature["CSSColorSpace"]=type_sort();
+  signature["cssSpaceSRGBLegacy"]=ColorSpace; signature["cssSpaceDisplayP3"]=ColorSpace;
+  signature["CSSColorComponent"]=type_sort();
+  signature["cssComponent0"]=ColorComponent; signature["cssComponent1"]=ColorComponent;
+  signature["CSSColorValue"]=type_sort();
+  Ptr color_ctor=Color; for(unsigned i=0;i<4;++i)color_ctor=fn(ColorComponent,color_ctor);
+  for(unsigned i=0;i<4;++i)color_ctor=fn(B,color_ctor); color_ctor=fn(ColorSpace,color_ctor);
+  signature["cssColor"]=color_ctor;
+  signature["cssColorSpaceEqual"]=fn(ColorSpace,fn(ColorSpace,B));
+  signature["cssColorComponentEqual"]=fn(ColorComponent,fn(ColorComponent,B));
+  signature["cssColorValueEqual"]=fn(Color,fn(Color,B));
   signature["gradientOffsetEqual"] = fn(Off, fn(Off, B));
   signature["gradientStopEqual"] = fn(S, fn(S, B));
   signature["gradientStopListEqual"] = fn(SL, fn(SL, B));
@@ -279,15 +302,15 @@ int main() {
   signature["conicGradient"] = curried_type(sym("ConicGradient"),
     {G,sym("OptionalCSSValue"),sym("OptionalCSSValue"),sym("OptionalCSSValue")});
   signature["conicGradientEqual"] = fn(sym("ConicGradient"),fn(sym("ConicGradient"),B));
-  signature["constantGradientEqual"] = fn(Col,fn(Col,B));
-  signature["colorImageEqual"] = fn(Col,fn(Col,B));
+  signature["constantGradientEqual"] = fn(Color,fn(Color,B));
+  signature["colorImageEqual"] = fn(Color,fn(Color,B));
   signature["GeneratorValue"] = type_sort();
   signature["paintGenerator"] = fn(Q,sym("GeneratorValue"));
   signature["linearGenerator"] = fn(sym("LinearGradient"),sym("GeneratorValue"));
   signature["radialGenerator"] = fn(sym("RadialGradient"),sym("GeneratorValue"));
   signature["conicGenerator"] = fn(sym("ConicGradient"),sym("GeneratorValue"));
-  signature["constantGenerator"] = fn(Col,sym("GeneratorValue"));
-  signature["colorImageGenerator"] = fn(Col,sym("GeneratorValue"));
+  signature["constantGenerator"] = fn(Color,sym("GeneratorValue"));
+  signature["colorImageGenerator"] = fn(Color,sym("GeneratorValue"));
   signature["generatorValueEqual"] = fn(sym("GeneratorValue"),fn(sym("GeneratorValue"),B));
   signature["generatedImageValuesEqual"] = curried_type(B,
     {C,C,V,V,sym("GeneratorValue"),sym("GeneratorValue")});
@@ -542,8 +565,19 @@ int main() {
       apps(sym("optionalCSSValueEqual"),{pvar(251),pvar(261)}),
       apps(sym("optionalCSSValueEqual"),{pvar(252),pvar(262)}),
       apps(sym("optionalCSSValueEqual"),{pvar(253),pvar(263)})})));
+  for(const char* color_space:{"cssSpaceSRGBLegacy","cssSpaceDisplayP3"})
+    rules.push_back(rule(apps(sym("cssColorSpaceEqual"),{sym(color_space),sym(color_space)}),sym("true")));
+  rules.push_back(rule(apps(sym("cssColorSpaceEqual"),{pvar(2600),pvar(2601)}),sym("false")));
+  for(const char* component:{"cssComponent0","cssComponent1"})
+    rules.push_back(rule(apps(sym("cssColorComponentEqual"),{sym(component),sym(component)}),sym("true")));
+  rules.push_back(rule(apps(sym("cssColorComponentEqual"),{pvar(2602),pvar(2603)}),sym("false")));
+  std::vector<Ptr> left_color_fields={pvar(2610)},right_color_fields={pvar(2620)};
+  std::vector<Ptr> color_equalities={apps(sym("cssColorSpaceEqual"),{pvar(2610),pvar(2620)})};
+  for(unsigned i=0;i<4;++i){left_color_fields.push_back(pvar(2611+i));right_color_fields.push_back(pvar(2621+i));color_equalities.push_back(apps(sym("boolEqual"),{pvar(2611+i),pvar(2621+i)}));}
+  for(unsigned i=0;i<4;++i){left_color_fields.push_back(pvar(2615+i));right_color_fields.push_back(pvar(2625+i));color_equalities.push_back(apps(sym("cssColorComponentEqual"),{pvar(2615+i),pvar(2625+i)}));}
+  rules.push_back(rule(apps(sym("cssColorValueEqual"),{apps(sym("cssColor"),left_color_fields),apps(sym("cssColor"),right_color_fields)}),gradient_and(color_equalities)));
   rules.push_back(rule(apps(sym("constantGradientEqual"),{pvar(270),pvar(271)}),
-                       apps(sym("gradientColorEqual"),{pvar(270),pvar(271)})));
+                       apps(sym("cssColorValueEqual"),{pvar(270),pvar(271)})));
   rules.push_back(rule(apps(sym("colorImageEqual"),{pvar(272),pvar(273)}),
                        apps(sym("constantGradientEqual"),{pvar(272),pvar(273)})));
   for (const auto& [tag,equality] : std::vector<std::pair<const char*,const char*>>{
@@ -604,10 +638,11 @@ int main() {
                                                         "noneValue","noneValue","noneValue"})}),
                           signature, rules);
   assert(conic_type && conv(*conic_type, B, indexed_rules));
-  auto constant_type = infer({}, apps(sym("constantGradientEqual"),{sym("colorRed"),sym("colorRed")}),
+  const CSSColorValue red_color{0,{false,false,false,false},{1.f,0.f,0.f,1.f}};
+  auto constant_type = infer({}, apps(sym("constantGradientEqual"),{css_color_term(red_color),css_color_term(red_color)}),
                              signature, rules);
   assert(constant_type && conv(*constant_type, B, indexed_rules));
-  auto color_image_type = infer({}, apps(sym("colorImageEqual"),{sym("colorRed"),sym("colorRed")}),
+  auto color_image_type = infer({}, apps(sym("colorImageEqual"),{css_color_term(red_color),css_color_term(red_color)}),
                                 signature, rules);
   assert(color_image_type && conv(*color_image_type, B, indexed_rules));
   Ptr paint_generator_sample=app(sym("paintGenerator"),
@@ -870,12 +905,13 @@ int main() {
   std::cout<<"CSSConicGradientValue common-field/position/angle equality compares "
            <<conic_pairs<<" targeted finite value pairs.\n";
   unsigned constant_pairs=0,color_image_pairs=0;
-  const char* color_values[]={"colorRed","colorBlue"};
-  for(const char* left:color_values) for(const char* right:color_values){
-    const bool expected=std::string(left)==right;
-    if(!conv(normalize(apps(sym("constantGradientEqual"),{sym(left),sym(right)}),indexed_rules),
+  const std::vector<CSSColorValue> color_values={red_color,{0,{false,false,false,false},{0.f,0.f,1.f,1.f}}};
+  auto css_colors_equal=[](const CSSColorValue& x,const CSSColorValue& y){return x.color_space==y.color_space&&x.none_flags==y.none_flags&&x.components==y.components;};
+  for(const auto& left:color_values) for(const auto& right:color_values){
+    const bool expected=css_colors_equal(left,right);
+    if(!conv(normalize(apps(sym("constantGradientEqual"),{css_color_term(left),css_color_term(right)}),indexed_rules),
              bool_term(expected),indexed_rules) ||
-       !conv(normalize(apps(sym("colorImageEqual"),{sym(left),sym(right)}),indexed_rules),
+       !conv(normalize(apps(sym("colorImageEqual"),{css_color_term(left),css_color_term(right)}),indexed_rules),
              bool_term(expected),indexed_rules)){
       std::cerr<<"constant/color image equality mismatch\n";return 11;
     }
@@ -892,8 +928,8 @@ int main() {
       case GeneratorKind::Linear: term=app(sym("linearGenerator"),linear_gradient_term(std::get<LinearGradient>(payload)));break;
       case GeneratorKind::Radial: term=app(sym("radialGenerator"),radial_gradient_term(std::get<RadialGradient>(payload)));break;
       case GeneratorKind::Conic: term=app(sym("conicGenerator"),conic_gradient_term(std::get<ConicGradient>(payload)));break;
-      case GeneratorKind::Constant: term=app(sym("constantGenerator"),sym(std::get<std::string>(payload)));break;
-      case GeneratorKind::ColorImage: term=app(sym("colorImageGenerator"),sym(std::get<std::string>(payload)));break;
+      case GeneratorKind::Constant: term=app(sym("constantGenerator"),css_color_term(std::get<CSSColorValue>(payload)));break;
+      case GeneratorKind::ColorImage: term=app(sym("colorImageGenerator"),css_color_term(std::get<CSSColorValue>(payload)));break;
     }
     generator_values.push_back({kind,std::move(payload),std::move(term)});
   };
@@ -901,9 +937,9 @@ int main() {
   for(const auto& value:linear_gradients) add_generator(GeneratorKind::Linear,value);
   for(const auto& value:radial_gradients) add_generator(GeneratorKind::Radial,value);
   for(const auto& value:conic_gradients) add_generator(GeneratorKind::Conic,value);
-  for(const char* color:color_values){
-    add_generator(GeneratorKind::Constant,std::string(color));
-    add_generator(GeneratorKind::ColorImage,std::string(color));
+  for(const auto& color:color_values){
+    add_generator(GeneratorKind::Constant,color);
+    add_generator(GeneratorKind::ColorImage,color);
   }
   auto generator_equal=[&](const GeneratorValue& a,const GeneratorValue& b){
     if(a.kind!=b.kind) return false;
@@ -920,7 +956,8 @@ int main() {
           optional_equal(x.y,y.y)&&optional_equal(x.from_angle,y.from_angle);
       }
       case GeneratorKind::Constant:case GeneratorKind::ColorImage:
-        return std::get<std::string>(a.payload)==std::get<std::string>(b.payload);
+        const auto& x=std::get<CSSColorValue>(a.payload);const auto& y=std::get<CSSColorValue>(b.payload);
+        return x.color_space==y.color_space&&x.none_flags==y.none_flags&&x.components==y.components;
     }
     return false;
   };
