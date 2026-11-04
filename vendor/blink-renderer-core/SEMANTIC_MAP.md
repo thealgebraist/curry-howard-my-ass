@@ -841,6 +841,27 @@ before calling `StyleForLayoutObject`. The generated set of copied properties,
 the builder's actual record transformation, the `DCHECK` contract, and
 subsequent style-difference handling remain unmodeled.
 
+`examples/blink_computed_style_difference.cpp` models the ordered result
+selection in `ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle`
+(`core/style/computed_style.cc:452-527`). Its 19 abstract predicates represent
+the source comparisons, including descendant-affecting scroll/display/container
+conditions, non-independent inherited equality, explicit child inheritance,
+variable independence and equality, independent inherited equality, and
+pseudo/overscroll/display-list cases. It preserves branch order and maps results
+to the source severity order in `computed_style.h:377-410`. The C++ and typed λΠ
+classifiers agree on all 524,288 Boolean assignments. Those assignments vary
+source observations independently; some may not be realizable by a concrete
+pair of ComputedStyle values, and source DCHECK consistency conditions are not
+encoded.
+
+The same example models the outer `ComputeDifference` cases (`computed_style.cc:421-450`):
+pointer identity yields equal, a missing style yields inherited, and otherwise
+the result is the maximum of the ordinary and optional cached inherited
+first-line difference. Typed λΠ and C++ agree on 576 finite combinations. The
+cached pseudo-style lookup and recursive style comparison are represented by
+input observations rather than evaluated. Generated field comparisons and
+style-recalc side effects remain outside the model.
+
 Typed λΠ agrees with the C++ transcription on 640 states each for
 `TraverseChildren` and `TraversePseudoElements`, all eight mark-reattach
 boolean combinations, all 64 inputs to the `TraverseChild` disjunction, and

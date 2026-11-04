@@ -159,6 +159,13 @@ Current λΠ work is small compared with that source surface:
   Shortcut decline is distinguished from resolver entry, which also depends on
   a separate parent-style/root-layout condition. It does not model generated
   inherited-property fields or later style diff processing.
+* `examples/blink_computed_style_difference.cpp` models the ordered style
+  difference classifier and the outer null/pointer/cached-first-line maximum
+  logic from `ComputedStyle::ComputeDifference`. The C++/typed-λΠ comparison
+  covers 524,288 abstract classifier states and 576 outer-wrapper states. The
+  classifier predicates are independently varied, so some combinations may
+  not correspond to concrete `ComputedStyle` pairs; generated field equality,
+  cache evaluation, and style side effects are not modeled.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).
