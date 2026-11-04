@@ -143,12 +143,13 @@ Current λΠ work is small compared with that source surface:
   outcomes. Character-reference resolution remains opaque.
 * `examples/blink_numeric_html_entity_bisimulation.cpp` models numeric
   character-reference prefix, decimal/hex accumulation, malformed-prefix
-  rollback, terminators, and exhausted-input rollback. Sixteen per-character
+  rollback, terminators, and exhausted-input rollback. Forty-nine per-character
   finite traces agree between C++ and typed λΠ, including the U+10FFFF limit,
   overflow latch, and ignored later digits. Tested values connect through
-  termination to replacement, representative U+0080/U+009F mappings, and
-  ordinary output. Arbitrary radix traces and the complete mapping table remain
-  outside the model.
+  termination to replacement, an independent typed transcription of all 32
+  U+0080–U+009F mappings (including
+  unchanged C1 controls), U+007F/U+00A0 pass-through, and ordinary output.
+  Arbitrary radix traces remain outside the model.
 * `examples/blink_html_named_entity.cpp` parses and validates all 2,231 rows of
   the pinned names CSV and embeds 11 selected records in a focused λΠ trie.
   Twelve finite C++/λΠ cases cover longest-prefix selection, the semicolonless
@@ -160,6 +161,18 @@ Current λΠ work is small compared with that source surface:
   comparisons agree. It abstracts exact source rewind, segmented-input
   suspension, and tokenizer mutation, so full-table data coverage does not
   establish arbitrary-input parser equivalence.
+* `examples/blink_html_named_entity_remainder.cpp` extends the generated state
+  machine with decoder status, consumed spelling, and remaining text for
+  twelve finite inputs. The remainder cases are fixture-indexed; generic
+  suffix extraction, actual segmented-source mutation, chunk continuation,
+  and tokenizer-state changes remain unmodeled.
+* `examples/blink_css_revert_origin.cpp` models CSS `revert` target-origin
+  selection, `CascadeMap::Find(property, origin)` filtering, and the
+  `ResolveRevertTo` priority fallback. Eleven finite C++/λΠ cases cover
+  UA/user/hint/author/animation target origins, no candidate, no-origin,
+  weaker, equal, and stronger candidates. Tree order, layers, inline/try flags,
+  declaration collection, recursive value resolution, and computed-style
+  application remain outside this projection.
 * `examples/blink_process_entity_bisimulation.cpp` models Data/RCDATA
   `ProcessEntity` effects over finite decoder outcomes. Eight cases compare
   success append (one/two codepoints plus entity flag), literal ampersand

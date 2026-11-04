@@ -193,8 +193,8 @@ make test
    * The priority fields are a named projection, not Blink's complete `MatchedRule` sort key or `CascadePriority`; parsing, combinators, attribute/pseudo selectors, layers, origins, importance, property application, and full stylesheet ordering remain outside scope.
 
 32. **`examples/blink_numeric_html_entity_bisimulation.cpp`**:
-   * Models numeric reference prefix/decimal/hex scanning, finite radix transitions, malformed-prefix rollback, semicolon and terminator outcomes, and exhausted-input rollback. Sixteen per-character traces compare C++ and typed λΠ, including the U+10FFFF boundary, overflow-to-invalid latch, and later-digit retention.
-   * Termination connects the tested accumulators to replacement for zero/surrogate/invalid values, U+0080/U+009F Windows-1252 mappings, and ordinary output. The arithmetic and mapping tables remain finite and do not cover arbitrary accumulator traces or every Windows-1252 entry.
+   * Models numeric reference prefix/decimal/hex scanning, finite radix transitions, malformed-prefix rollback, semicolon and terminator outcomes, and exhausted-input rollback. Forty-nine per-character traces compare C++ and typed λΠ, including the U+10FFFF boundary, overflow-to-invalid latch, and later-digit retention.
+   * Termination connects tested accumulators to replacement, an independent λΠ transcription of all 32 pinned U+0080–U+009F mapping entries (including unchanged C1 controls), U+007F/U+00A0 pass-through, and ordinary output. Radix transitions remain finite to the tested traces.
 
 33. **`examples/blink_html_named_entity.cpp`**:
    * Retains a compact 11-entry λΠ trie for focused longest-prefix and attribute-guard cases.
@@ -216,6 +216,14 @@ make test
 37. **`examples/blink_css_selector_color.cpp`**:
    * Composes restricted tag/id/class matching and matched-only declaration collection with three-field abstract priority selection, then applies `color` explicit/initial/inherit/unset/missing behavior using parent or root context.
    * Twelve finite C++/typed-λΠ cases compare match/miss, winner and tie behavior, CSS-wide keywords, and inherited/root outcomes. It does not cover full selector syntax, priority ordering, cascade origins/layers, actual CSS color values, or computed-style lifecycle.
+
+38. **`examples/blink_css_revert_origin.cpp`**:
+   * Models `TargetOriginForRevert`, `CascadeMap::Find(property, origin)` candidate filtering, and `ResolveRevertTo` fallback using the origin/importance priority field plus rule index, with other `CascadePriority` fields fixed.
+   * Eleven finite C++/typed-λΠ comparisons cover UA/user/hint/author/animation target origins, absent and no-origin candidates, weaker resolution, and equal/stronger priority fallback. It does not model CSS-wide value recursion, declaration collection, or full packed priority ordering.
+
+39. **`examples/blink_html_named_entity_remainder.cpp`**:
+   * Extends the all-table named-reference state model with `decoded`, `noEntity`, `guardReject`, and `needMore` outcomes plus the selected spelling and remaining text.
+   * Twelve finite C++/typed-λΠ comparisons cover successful matches, overlong-prefix rollback, attribute guard rejection, and incomplete prefixes. Remainder values are fixture-indexed; generic suffix extraction, actual `SegmentedString` mutation, tokenizer state changes, and continuation across chunks remain outside scope.
 
 ---
 
