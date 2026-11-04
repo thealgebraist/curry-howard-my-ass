@@ -319,6 +319,12 @@ make test
    * Resolution values are 0–3, device scales 1–4, and MIME support is a Boolean input. The model omits floating-point resolution computation, arbitrary CSS type support, `options_` cache mutation, and the subsequent image-load dispatch.
 
 
+61. **`examples/blink_image_set_load_dispatch.cpp`**:
+   * Models the consumer path in `StyleImageLoader::ResolveImageSet`: no selected option returns null; selected `CSSImageValue` and `CSSGradientValue` options are accepted; other CSS value kinds are rejected. The CSS image route carries the selected computed resolution as an override, while the gradient route produces a generated-image result without retaining that override.
+   * Fifteen finite selected-option states compare a C++ branch transcription with typed λΠ. Image identity and resolution use finite atoms.
+   * Resource fetching, the CSSImageValue cache implementation, gradient container/viewport evaluation, and the outer CSSImageSetValue cache call are not modeled.
+
+
 ---
 
 ## License

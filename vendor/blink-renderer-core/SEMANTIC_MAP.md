@@ -987,6 +987,14 @@ pairs reduce to false through the tag dispatch. The inequality is checked throug
 a generated-image change predicate. These fixtures integrate the represented
 subclass models but do not widen their finite CSSValue payload domains.
 
+`examples/blink_image_set_load_dispatch.cpp` composes the selected-option
+observation with the subsequent `StyleImageLoader::ResolveImageSet` branch.
+No selection and unsupported CSS value kinds return null. `CSSImageValue`
+reaches its cache path with the selected resolution override; `CSSGradientValue`
+reaches its generated-image path, whose shown `Load` branch does not consume that
+override. The model abstracts resource/image results and does not include the
+outer `CSSImageSetValue::CacheImage` call in `Load`.
+
 `examples/blink_image_set_selection.cpp` models the first `GetBestOption`
 computation for an initially empty `options_` cache. It filters by MIME support
 and positive computed resolution, stable-sorts by resolution, removes duplicate

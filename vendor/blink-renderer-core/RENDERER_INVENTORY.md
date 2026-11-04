@@ -191,6 +191,12 @@ Current λΠ work is small compared with that source surface:
   both right-hand image kinds (50 composed states). Nested CSSValue relations
   are represented by finite atoms; arbitrary crossfade values and rendering
   behavior remain outside scope.
+* `examples/blink_image_set_load_dispatch.cpp` models
+  `StyleImageLoader::ResolveImageSet`: null selection and unsupported CSS value
+  kinds return null; `CSSImageValue` and `CSSGradientValue` go through distinct
+  load observations. The CSS image route carries the option's resolution
+  override; the gradient route does not. Fifteen finite states are represented.
+  Resource fetching and outer image-set caching remain outside scope.
 * `examples/blink_image_set_selection.cpp` models the initial `GetBestOption`
   computation: support/positive-resolution filtering, stable sort, stable
   resolution deduplication, and threshold choice with highest-resolution
