@@ -968,6 +968,14 @@ value can pass the modern checks. A targeted cross-type pair exhibits this
 direction-dependent result. Size/position payloads and identifiers use finite
 atoms; this is not a full radial gradient CSSValue model.
 
+`CSSConicGradientValue::Equals` is modeled over 64 targeted pairs. It requires
+common gradient equality plus nullable x, y, and from-angle equality. The same
+model adds the simple delegation for `CSSConstantGradientValue::Equals` and
+`CSSColorImageValue::Equals`: both compare the represented color value, with
+color-image equality delegating to the constant-gradient implementation. The
+conic fixture set and red/blue color domain are finite; CSS color internals and
+full CSSValue dispatch remain outside scope.
+
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
 compares position and mode (`computed_style.h:2578`, `scroll_marker_group.h:25`).

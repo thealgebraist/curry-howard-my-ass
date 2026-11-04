@@ -201,7 +201,10 @@ Current λΠ work is small compared with that source surface:
   pairs across deprecated, prefixed, and standard branches. A further 121 targeted
   `CSSRadialGradientValue` pairs cover legacy geometry, modern explicit sizes, and
   defaulted identifiers, retaining the source-directional gradient-type check.
-  Conic fields and unrestricted CSSValue payload semantics remain outside scope.
+  A 64-pair `CSSConicGradientValue` fixture path checks common fields and nullable
+  x/y/from-angle values. Constant-gradient and color-image equality each cover
+  two finite colors, with color-image equality delegating to the constant case.
+  CSS color internals and unrestricted CSSValue payload semantics remain outside scope.
 * `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
   `DiffAffectsScrollAnimations` predicate and its first-priority route into the
   computed-style difference severity. The C++/typed-λΠ comparisons cover all

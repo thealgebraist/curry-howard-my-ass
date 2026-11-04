@@ -52,6 +52,12 @@ struct RadialGradient {
   const char* end_horizontal_size;
   const char* end_vertical_size;
 };
+struct ConicGradient {
+  GradientBase base;
+  const char* x;
+  const char* y;
+  const char* from_angle;
+};
 
 static Ptr fn(Ptr a, Ptr b) { return arrow(std::move(a), std::move(b)); }
 static Rule rule(Ptr lhs, Ptr rhs) { return {std::move(lhs), std::move(rhs)}; }
@@ -125,6 +131,11 @@ static Ptr radial_gradient_term(const RadialGradient& value) {
      optional_value_term(value.second_radius),optional_identifier_term(value.shape),
      optional_identifier_term(value.sizing_behavior),optional_value_term(value.end_horizontal_size),
      optional_value_term(value.end_vertical_size)});
+}
+static Ptr conic_gradient_term(const ConicGradient& value) {
+  return apps(sym("conicGradient"),
+    {gradient_base_term(value.base),optional_value_term(value.x),optional_value_term(value.y),
+     optional_value_term(value.from_angle)});
 }
 static Ptr generated_equal_term(const ContainerSizes& left_container,
                                 const ContainerSizes& right_container,
@@ -256,6 +267,12 @@ int main() {
      sym("OptionalCSSValue"),sym("OptionalIdentifier"),sym("OptionalIdentifier"),
      sym("OptionalCSSValue"),sym("OptionalCSSValue")});
   signature["radialGradientEqual"] = fn(sym("RadialGradient"),fn(sym("RadialGradient"),B));
+  signature["ConicGradient"] = type_sort();
+  signature["conicGradient"] = curried_type(sym("ConicGradient"),
+    {G,sym("OptionalCSSValue"),sym("OptionalCSSValue"),sym("OptionalCSSValue")});
+  signature["conicGradientEqual"] = fn(sym("ConicGradient"),fn(sym("ConicGradient"),B));
+  signature["constantGradientEqual"] = fn(Col,fn(Col,B));
+  signature["colorImageEqual"] = fn(Col,fn(Col,B));
 
   for (bool a : {false, true})
     for (bool b : {false, true})
@@ -498,6 +515,17 @@ int main() {
                                apps(sym("radialGradient"),right_no_horizontal)}),keyword_result));
   }
   rules.push_back(rule(apps(sym("radialGradientEqual"),{pvar(240),pvar(241)}),sym("false")));
+  rules.push_back(rule(apps(sym("conicGradientEqual"),
+    {apps(sym("conicGradient"),{pvar(250),pvar(251),pvar(252),pvar(253)}),
+     apps(sym("conicGradient"),{pvar(260),pvar(261),pvar(262),pvar(263)})}),
+    gradient_and({apps(sym("gradientBaseEqual"),{pvar(250),pvar(260)}),
+      apps(sym("optionalCSSValueEqual"),{pvar(251),pvar(261)}),
+      apps(sym("optionalCSSValueEqual"),{pvar(252),pvar(262)}),
+      apps(sym("optionalCSSValueEqual"),{pvar(253),pvar(263)})})));
+  rules.push_back(rule(apps(sym("constantGradientEqual"),{pvar(270),pvar(271)}),
+                       apps(sym("gradientColorEqual"),{pvar(270),pvar(271)})));
+  rules.push_back(rule(apps(sym("colorImageEqual"),{pvar(272),pvar(273)}),
+                       apps(sym("constantGradientEqual"),{pvar(272),pvar(273)})));
 
   RuleIndex indexed_rules(rules);
   auto optional_type = infer({}, apps(sym("optionalSizeEqual"), {sym("noneSize"), sym("noneSize")}), signature, rules);
@@ -533,6 +561,19 @@ int main() {
                                       "noneIdentifier","noneIdentifier","noneValue","noneValue"})}),
                            signature, rules);
   assert(radial_type && conv(*radial_type, B, indexed_rules));
+  auto conic_type = infer({}, apps(sym("conicGradientEqual"),
+                                   {conic_gradient_term({{false,"spaceNone","hueShorter",{}},
+                                                        "noneValue","noneValue","noneValue"}),
+                                    conic_gradient_term({{false,"spaceNone","hueShorter",{}},
+                                                        "noneValue","noneValue","noneValue"})}),
+                          signature, rules);
+  assert(conic_type && conv(*conic_type, B, indexed_rules));
+  auto constant_type = infer({}, apps(sym("constantGradientEqual"),{sym("colorRed"),sym("colorRed")}),
+                             signature, rules);
+  assert(constant_type && conv(*constant_type, B, indexed_rules));
+  auto color_image_type = infer({}, apps(sym("colorImageEqual"),{sym("colorRed"),sym("colorRed")}),
+                                signature, rules);
+  assert(color_image_type && conv(*color_image_type, B, indexed_rules));
 
   std::vector<ContainerSizes> containers;
   const std::vector<std::optional<unsigned>> optional_values={std::nullopt, 0u, 1u};
@@ -762,4 +803,41 @@ int main() {
   }
   std::cout<<"CSSRadialGradientValue deprecated/modern branch equality compares "
            <<radial_pairs<<" targeted finite value pairs.\n";
+  const std::vector<ConicGradient> conic_gradients={
+    {base0,"noneValue","noneValue","noneValue"},
+    {base0,"coordA","coordB","angleA"},
+    {base0,"coordA","coordB","angleA"},
+    {base0,"coordA","coordB","angleB"},
+    {base1,"coordA","coordB","angleA"},
+    {{false,"spaceNone","hueShorter",{{"colorRed","offsetZero"}}},"coordA","coordB","angleA"},
+    {base0,"noneValue","coordA","noneValue"},
+    {base0,"coordB","noneValue","angleB"}
+  };
+  unsigned conic_pairs=0;
+  for(const auto& left:conic_gradients) for(const auto& right:conic_gradients){
+    const bool expected=gradient_bases_equal(left.base,right.base)&&
+      optional_equal(left.x,right.x)&&optional_equal(left.y,right.y)&&
+      optional_equal(left.from_angle,right.from_angle);
+    Ptr term=apps(sym("conicGradientEqual"),{conic_gradient_term(left),conic_gradient_term(right)});
+    if(!conv(normalize(term,indexed_rules),bool_term(expected),indexed_rules)){
+      std::cerr<<"CSSConicGradientValue equality mismatch\n";return 10;
+    }
+    ++conic_pairs;
+  }
+  std::cout<<"CSSConicGradientValue common-field/position/angle equality compares "
+           <<conic_pairs<<" targeted finite value pairs.\n";
+  unsigned constant_pairs=0,color_image_pairs=0;
+  const char* color_values[]={"colorRed","colorBlue"};
+  for(const char* left:color_values) for(const char* right:color_values){
+    const bool expected=std::string(left)==right;
+    if(!conv(normalize(apps(sym("constantGradientEqual"),{sym(left),sym(right)}),indexed_rules),
+             bool_term(expected),indexed_rules) ||
+       !conv(normalize(apps(sym("colorImageEqual"),{sym(left),sym(right)}),indexed_rules),
+             bool_term(expected),indexed_rules)){
+      std::cerr<<"constant/color image equality mismatch\n";return 11;
+    }
+    ++constant_pairs;++color_image_pairs;
+  }
+  std::cout<<"CSSConstantGradientValue and CSSColorImageValue delegated color equality compare "
+           <<constant_pairs<<" and "<<color_image_pairs<<" pairs respectively.\n";
 }
