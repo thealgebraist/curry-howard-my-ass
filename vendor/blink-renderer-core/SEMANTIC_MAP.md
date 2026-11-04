@@ -923,10 +923,10 @@ evaluated. The payload relation is now included in `blink_content_data_equivalen
 and composed with an image-content reattach decision. The general linked-list fixtures still include finite image atoms. A second
 relation-parameterized recursive path uses `imageNode` constructors and feeds
 `nodeEqualWithImage` into `contentListEqualWithImage`. It checks singleton image
-lists plus image nodes in the head and tail of two-node lists across 442,368
-kind/relation cases, and routes list inequality to reattachment. This covers the
-represented list positions but not arbitrary length or mixed multiple image
-nodes in one list.
+lists, image nodes in the head and tail of two-node lists, and two repeated
+image-kind nodes across 589,824 kind/relation cases. List inequality routes to
+reattachment. The repeated-image fixture exercises recursive delegation twice;
+it does not cover arbitrary list length or every mixed image-kind sequence.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`

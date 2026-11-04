@@ -221,7 +221,9 @@ int main(){
     const std::vector<std::pair<std::vector<Ptr>,std::vector<Ptr>>> cases={
       {{app(sym("imageNode"),sym(image_names[left]))}, {app(sym("imageNode"),sym(image_names[right]))}},
       {{app(sym("imageNode"),sym(image_names[left])),sym("text0")}, {app(sym("imageNode"),sym(image_names[right])),sym("text0")}},
-      {{sym("text0"),app(sym("imageNode"),sym(image_names[left]))}, {sym("text0"),app(sym("imageNode"),sym(image_names[right]))}}
+      {{sym("text0"),app(sym("imageNode"),sym(image_names[left]))}, {sym("text0"),app(sym("imageNode"),sym(image_names[right]))}},
+      {{app(sym("imageNode"),sym(image_names[left])),app(sym("imageNode"),sym(image_names[left]))},
+       {app(sym("imageNode"),sym(image_names[right])),app(sym("imageNode"),sym(image_names[right]))}}
     };
     for(const auto& [a,bnodes]:cases){
       auto make_list=[](const std::vector<Ptr>& ns){Ptr out=sym("nil");for(auto i=ns.rbegin();i!=ns.rend();++i)out=ap(sym("cons"),{*i,out});return out;};
