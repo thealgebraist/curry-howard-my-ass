@@ -420,6 +420,12 @@ make test
    * Actual cursor offsets and subsequent tag dispatch are outside this scanner model.
 
 
+78. **`examples/blink_html_fastpath_wrapper.cpp`**:
+   * Models `TryParsingHTMLFragment` orchestration: `CanUseFastPath` rejection returns before parser dispatch and leaves the optional unsupported-tag output unchanged; an allowed gate dispatches 8/16-bit parsing and reports success/abort.
+   * It represents the optional output flag (true only for unsupported-tag parse failure) and the feature-gated unsupported-context log, which is suppressed for contexts classified as supported. The typed λΠ and C++ models cover 320 finite gate, width, parse-result, pointer, logging, and context states.
+   * Parser internals and actual histogram samples, byte counts, DOM mutations, and timing values are abstracted.
+
+
 ---
 
 ## License

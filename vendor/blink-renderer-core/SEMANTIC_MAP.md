@@ -551,6 +551,21 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path wrapper
+
+`examples/blink_html_fastpath_wrapper.cpp` models the public
+`TryParsingHTMLFragment` route and its implementation report. `CanUseFastPath`
+failure returns false before parser construction and leaves
+`failed_because_unsupported_tag` unchanged. An allowed gate chooses the 8-bit or
+16-bit implementation from the source representation. After `Run`, the wrapper
+reports success/abort; when the optional output pointer exists it is set true
+only for `kFailedUnsupportedTag` and false for other parse results. The
+unsupported-context detail log occurs only when that parse result is present,
+the runtime feature is enabled, and the context classification is not
+`kSupported`. Typed λΠ and C++ models cover 320 gate/width/result/pointer/logging
+states. Parser internals, real histograms, elapsed time, byte counts, and DOM
+effects are abstract. Sources: `html_document_parser_fastpath.cc:1927-2004,1737-1771`.
+
 ## HTML fragment fast-path tag-name scan
 
 `examples/blink_html_fastpath_tag_name.cpp` models `ScanTagname` over ASCII
