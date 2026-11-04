@@ -909,6 +909,19 @@ cases test the recursive list equation over the represented depth, not arbitrary
 list length. Strings, StyleImage equality, counter-style values, and TreeScope
 pointer identity are finite atoms, not evaluated Blink objects.
 
+`examples/blink_style_image_equality.cpp` refines the StyleImage atom used for
+image content. It represents the six subclasses and their pinned equality
+branches: fetched/fetched, fetched/pending, generated/generated, pending/any,
+image-set/image-set, crossfade/crossfade, mask-source/pending, and
+mask-source/mask-source. Pending cases preserve source-directed behavior; for
+example, pending/generated may compare through CSSValue equivalence while
+generated/pending is false. C++ and typed λΠ agree on all 6×6×2^12 = 147,456
+kind/relation assignments, and these cases compose into the image-content
+reattach trigger. The 12 field relations are abstract booleans: CSSValue,
+resource, URL, resolution, generated-image, and image-set internals are not
+evaluated. This refinement is documented beside the content-list model; it is
+not yet wired into that model's image payload equality.
+
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
 compares position and mode (`computed_style.h:2578`, `scroll_marker_group.h:25`).
