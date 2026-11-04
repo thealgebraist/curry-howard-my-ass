@@ -135,6 +135,13 @@ Current λΠ work is small compared with that source surface:
   Child/descendant variants are grouped by family; `FlagsForChildren`, pseudo
   element decisions, reattachment behavior, and Element traversal remain
   unmodeled.
+* `examples/blink_style_recalc_children.cpp` models the exact 13-bit
+  `FlagsForChildren` transform. Its C++/λΠ comparison exhausts all 8,192 input
+  masks for old style present/absent and size-query matching true/false (32,768
+  states), including conditional size-flag clearing and the suppression/
+  mark-reattach interaction. A separate check composes the transform with all
+  five propagation levels. Element traversal and style scheduling remain
+  outside scope.
 * `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
   TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
   over ten character classes and seven states (70 finite transitions).

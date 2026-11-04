@@ -777,6 +777,18 @@ child/descendant flag is represented as one family bit; `FlagsForChildren`,
 tree traversal remain outside this model. The finite flag product is exhaustive
 for these grouped inputs, not a proof of the full renderer lifecycle.
 
+`examples/blink_style_recalc_children.cpp` models the child flag transform from
+`style_recalc_change.cc:156-188` using exact 13-bit inputs. The C++ reference
+and typed λΠ compare all 8,192 masks across four combinations of old-style
+presence and `CanMatchSizeContainerQueries`, for 32,768 cases. The λΠ rule
+clears `kRecalcStyleContainerChildren`; it clears `kRecalcSizeContainer` only
+when the remaining size/suppression bits equal the current-container size bit
+and an old style can match size queries; it always clears `kSuppressRecalc`,
+and retains `kMarkReattach` only when suppression was set. Other bits pass
+through unchanged. The model also composes this result with the five
+`ForChildren` propagation outcomes. This isolates the flag and propagation
+transform; it does not model Element traversal or subsequent recalc scheduling.
+
 ## Paint chunk grouping
 
 `paint/paint_chunker.cc:30-89` updates current properties and creates a new
