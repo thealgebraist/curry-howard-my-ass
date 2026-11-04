@@ -239,10 +239,11 @@ Current λΠ work is small compared with that source surface:
   token term and final DOM/stack state. This is a mapped transcription, not
   execution of Blink's tokenizer; Unicode, duplicate attrs, parse-error
   reconsume, custom/sanitizer effects, and full DOM lifecycle are excluded.
-  The same raw source is scanned to derive the start-tag token and suffix
-  character token; a quoted-attribute `>` case checks the tag/body boundary.
-  The inserted node then feeds fixed `p`/`.beta`/`#alpha` selector matching,
-  numeric-priority color selection, and abstract text layout/paint. Six cases
+  The same raw source yields a start-tag token, text token through the next `<`,
+  and restricted `</p>` token; the p-end transition closes the open-element
+  stack. A quoted-attribute `>` case checks the tag/body boundary. The DOM
+  then feeds fixed `p`/`.beta`/`#alpha` selector matching, numeric-priority
+  color selection, and abstract text layout/paint. Six cases
   agree with the C++ reference; the
   both-selectors-hit case also checks declaration-order-independent winner
   selection. The `.beta` selector checks whitespace-separated class tokens
@@ -250,8 +251,8 @@ Current λΠ work is small compared with that source surface:
   appends content to the same inserted node; non-empty data reaches `textRun`
   and an abstract `paintText`, while an empty token emits no text item. A
   changed-color simple-paint flag is projected only when text is present.
-  The suffix is one character token: later markup, references, and tokenizer
-  chunking remain unmodeled. Character data is flattened rather than modeled
+  Only a text run followed by `</p>` is accepted; other markup, body entity
+  references, multiple text tokens, and tokenizer chunking remain unmodeled. Character data is flattened rather than modeled
   as a DOM Text node with separate identity or coalescing; glyph shaping,
   geometry, full layout, and Blink paint artifact internals remain outside scope. Full selector syntax,
   cascade priorities, and color scheme are also unmodeled.
