@@ -920,9 +920,13 @@ kind/relation assignments, with these cases composed into the image-content
 reattach trigger. The 12 field relations are abstract booleans: CSSValue,
 resource, URL, resolution, generated-image, and image-set internals are not
 evaluated. The payload relation is now included in `blink_content_data_equivalence.cpp`
-and composed with an image-content reattach decision. The general linked-list
-fixtures still use finite image atoms; only the image-payload path consumes the
-12 explicit field-relation inputs.
+and composed with an image-content reattach decision. The general linked-list fixtures still include finite image atoms. A second
+relation-parameterized recursive path uses `imageNode` constructors and feeds
+`nodeEqualWithImage` into `contentListEqualWithImage`. It checks singleton image
+lists plus image nodes in the head and tail of two-node lists across 442,368
+kind/relation cases, and routes list inequality to reattachment. This covers the
+represented list positions but not arbitrary length or mixed multiple image
+nodes in one list.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`

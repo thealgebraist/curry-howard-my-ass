@@ -183,7 +183,7 @@ Current λΠ work is small compared with that source surface:
   equality and linked-list comparison, then routes inequality to the content
   reattach trigger. Typed λΠ and C++ comparisons cover 11,449 directed node
   pairs and 34,348 bounded list pairs, including Counter/AltCounter asymmetry.
-  String, counter-style, and tree-scope payload values are finite atoms; lists are covered through length two. Image payload equality is refined separately across 147,456 subclass/relation states and composed with its reattach trigger.
+  String, counter-style, and tree-scope payload values are finite atoms; ordinary list fixtures cover through length two. A relation-parameterized image-list path checks 442,368 singleton/head/tail comparisons over 147,456 subclass/relation states and composes inequality with reattachment.
 * `examples/blink_style_image_equality.cpp` models all six `StyleImage` subclass
   equality branches and the image-content reattach trigger across 147,456 kind/
   relation assignments. Its comparison loop checks the C++ transcription against λΠ.

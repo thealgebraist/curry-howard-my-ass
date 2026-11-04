@@ -70,8 +70,12 @@ int main(){
   sig["nil"]=L;sig["cons"]=fn(N,fn(L,L));sig["andB"]=fn(B,fn(B,B));sig["notB"]=fn(B,B);
   sig["nodeEqual"]=fn(N,fn(N,B));sig["contentListEqual"]=fn(L,fn(L,B));sig["contentChangedRequiresReattach"]=fn(L,fn(L,B));
   Ptr image_relations=B;for(unsigned i=0;i<12;++i)image_relations=fn(B,image_relations);
+  sig["imageNode"]=fn(I,N);
   sig["imageContentDataEqual"]=fn(I,fn(I,image_relations));
   sig["imageContentChangedRequiresReattach"]=fn(I,fn(I,image_relations));
+  sig["nodeEqualWithImage"]=fn(N,fn(N,image_relations));
+  sig["contentListEqualWithImage"]=fn(L,fn(L,image_relations));
+  sig["contentChangedRequiresReattachWithImage"]=fn(L,fn(L,image_relations));
   for(bool a:{false,true})for(bool b:{false,true})rules.push_back(R(ap(sym("andB"),{bt(a),bt(b)}),bt(a&&b)));
   rules.push_back(R(app(sym("notB"),sym("true")),sym("false")));
   rules.push_back(R(app(sym("notB"),sym("false")),sym("true")));
@@ -98,6 +102,30 @@ int main(){
   Ptr image_changed=sym("imageContentChangedRequiresReattach");for(const auto& arg:image_trigger)image_changed=app(image_changed,arg);
   rules.push_back(R(image_changed,app(sym("notB"),image_equal)));
 
+  std::vector<Ptr> relation_vars;for(unsigned i=0;i<12;++i)relation_vars.push_back(pvar(80+i));
+  auto relation_args=[&](Ptr f,std::vector<Ptr> args){for(auto& x:args)f=app(f,x);for(const auto& x:relation_vars)f=app(f,x);return f;};
+  std::vector<Ptr> image_node_args={app(sym("imageNode"),pvar(70)),app(sym("imageNode"),pvar(71))};
+  rules.push_back(R(relation_args(sym("nodeEqualWithImage"),image_node_args),
+                    relation_args(sym("imageContentDataEqual"),{pvar(70),pvar(71)})));
+  rules.push_back(R(relation_args(sym("nodeEqualWithImage"),{pvar(72),pvar(73)}),
+                    ap(sym("nodeEqual"),{pvar(72),pvar(73)})));
+  std::vector<Ptr> list_bools;for(unsigned i=0;i<12;++i)list_bools.push_back(pvar(80+i));
+  auto list_rule=[&](std::vector<Ptr> lists,Ptr result){
+    Ptr lhs=sym("contentListEqualWithImage");for(const auto& x:lists)lhs=app(lhs,x);for(const auto& x:list_bools)lhs=app(lhs,x);
+    rules.push_back(R(lhs,std::move(result)));
+  };
+  list_rule({sym("nil"),sym("nil")},sym("true"));
+  list_rule({sym("nil"),ap(sym("cons"),{pvar(74),pvar(75)})},sym("false"));
+  list_rule({ap(sym("cons"),{pvar(74),pvar(75)}),sym("nil")},sym("false"));
+  Ptr head_eq=relation_args(sym("nodeEqualWithImage"),{pvar(74),pvar(76)});
+  Ptr tail_eq=sym("contentListEqualWithImage");for(const auto& x:{pvar(75),pvar(77)})tail_eq=app(tail_eq,x);for(const auto& x:list_bools)tail_eq=app(tail_eq,x);
+  list_rule({ap(sym("cons"),{pvar(74),pvar(75)}),ap(sym("cons"),{pvar(76),pvar(77)})},ap(sym("andB"),{head_eq,tail_eq}));
+  Ptr changed_list=sym("contentChangedRequiresReattachWithImage");
+  std::vector<Ptr> list_trigger={pvar(100),pvar(101)};for(unsigned i=0;i<12;++i)list_trigger.push_back(pvar(80+i));
+  for(const auto& x:list_trigger)changed_list=app(changed_list,x);
+  Ptr list_equal=sym("contentListEqualWithImage");for(const auto& x:list_trigger)list_equal=app(list_equal,x);
+  rules.push_back(R(changed_list,app(sym("notB"),list_equal)));
+
   for(const auto& node:nodes)rules.push_back(R(ap(sym("nodeEqual"),{sym(node.constructor),sym(node.constructor)}),sym("true")));
   // CounterContentData::Equals accepts an AltCounterContentData after checking
   // the five CounterData fields; the reverse dynamic cast fails.
@@ -121,6 +149,11 @@ int main(){
   std::vector<Ptr> image_sample={sym("fetched"),sym("pending")};for(unsigned i=0;i<12;++i)image_sample.push_back(sym("false"));
   Ptr image_check=sym("imageContentDataEqual");for(const auto& arg:image_sample)image_check=app(image_check,arg);
   auto image_type=infer({},image_check,sig,rules);assert(image_type&&conv(*image_type,B,ix));
+  Ptr list_image_sample=sym("contentListEqualWithImage");
+  list_image_sample=app(list_image_sample,ap(sym("cons"),{app(sym("imageNode"),sym("fetched")),sym("nil")}));
+  list_image_sample=app(list_image_sample,ap(sym("cons"),{app(sym("imageNode"),sym("pending")),sym("nil")}));
+  for(unsigned i=0;i<12;++i)list_image_sample=app(list_image_sample,sym("false"));
+  auto list_image_type=infer({},list_image_sample,sig,rules);assert(list_image_type&&conv(*list_image_type,B,ix));
 
   unsigned node_pairs=0;
   for(const auto& a:nodes)for(const auto& b:nodes){
@@ -170,4 +203,35 @@ int main(){
     if(!conv(normalize(changed,ix),bt(!equal),ix)){std::cerr<<"ImageContentData payload reattach mismatch\n";return 9;}++image_reattach_pairs;
   }
   std::cout<<"ImageContentData payload equality and reattach composition agree on "<<image_payload_pairs<<" kind/relation states ("<<image_reattach_pairs<<" reattach decisions).\n";
+  auto style_image_equal=[](unsigned left,unsigned right,const bool* b){
+    if(left==0&&right==2)return b[0];
+    if(left==0&&right==0)return b[1]&&b[2]&&b[3];
+    if(left==1&&right==1)return b[4]&&b[5]&&b[6];
+    if(left==2)return b[0];
+    if(left==3&&right==3)return b[7]&&b[8];
+    if(left==4&&right==4)return b[9];
+    if(left==5&&right==2)return b[0];
+    if(left==5&&right==5)return b[10]&&b[11];
+    return false;
+  };
+  unsigned image_lists=0,image_list_reattach=0;
+  for(unsigned left=0;left<6;++left)for(unsigned right=0;right<6;++right)for(unsigned mask=0;mask<(1u<<12);++mask){
+    bool b[12];std::vector<Ptr> args;for(unsigned i=0;i<12;++i){b[i]=(mask&(1u<<i))!=0;args.push_back(bt(b[i]));}
+    const bool payload_equal=style_image_equal(left,right,b);
+    const std::vector<std::pair<std::vector<Ptr>,std::vector<Ptr>>> cases={
+      {{app(sym("imageNode"),sym(image_names[left]))}, {app(sym("imageNode"),sym(image_names[right]))}},
+      {{app(sym("imageNode"),sym(image_names[left])),sym("text0")}, {app(sym("imageNode"),sym(image_names[right])),sym("text0")}},
+      {{sym("text0"),app(sym("imageNode"),sym(image_names[left]))}, {sym("text0"),app(sym("imageNode"),sym(image_names[right]))}}
+    };
+    for(const auto& [a,bnodes]:cases){
+      auto make_list=[](const std::vector<Ptr>& ns){Ptr out=sym("nil");for(auto i=ns.rbegin();i!=ns.rend();++i)out=ap(sym("cons"),{*i,out});return out;};
+      Ptr left_list=make_list(a),right_list=make_list(bnodes);
+      Ptr term=sym("contentListEqualWithImage");term=app(term,left_list);term=app(term,right_list);for(const auto& x:args)term=app(term,x);
+      const bool expected=payload_equal;
+      if(!conv(normalize(term,ix),bt(expected),ix)){std::cerr<<"ContentData image-list equality mismatch\n";return 10;}++image_lists;
+      Ptr changed=sym("contentChangedRequiresReattachWithImage");changed=app(changed,left_list);changed=app(changed,right_list);for(const auto& x:args)changed=app(changed,x);
+      if(!conv(normalize(changed,ix),bt(!expected),ix)){std::cerr<<"ContentData image-list reattach mismatch\n";return 11;}++image_list_reattach;
+    }
+  }
+  std::cout<<"Recursive ContentData image-list equality and reattach decisions compare over "<<image_lists<<" cases ("<<image_list_reattach<<" trigger results).\n";
 }
