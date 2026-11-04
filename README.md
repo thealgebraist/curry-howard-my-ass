@@ -167,7 +167,7 @@ make test
 
 24. **`examples/blink_computed_style_difference.cpp`**:
    * Models the ordered `ComputedStyle::ComputeDifferenceIgnoringInheritedFirstLineStyle` branch classifier across 19 abstract Boolean relations for scroll animation, descendant-affecting display/container changes, inherited and non-inherited equality, variable dependencies, pseudo styles, overscroll, and display-list transitions. Typed λΠ agrees with a C++ transcription on all 524,288 predicate assignments.
-   * Also models `ComputeDifference` pointer identity/null-style handling and the maximum severity of cached inherited first-line and ordinary differences (576 states), plus `Element::ApplyComputedStyleDiff` propagation updates for all 30 current-propagation/difference pairs. Concrete generated-field equality, reachable-state constraints, cache lookup/computation, and style side effects are omitted.
+   * Also models `ComputeDifference` pointer identity/null-style handling and the maximum severity of cached inherited first-line and ordinary differences (576 states), plus `Element::ApplyComputedStyleDiff` propagation updates for all 30 current-propagation/difference pairs. Also models `NeedsReinsertLayoutTree` (16 position/float states) and the `LayoutObject::ApplyStyleChanges` selection (32 states) for diff severity, HTML root, anchor evaluator/functions, and first-letter initial-letter cases. Concrete generated-field equality, reachable-state constraints, cache lookup/computation, and style side effects are omitted.
 
 25. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
    * Models the shared in-body end-tag branch for all 28 distinct block-element target tags, including the general scope scan, implied-end-tag pass, and pop-through-target transition.

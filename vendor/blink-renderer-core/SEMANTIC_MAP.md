@@ -871,6 +871,19 @@ C++ and λΠ rules agree for all 30 pairs of five propagation levels and six
 difference severities. This models only the propagation field; query flags and
 later style/DOM side effects remain outside this helper model.
 
+The same example covers two adjacent `RecalcOwnStyle` layout decisions. The
+`ComputedStyle::NeedsReinsertLayoutTree` predicate (`computed_style.cc:406-419`)
+requests reinsertion when out-of-flow status changes, or when float status
+changes while the new style is not out of flow. The C++/λΠ comparison covers all
+16 old/new position/float combinations. The model also captures selection of
+`LayoutObject::ApplyStyleChanges` (`element.cc:6218-6268`): difference severity
+sets the initial value, HTML root style forces application, an anchor evaluator
+overrides to no application, and anchor functions or a non-normal first-letter
+initial-letter force application when no evaluator is active. The comparison
+covers all 32 Boolean combinations. These are decision models only; the
+subsequent layout-tree remove/reinsert, `SetStyle`, and layout invalidation
+operations are not executed or modeled.
+
 Typed λΠ agrees with the C++ transcription on 640 states each for
 `TraverseChildren` and `TraversePseudoElements`, all eight mark-reattach
 boolean combinations, all 64 inputs to the `TraverseChild` disjunction, and
