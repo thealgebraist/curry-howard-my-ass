@@ -140,3 +140,6 @@ example; they do not claim behavioral equivalence with Blink.
 * [Gradient color-stop value equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.h#68)
 * [CSSGradientValue common equality fields](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#1699)
 * [CSSLinearGradientValue subclass equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#1470)
+
+* [CSSGradientValue equality fields and stop vector](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#1699)
+* [CSSLinearGradientValue deprecated/modern equality branches](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#1470)

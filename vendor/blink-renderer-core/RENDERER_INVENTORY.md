@@ -197,7 +197,9 @@ Current λΠ work is small compared with that source surface:
   text and checks 36 value pairs plus 144 image-size compositions.
   It also models the common `CSSGradientValue::Equals` fields and stop-list
   equality through two stops over 254,016 pairs; stop components are finite CSSValue
-  atoms with no null hints, and concrete subclass fields remain outside scope.
+  atoms with no null hints. It also models 144 targeted `CSSLinearGradientValue`
+  pairs across deprecated, prefixed, and standard branches; radial/conic fields
+  and unrestricted CSSValue payload semantics remain outside scope.
 * `examples/blink_diff_affects_scroll_animations.cpp` models the six-field
   `DiffAffectsScrollAnimations` predicate and its first-priority route into the
   computed-style difference severity. The C++/typed-λΠ comparisons cover all

@@ -29,6 +29,15 @@ struct GradientBase {
   const char* hue_method;
   std::vector<GradientStop> stops;
 };
+struct LinearGradient {
+  const char* type;
+  GradientBase base;
+  const char* first_x;
+  const char* first_y;
+  const char* second_x;
+  const char* second_y;
+  const char* angle;
+};
 
 static Ptr fn(Ptr a, Ptr b) { return arrow(std::move(a), std::move(b)); }
 static Rule rule(Ptr lhs, Ptr rhs) { return {std::move(lhs), std::move(rhs)}; }
@@ -80,6 +89,15 @@ static Ptr gradient_base_term(const GradientBase& value) {
   return apps(sym("gradientBase"),
               {bool_term(value.repeating), sym(value.interpolation_space),
                sym(value.hue_method), gradient_stops_term(value.stops)});
+}
+static Ptr optional_value_term(const char* value) {
+  return std::string(value)=="noneValue" ? sym("noneValue") : app(sym("someValue"),sym(value));
+}
+static Ptr linear_gradient_term(const LinearGradient& value) {
+  return apps(sym("linearGradient"),
+              {sym(value.type),gradient_base_term(value.base),optional_value_term(value.first_x),
+               optional_value_term(value.first_y),optional_value_term(value.second_x),
+               optional_value_term(value.second_y),optional_value_term(value.angle)});
 }
 static Ptr generated_equal_term(const ContainerSizes& left_container,
                                 const ContainerSizes& right_container,
@@ -155,9 +173,6 @@ int main() {
   signature["generatedPaintImageEqual"] = fn(C, fn(C, fn(V, fn(V, fn(Q, fn(Q, B))))));
   signature["generatedPaintImageNeedsReattach"] = fn(C, fn(C, fn(V, fn(V, fn(Q, fn(Q, B))))));
   signature["CSSGradientBase"] = type_sort();
-  signature["CSSGradientRepeat"] = type_sort();
-  signature["nonRepeating"] = sym("CSSGradientRepeat");
-  signature["repeating"] = sym("CSSGradientRepeat");
   signature["GradientColorSpace"] = type_sort();
   for (const char* space : {"spaceNone", "spaceSRGB", "spaceLab"}) signature[space] = CS;
   signature["HueInterpolationMethod"] = type_sort();
@@ -180,6 +195,19 @@ int main() {
   signature["gradientStopEqual"] = fn(S, fn(S, B));
   signature["gradientStopListEqual"] = fn(SL, fn(SL, B));
   signature["gradientBaseEqual"] = fn(G, fn(G, B));
+  signature["GradientValueAtom"] = type_sort();
+  for (const char* atom : {"coordA","coordB","angleA","angleB"}) signature[atom] = sym("GradientValueAtom");
+  signature["OptionalCSSValue"] = type_sort();
+  signature["noneValue"] = sym("OptionalCSSValue");
+  signature["someValue"] = fn(sym("GradientValueAtom"),sym("OptionalCSSValue"));
+  signature["LinearGradientType"] = type_sort();
+  for (const char* type : {"deprecatedLinear","prefixedLinear","standardLinear"}) signature[type] = sym("LinearGradientType");
+  signature["linearGradient"] = fn(sym("LinearGradientType"),fn(G,fn(sym("OptionalCSSValue"),fn(sym("OptionalCSSValue"),fn(sym("OptionalCSSValue"),fn(sym("OptionalCSSValue"),fn(sym("OptionalCSSValue"),sym("LinearGradient"))))))));
+  signature["LinearGradient"] = type_sort();
+  signature["gradientValueAtomEqual"] = fn(sym("GradientValueAtom"),fn(sym("GradientValueAtom"),B));
+  signature["optionalCSSValueEqual"] = fn(sym("OptionalCSSValue"),fn(sym("OptionalCSSValue"),B));
+  signature["gradientStopsEqual"] = fn(G,fn(G,B));
+  signature["linearGradientEqual"] = fn(sym("LinearGradient"),fn(sym("LinearGradient"),B));
 
   for (bool a : {false, true})
     for (bool b : {false, true})
@@ -305,6 +333,65 @@ int main() {
                                {apps(sym("hueMethodEqual"),{pvar(74),pvar(78)}),
                                 apps(sym("gradientStopListEqual"),{pvar(75),pvar(79)})})})})));
 
+  for (const char* atom : {"coordA","coordB","angleA","angleB"})
+    rules.push_back(rule(apps(sym("gradientValueAtomEqual"),{sym(atom),sym(atom)}),sym("true")));
+  rules.push_back(rule(apps(sym("gradientValueAtomEqual"),{pvar(80),pvar(81)}),sym("false")));
+  rules.push_back(rule(apps(sym("optionalCSSValueEqual"),{sym("noneValue"),sym("noneValue")}),sym("true")));
+  rules.push_back(rule(apps(sym("optionalCSSValueEqual"),
+                            {sym("noneValue"),app(sym("someValue"),pvar(82))}),sym("false")));
+  rules.push_back(rule(apps(sym("optionalCSSValueEqual"),
+                            {app(sym("someValue"),pvar(82)),sym("noneValue")}),sym("false")));
+  rules.push_back(rule(apps(sym("optionalCSSValueEqual"),
+                            {app(sym("someValue"),pvar(82)),app(sym("someValue"),pvar(83))}),
+                       apps(sym("gradientValueAtomEqual"),{pvar(82),pvar(83)})));
+  rules.push_back(rule(apps(sym("gradientStopsEqual"),
+                            {apps(sym("gradientBase"),{pvar(84),pvar(85),pvar(86),pvar(87)}),
+                             apps(sym("gradientBase"),{pvar(88),pvar(89),pvar(90),pvar(91)})}),
+                       apps(sym("gradientStopListEqual"),{pvar(87),pvar(91)})));
+  auto gradient_and = [](std::vector<Ptr> terms) {
+    Ptr result=terms.back();
+    for (int i=static_cast<int>(terms.size())-2;i>=0;--i)
+      result=apps(sym("andB"),{terms[i],result});
+    return result;
+  };
+  std::vector<Ptr> deprecated_left={sym("deprecatedLinear"),pvar(100),pvar(101),pvar(102),pvar(103),pvar(104),pvar(105)};
+  std::vector<Ptr> deprecated_right={sym("deprecatedLinear"),pvar(110),pvar(111),pvar(112),pvar(113),pvar(114),pvar(115)};
+  Ptr deprecated_result=gradient_and({
+    apps(sym("optionalCSSValueEqual"),{pvar(101),pvar(111)}),
+    apps(sym("optionalCSSValueEqual"),{pvar(102),pvar(112)}),
+    apps(sym("optionalCSSValueEqual"),{pvar(103),pvar(113)}),
+    apps(sym("optionalCSSValueEqual"),{pvar(104),pvar(114)}),
+    apps(sym("gradientStopsEqual"),{pvar(100),pvar(110)})});
+  rules.push_back(rule(apps(sym("linearGradientEqual"),
+                            {apps(sym("linearGradient"),deprecated_left),
+                             apps(sym("linearGradient"),deprecated_right)}),deprecated_result));
+  for (const char* type : {"prefixedLinear","standardLinear"}) {
+    std::vector<Ptr> left={sym(type),pvar(120),pvar(121),pvar(122),pvar(123),pvar(124),pvar(125)};
+    std::vector<Ptr> right={sym(type),pvar(130),pvar(131),pvar(132),pvar(133),pvar(134),pvar(135)};
+    Ptr base_equal=apps(sym("gradientBaseEqual"),{pvar(120),pvar(130)});
+    Ptr angle_some=app(sym("someValue"),pvar(136));
+    auto left_angle_case=left;left_angle_case[6]=angle_some;
+    Ptr angle_result=gradient_and({base_equal,
+      apps(sym("optionalCSSValueEqual"),{angle_some,pvar(135)}),
+      apps(sym("gradientStopsEqual"),{pvar(120),pvar(130)})});
+    rules.push_back(rule(apps(sym("linearGradientEqual"),
+                              {apps(sym("linearGradient"),left_angle_case),
+                               apps(sym("linearGradient"),right)}),angle_result));
+    auto left_no_angle=left;left_no_angle[6]=sym("noneValue");
+    auto right_has_angle=right;right_has_angle[6]=app(sym("someValue"),pvar(137));
+    rules.push_back(rule(apps(sym("linearGradientEqual"),
+                              {apps(sym("linearGradient"),left_no_angle),
+                               apps(sym("linearGradient"),right_has_angle)}),sym("false")));
+    auto right_no_angle=right;right_no_angle[6]=sym("noneValue");
+    Ptr no_angle_result=gradient_and({base_equal,
+      apps(sym("optionalCSSValueEqual"),{pvar(122),pvar(132)}),
+      apps(sym("optionalCSSValueEqual"),{pvar(123),pvar(133)})});
+    rules.push_back(rule(apps(sym("linearGradientEqual"),
+                              {apps(sym("linearGradient"),left_no_angle),
+                               apps(sym("linearGradient"),right_no_angle)}),no_angle_result));
+  }
+  rules.push_back(rule(apps(sym("linearGradientEqual"),{pvar(140),pvar(141)}),sym("false")));
+
   RuleIndex indexed_rules(rules);
   auto optional_type = infer({}, apps(sym("optionalSizeEqual"), {sym("noneSize"), sym("noneSize")}), signature, rules);
   assert(optional_type && conv(*optional_type, B, indexed_rules));
@@ -323,6 +410,13 @@ int main() {
                                        gradient_base_term({false,"spaceNone","hueShorter",{}})}),
                              signature, rules);
   assert(gradient_type && conv(*gradient_type, B, indexed_rules));
+  auto linear_type = infer({}, apps(sym("linearGradientEqual"),
+                                    {linear_gradient_term({"standardLinear",{false,"spaceNone","hueShorter",{}},
+                                                           "noneValue","noneValue","noneValue","noneValue","noneValue"}),
+                                     linear_gradient_term({"standardLinear",{false,"spaceNone","hueShorter",{}},
+                                                           "noneValue","noneValue","noneValue","noneValue","noneValue"})}),
+                           signature, rules);
+  assert(linear_type && conv(*linear_type, B, indexed_rules));
 
   std::vector<ContainerSizes> containers;
   const std::vector<std::optional<unsigned>> optional_values={std::nullopt, 0u, 1u};
@@ -455,4 +549,54 @@ int main() {
     }
   std::cout << "CSSGradientValue common-field and bounded color-stop-list equality compares "
             << gradient_pairs << " finite gradient pairs.\n";
+  const std::vector<LinearGradient> linear_gradients={
+    {"deprecatedLinear",{false,"spaceNone","hueShorter",{}},"noneValue","noneValue","noneValue","noneValue","noneValue"},
+    {"deprecatedLinear",{true,"spaceLab","hueLonger",{}},"noneValue","noneValue","noneValue","noneValue","noneValue"},
+    {"deprecatedLinear",{false,"spaceNone","hueShorter",{}},"coordA","coordB","coordA","coordB","noneValue"},
+    {"deprecatedLinear",{false,"spaceNone","hueShorter",{}},"coordA","coordB","coordB","coordB","noneValue"},
+    {"prefixedLinear",{false,"spaceNone","hueShorter",{}},"noneValue","noneValue","noneValue","noneValue","angleA"},
+    {"prefixedLinear",{true,"spaceNone","hueShorter",{}},"coordB","coordB","noneValue","noneValue","angleA"},
+    {"prefixedLinear",{false,"spaceNone","hueShorter",{}},"noneValue","noneValue","noneValue","noneValue","angleB"},
+    {"prefixedLinear",{false,"spaceNone","hueShorter",{}},"coordA","noneValue","noneValue","noneValue","noneValue"},
+    {"prefixedLinear",{false,"spaceNone","hueShorter",{}},"coordB","coordA","noneValue","noneValue","noneValue"},
+    {"prefixedLinear",{false,"spaceNone","hueShorter",{{"colorRed","offsetZero"}}},"noneValue","noneValue","noneValue","noneValue","noneValue"},
+    {"standardLinear",{false,"spaceNone","hueShorter",{}},"coordA","noneValue","noneValue","noneValue","noneValue"},
+    {"standardLinear",{false,"spaceNone","hueShorter",{}},"noneValue","noneValue","noneValue","noneValue","angleA"}
+  };
+  auto optional_equal=[](const char* a,const char* b){
+    return std::string(a)==b;
+  };
+  auto stop_lists_equal=[](const std::vector<GradientStop>& a,const std::vector<GradientStop>& b){
+    if(a.size()!=b.size()) return false;
+    for(size_t i=0;i<a.size();++i)
+      if(std::string(a[i].color)!=b[i].color || std::string(a[i].offset)!=b[i].offset) return false;
+    return true;
+  };
+  auto gradient_bases_equal=[&](const GradientBase& a,const GradientBase& b){
+    return a.repeating==b.repeating && std::string(a.interpolation_space)==b.interpolation_space &&
+      std::string(a.hue_method)==b.hue_method && stop_lists_equal(a.stops,b.stops);
+  };
+  auto linear_equals=[&](const LinearGradient& a,const LinearGradient& b){
+    if(std::string(a.type)!=b.type) return false;
+    if(std::string(a.type)=="deprecatedLinear")
+      return optional_equal(a.first_x,b.first_x)&&optional_equal(a.first_y,b.first_y)&&
+        optional_equal(a.second_x,b.second_x)&&optional_equal(a.second_y,b.second_y)&&
+        stop_lists_equal(a.base.stops,b.base.stops);
+    if(!gradient_bases_equal(a.base,b.base)) return false;
+    if(std::string(a.angle)!="noneValue")
+      return optional_equal(a.angle,b.angle)&&stop_lists_equal(a.base.stops,b.base.stops);
+    if(std::string(b.angle)!="noneValue") return false;
+    return optional_equal(a.first_x,b.first_x)&&optional_equal(a.first_y,b.first_y);
+  };
+  unsigned linear_pairs=0;
+  for(const auto& left:linear_gradients) for(const auto& right:linear_gradients){
+    const bool expected=linear_equals(left,right);
+    Ptr term=apps(sym("linearGradientEqual"),{linear_gradient_term(left),linear_gradient_term(right)});
+    if(!conv(normalize(term,indexed_rules),bool_term(expected),indexed_rules)){
+      std::cerr<<"CSSLinearGradientValue equality mismatch\n";return 8;
+    }
+    ++linear_pairs;
+  }
+  std::cout<<"CSSLinearGradientValue deprecated/modern branch equality compares "
+           <<linear_pairs<<" targeted finite value pairs.\n";
 }

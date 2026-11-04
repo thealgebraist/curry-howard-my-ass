@@ -943,14 +943,20 @@ derives each `paint(...)` string. Thirty-six value pairs compare directly; 144
 cases compose paint equality with representative equal/unequal container and
 viewport sizes. The model omits arbitrary doubles, NaN or signed-zero behavior,
 lazy size lookup effects, general argument serialization, multiple arguments,
-and multiple arguments. A shared `CSSGradientValue::Equals` model covers repeat,
-color interpolation space, hue method, and recursive color-stop list equality
-through two stops. It compares 254,016 finite gradient-base pairs using three
-representative color spaces, all four hue methods, two repeat values, and red/blue
-colors with zero/half offsets. This is only the common base relation used by
-concrete gradient subclasses; stop colors and offsets use finite CSSValue atoms
-with no null hint components. Linear/radial/conic-specific fields and complete
-CSS value equality remain outside the model.
+and multiple paint arguments. A shared `CSSGradientValue::Equals` model covers
+repeat, color interpolation space, hue method, and recursive color-stop list
+equality through two stops. It compares 254,016 finite gradient-base pairs using
+three representative color spaces, all four hue methods, two repeat values, and
+red/blue colors with zero/half offsets. Stop colors and offsets are finite
+CSSValue atoms; null hint components are excluded.
+
+`CSSLinearGradientValue::Equals` is modeled over 144 targeted value pairs across
+the deprecated, prefixed, and standard linear types. The deprecated branch
+compares four optional coordinates and stops while ignoring common repeat/color
+fields, matching the pinned branch. Modern types first compare common base fields,
+then handle an angle or compare optional first-position x/y values. Coordinate and
+angle payloads are finite CSSValue atoms. This does not model all linear gradient
+values, radial/conic subclasses, or the complete CSSValue equality dispatch.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`
