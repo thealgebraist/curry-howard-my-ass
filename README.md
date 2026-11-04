@@ -343,6 +343,12 @@ make test
    * Resolver internals, allocation behavior, and raw GC pointer identity are abstracted to the per-image same-reference/replacement observation and the final original/copy tag.
 
 
+65. **`examples/blink_image_set_failed_subresources.cpp`**:
+   * Models `CSSImageSetValue::HasFailedOrCanceledSubresources`: select the cached style image using shared versus fetcher-keyed mode, then classify absent image, absent resource content, loaded content, and failed/canceled content. The source intentionally does not compare device scale.
+   * The typed λΠ model and C++ transcription cover 512 finite cache/status states across fetcher presence, feature gate, fetcher choice, and all three cached-state observations; the cache branch is derived from fetcher presence and the feature gate.
+   * Fetcher-key identity, resource loading, DSF values, and `StyleImage`/`ImageResourceContent` internals are abstracted to status constructors.
+
+
 ---
 
 ## License

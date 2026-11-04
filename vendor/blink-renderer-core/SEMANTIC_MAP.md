@@ -1006,6 +1006,15 @@ override. The model abstracts resource/image results and does not include the ou
 cache call in `Load`; its cache state effects are modeled separately in
 `blink_image_set_cache.cpp`.
 
+`examples/blink_image_set_failed_subresources.cpp` models the cache lookup and
+status decision in `HasFailedOrCanceledSubresources`. The effective cache mode
+selects either the shared entry or the requested fetcher entry; null fetcher or
+disabled identity checking uses the shared entry. A missing cached style image
+returns false, while an image with no resource content or failed/canceled
+content returns true. Loaded content returns false. The source does not check
+device scale in this method, and the model leaves fetcher-key identity, resource
+loading, and image/content internals as finite observations.
+
 `examples/blink_image_set_resolve_values.cpp` models
 `ResolveValuesAndCreateCopyIfNeeded` followed by `ResolveValuesIfNeeded`. For
 each option, the abstract `ResolveGradients` observation either returns the
