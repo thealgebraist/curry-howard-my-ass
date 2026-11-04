@@ -57,6 +57,13 @@ make test
    * Proves Self-Implication (`id_imp`) and Hypothetical Syllogism (`syllogism`).
    * Demonstrates transparent unfolding of proofs via synthesized $\delta$-rules.
 
+3. **`examples/inverse_galois.cpp`**:
+   * Verification of the **Inverse Galois Problem** over $\mathbb{Q}$:
+     * Realizing the cyclic group $C_2 \cong \mathbb{Z}/2\mathbb{Z}$ via the quadratic extension $\mathbb{Q}(\sqrt{2})/\mathbb{Q}$.
+     * Realizing the non-abelian symmetric group $S_3$ via the splitting field of $x^3 - 2$ over $\mathbb{Q}$.
+     * Definitional verification of group homomorphism conditions $\phi(\sigma_1 \circ \sigma_2) \equiv \phi(\sigma_1) \cdot \phi(\sigma_2)$ under the rewrite engine.
+     * Fully typed proof terms witnessing `InverseGalois(C2, Q)` and `InverseGalois(S3, Q)`.
+
 ---
 
 ## License

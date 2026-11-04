@@ -1,6 +1,7 @@
 test_suite
 mltt_vectors
 automath_logic
+inverse_galois
 *.o
 *.dSYM
 .DS_Store
