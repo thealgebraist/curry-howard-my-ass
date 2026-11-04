@@ -107,6 +107,11 @@ Current λΠ work is small compared with that source surface:
   selection. Nine finite C++/λΠ cases cover selector rejection, compound
   matches, priority-field ordering, and later-input selection on exact ties.
   Its three-field priority is an abstraction, not Blink's full sort key.
+* `examples/blink_css_selector_color.cpp` connects restricted selector matching
+  and winner selection to `color` explicit/initial/inherit/unset/missing
+  defaulting. Twelve finite cases agree between its C++ transcription and
+  typed λΠ, including parent/root behavior. Full CSS priority, actual values,
+  and computed-style lifecycle remain outside this projection.
 * `examples/blink_css_color_defaulting.cpp` models missing, `inherit`,
   `initial`, and `unset` outcomes for Blink's inherited `color` longhand, with
   parent-present and root cases. A C++ branch transcription and typed λΠ

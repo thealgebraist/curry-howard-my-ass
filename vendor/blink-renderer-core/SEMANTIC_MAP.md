@@ -347,6 +347,28 @@ construction. It omits highlight-specific inheritance, pseudo-element and
 shadow-boundary adjustments, actual color representation, cascade selection,
 and all effects of color on dependent properties.
 
+## Restricted selector-to-color pipeline
+
+`examples/blink_css_selector_color.cpp` composes three existing projections:
+tag/id/class matching and matched-rule transfer from
+`selector_checker-inl.h:218-245` and `element_rule_collector.cc:1260-1295`,
+per-property winner selection from an abstract three-field priority, and
+`color` value defaulting described above. Its C++ and typed λΠ paths agree on
+twelve fixtures spanning match/miss, priority selection and represented ties,
+explicit values, `initial`/`inherit`/`unset`, and missing declarations with a
+parent or at the root.
+
+`ElementRuleCollector::CompareRules` uses the full `MatchedRule::SortKey` plus
+source position (`element_rule_collector.cc:1514-1534`), while
+`StyleCascade::CollectFromMatchResult` expands matched properties and inserts
+their `CascadePriority` keys (`resolver/style_cascade.cc:498-523`). The example
+uses only a named three-field priority projection and abstract color IDs. Its
+tie behavior is tested against its finite C++ transcription; the check does
+not establish equality with Blink's complete sort key or `CascadeMap` behavior.
+It also omits selector parsing, combinators, attributes, origins/layers,
+importance, actual `StyleColor` values, pseudo/highlight inheritance, and
+`ComputedStyle` construction or lifecycle.
+
 ## HTML tokenizer boundary: open-tag dispatch
 
 `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the dispatch
