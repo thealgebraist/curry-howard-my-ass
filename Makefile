@@ -1,7 +1,7 @@
 CXX ?= g++-16
 CXXFLAGS ?= -std=c++23 -Wall -Wextra -O2 -Isrc
 
-all: test_suite mltt_vectors automath_logic inverse_galois scheme_interpreter cpp_template_evaluator blink_rendering_model blink_parser_lifecycle blink_parser_bisimulation blink_tree_builder_p_start_bisimulation blink_tree_builder_p_end_bisimulation blink_tree_builder_li_end_bisimulation blink_css_cascade_bisimulation blink_css_selector_bisimulation blink_css_combinator_bisimulation blink_css_revert_layer blink_css_priority_layer_normalization blink_layout_dirty_bisimulation
+all: test_suite mltt_vectors automath_logic inverse_galois scheme_interpreter cpp_template_evaluator blink_rendering_model blink_parser_lifecycle blink_parser_bisimulation blink_tree_builder_p_start_bisimulation blink_tree_builder_p_end_bisimulation blink_tree_builder_li_end_bisimulation blink_tree_builder_block_end_bisimulation blink_css_cascade_bisimulation blink_css_selector_bisimulation blink_css_combinator_bisimulation blink_css_revert_layer blink_css_priority_layer_normalization blink_css_color_defaulting blink_layout_dirty_bisimulation blink_tokenizer_open_tag_bisimulation
 
 test_suite: tests/test_suite.cpp src/lambda_pi.hpp src/automath.hpp
 	$(CXX) $(CXXFLAGS) tests/test_suite.cpp -o test_suite
@@ -39,6 +39,9 @@ blink_tree_builder_p_end_bisimulation: examples/blink_tree_builder_p_end_bisimul
 blink_tree_builder_li_end_bisimulation: examples/blink_tree_builder_li_end_bisimulation.cpp src/lambda_pi.hpp
 	$(CXX) $(CXXFLAGS) examples/blink_tree_builder_li_end_bisimulation.cpp -o blink_tree_builder_li_end_bisimulation
 
+blink_tree_builder_block_end_bisimulation: examples/blink_tree_builder_block_end_bisimulation.cpp src/lambda_pi.hpp
+	$(CXX) $(CXXFLAGS) examples/blink_tree_builder_block_end_bisimulation.cpp -o blink_tree_builder_block_end_bisimulation
+
 blink_css_cascade_bisimulation: examples/blink_css_cascade_bisimulation.cpp src/lambda_pi.hpp
 	$(CXX) $(CXXFLAGS) examples/blink_css_cascade_bisimulation.cpp -o blink_css_cascade_bisimulation
 
@@ -54,8 +57,14 @@ blink_css_revert_layer: examples/blink_css_revert_layer.cpp src/lambda_pi.hpp
 blink_css_priority_layer_normalization: examples/blink_css_priority_layer_normalization.cpp src/lambda_pi.hpp
 	$(CXX) $(CXXFLAGS) examples/blink_css_priority_layer_normalization.cpp -o blink_css_priority_layer_normalization
 
+blink_css_color_defaulting: examples/blink_css_color_defaulting.cpp src/lambda_pi.hpp
+	$(CXX) $(CXXFLAGS) examples/blink_css_color_defaulting.cpp -o blink_css_color_defaulting
+
 blink_layout_dirty_bisimulation: examples/blink_layout_dirty_bisimulation.cpp src/lambda_pi.hpp
 	$(CXX) $(CXXFLAGS) examples/blink_layout_dirty_bisimulation.cpp -o blink_layout_dirty_bisimulation
+
+blink_tokenizer_open_tag_bisimulation: examples/blink_tokenizer_open_tag_bisimulation.cpp src/lambda_pi.hpp
+	$(CXX) $(CXXFLAGS) examples/blink_tokenizer_open_tag_bisimulation.cpp -o blink_tokenizer_open_tag_bisimulation
 
 test: all
 	@echo "\n=== Running Full λN / λP / Automath Test Suite ==="
@@ -82,6 +91,8 @@ test: all
 	./blink_tree_builder_p_end_bisimulation
 	@echo "\n=== Running finite λΠ Blink tree-builder li-end bisimulation ==="
 	./blink_tree_builder_li_end_bisimulation
+	@echo "\n=== Running finite λΠ Blink tree-builder block-end bisimulation ==="
+	./blink_tree_builder_block_end_bisimulation
 	@echo "\n=== Running finite λΠ Blink CSS cascade bisimulation ==="
 	./blink_css_cascade_bisimulation
 	@echo "\n=== Running finite λΠ Blink CSS selector bisimulation ==="
@@ -92,10 +103,14 @@ test: all
 	./blink_css_revert_layer
 	@echo "\n=== Running finite λΠ CascadePriority layer normalization ==="
 	./blink_css_priority_layer_normalization
+	@echo "\n=== Running finite λΠ Blink color defaulting model ==="
+	./blink_css_color_defaulting
 	@echo "\n=== Running finite λΠ Blink layout dirty-bit model ==="
 	./blink_layout_dirty_bisimulation
+	@echo "\n=== Running finite λΠ Blink tokenizer open-tag dispatch model ==="
+	./blink_tokenizer_open_tag_bisimulation
 
 clean:
-	rm -f test_suite mltt_vectors automath_logic inverse_galois scheme_interpreter cpp_template_evaluator blink_rendering_model blink_parser_lifecycle blink_parser_bisimulation blink_tree_builder_p_start_bisimulation blink_tree_builder_p_end_bisimulation blink_tree_builder_li_end_bisimulation blink_css_cascade_bisimulation blink_css_selector_bisimulation blink_css_combinator_bisimulation blink_css_revert_layer blink_css_priority_layer_normalization blink_layout_dirty_bisimulation
+	rm -f test_suite mltt_vectors automath_logic inverse_galois scheme_interpreter cpp_template_evaluator blink_rendering_model blink_parser_lifecycle blink_parser_bisimulation blink_tree_builder_p_start_bisimulation blink_tree_builder_p_end_bisimulation blink_tree_builder_li_end_bisimulation blink_tree_builder_block_end_bisimulation blink_css_cascade_bisimulation blink_css_selector_bisimulation blink_css_combinator_bisimulation blink_css_revert_layer blink_css_priority_layer_normalization blink_css_color_defaulting blink_layout_dirty_bisimulation blink_tokenizer_open_tag_bisimulation
 
 .PHONY: all test clean

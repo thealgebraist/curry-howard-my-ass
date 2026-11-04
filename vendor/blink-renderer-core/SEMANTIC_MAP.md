@@ -209,6 +209,41 @@ identity for ordinary tags, actual DOM effects, or state beyond the open
 element stack. It therefore checks this finite transition projection, not the
 complete Blink tree-builder.
 
+## Tree-builder boundary: shared block-element end tags
+
+`examples/blink_tree_builder_block_end_bisimulation.cpp` models the shared
+case set in `HTMLTreeBuilder::ProcessEndTagForInBody` at
+`core/html/parser/html_tree_builder.cc:2230-2267`. The 28 target names each
+have a distinct λΠ `BlockTarget` constructor: `address`, `article`, `aside`,
+`blockquote`, `button`, `center`, `details`, `dialog`, `dir`, `div`, `dl`,
+`fieldset`, `figcaption`, `figure`, `footer`, `header`, `hgroup`, `listing`,
+`main`, `menu`, `nav`, `ol`, `pre`, `search`, `section`, `summary`, `select`,
+and `ul`. The transition checks scope for that target, generates implied end
+tags, then pops through the target; a scope miss leaves the stack unchanged.
+
+The target-first order within Blink's `InScopeCommon` loop is at
+`core/html/parser/html_element_stack.cc:420-430`: a matching HTML element
+returns true before the marker predicate can stop the scan. The model groups
+the standard HTML marker names listed in lines 48-56 into one constructor,
+uses a separate constructor for `IsScopeMarkerNonHTML` at lines 64-74, and
+uses another for document-fragment roots. It represents `select` separately
+because it is both a target and an HTML scope marker. The λΠ
+`generateImpliedEndTags` operator models `GenerateImpliedEndTags` at
+`core/html/parser/html_construction_site.cc:113-130,1529-1532`, using Blink's
+`dd`, `dt`, `li`, `option`, `optgroup`, `p`, `rb`, `rp`, `rt`, and `rtc` set.
+
+Thirty-five finite configurations were compared between the C++ transcription
+and λΠ: one scope-hit stack for each distinct target plus nested implied-tag,
+unrelated-top, select-marker, scope-miss, and absent-target cases. For the 31
+hits, the explicit implied-end-tag pass followed by pop-through-target was
+also checked against direct pop-through-target on the original stack; this is
+the final-stack abstraction boundary. The model omits parse-error reporting,
+the current-node diagnostic, DOM effects, foreign namespace identity for
+ordinary tag items, and general mixtures of multiple different block target
+tags in one stack. Its target-matching rules cover the enumerated finite stack
+cases; this check is not a proof of all possible stacks or full tree-builder
+equivalence.
+
 ## Layout boundary: dirty-bit propagation
 
 `examples/blink_layout_dirty_bisimulation.cpp` models a bounded part of
@@ -253,3 +288,58 @@ and tree order to zero and omits their normalization masks, inline/try-style
 flags, lower rule/declaration indices, and the remaining packed 96-bit
 priority comparison behavior. It does not prove equivalence of the complete
 `ForLayerComparison` method.
+
+## CSS `color` defaulting boundary
+
+`examples/blink_css_color_defaulting.cpp` models the defaulting decision for
+the `color` longhand, whose metadata in pinned commit
+`99d77c2af39f60ee06a5516ad5428e4d2aa61da4` marks it `inherited: true` and gives
+it `StyleColor(Color::kBlack)` as its default (`core/css/css_properties.json5`
+lines 1398–1419). `StyleBuilder::ApplyProperty` in
+`core/css/resolver/style_builder.cc` lines 104–132 turns explicit `inherit`,
+`initial`, and `unset` values into `ApplyInherit` or `ApplyInitial`; if
+`inherit` or `unset` has no parent style it rewrites the value to initial.
+`StyleResolverState::IsInheritedForUnset` at
+`core/css/resolver/style_resolver_state.cc` lines 164–167 returns
+`property.IsInherited()` (with an extra highlight-style condition omitted in
+this model). Therefore explicit `unset` for ordinary `color` follows the
+parent when present and the initial value at the root. Missing `color` is
+modeled from the base-style initialization split described in
+`core/css/resolver/style_resolver.cc`: `InitStyle` receives a source for
+non-inherited properties and a parent style (lines 1623–1649), and its base
+style description says these sources are merged before matched properties are
+applied (lines 1905–1923). Because `color` is in the inherited field group,
+the model uses the parent value for a missing declaration when one exists.
+
+The typed λΠ function and a separate C++ branch transcription agree on 24
+inputs: four keyword/missing cases, parent present or absent, and three
+abstract parent color values. Initial black is represented by zero. This is a
+projection of the one property's defaulting choice, not a translation of the
+generated `ApplyInherit`/`ApplyInitial` implementations or `ComputedStyle`
+construction. It omits highlight-specific inheritance, pseudo-element and
+shadow-boundary adjustments, actual color representation, cascade selection,
+and all effects of color on dependent properties.
+
+## HTML tokenizer boundary: open-tag dispatch
+
+`examples/blink_tokenizer_open_tag_bisimulation.cpp` models the dispatch
+branches of `HTMLTokenizer::NextTokenImpl` in
+`core/html/parser/html_tokenizer.cc:279-410` at the pinned Chromium revision.
+It covers the Data state, TagOpen state, and EndTagOpen state over ten abstract
+character classes. Outcomes include data-character and EOF emission, start or
+end tag opening with ASCII lowercasing abstracted into the action, markup
+declaration handoff, character-reference handoff, and malformed-open recovery
+such as reconsuming `<` or `</` in Data or entering bogus-comment handling.
+
+Seven states times ten character classes produce 70 finite transitions. The
+native transcription and typed λΠ transition agree on every pair. The Data
+state assumes there is no buffered character token before `<`; processing
+instruction support is fixed disabled, matching the default branch in the
+selected source. TagName, MarkupDeclarationOpen, BogusComment, and
+CharacterReference are opaque handoff states whose later input preserves that
+state with an `opaqueContinue` observation. Consequently this is a model of
+selected front-end dispatch only. It omits segmented-stream buffering and
+preprocessing, full tag-name scanning, entity decoding, comments and doctypes,
+attribute states, processing-instruction mode variation, token emission
+internals, and tree-builder/DOM effects. The C++ side is a transcription, not
+execution of Blink's linked `HTMLTokenizer`.

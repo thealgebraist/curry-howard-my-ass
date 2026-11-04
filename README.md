@@ -143,6 +143,16 @@ make test
 17. **`examples/blink_tree_builder_li_end_bisimulation.cpp`**:
    * Models the `</li>` stack transition, including list-item-scope hits and no-op misses. Eleven finite stacks are compared; five hit cases check that represented implied-end-tag popping has the same final stack as the λΠ pop-through-`li` abstraction.
 
+18. **`examples/blink_css_color_defaulting.cpp`**:
+   * Models `color` defaulting for missing, `inherit`, `initial`, and `unset`, with or without a parent style. A native C++ branch transcription agrees with λΠ on 24 finite cases. Color values are abstract IDs and initial black is encoded as zero.
+
+19. **`examples/blink_tree_builder_block_end_bisimulation.cpp`**:
+   * Models the shared in-body end-tag branch for all 28 distinct block-element target tags, including the general scope scan, implied-end-tag pass, and pop-through-target transition.
+   * Compares 35 finite C++/λΠ configurations: one scope hit for each target plus nested implied-tag, unrelated-top, marker-miss, and absent-target cases. Parse-error and DOM effects, arbitrary stack mixtures, and full tokenizer/parser control flow remain unmodeled.
+
+20. **`examples/blink_tokenizer_open_tag_bisimulation.cpp`**:
+   * Models the Data, TagOpen, and EndTagOpen dispatch branches over ten character classes, with seven tokenizer states and 70 finite transitions. It abstracts later tag-name, markup-declaration, bogus-comment, and character-reference processing, and assumes processing-instruction support is disabled.
+
 ---
 
 ## License

@@ -64,6 +64,12 @@ Current λΠ work is small compared with that source surface:
   that button alone does not stop list-item scope. Five hit cases compare
   explicit implied-end-tag popping followed by pop-through-`li` with the
   final-stack abstraction used in λΠ.
+* `examples/blink_tree_builder_block_end_bisimulation.cpp` models the shared
+  in-body end-tag branch for all 28 block-element target names as distinct
+  λΠ constructors. Thirty-five finite configurations compare the C++ and λΠ
+  stack projections, including a scope hit for each target, implied-tag
+  sequences, unrelated stack items, and marker/absent-target misses. It omits
+  parse-error/DOM effects and arbitrary mixtures of multiple target tags.
 * `examples/blink_css_cascade_bisimulation.cpp` models a restricted
   per-property cascade over five already-matched declaration sets, with a
   finite closure check between an imperative C++ scan and a λΠ priority
@@ -82,6 +88,15 @@ Current λΠ work is small compared with that source surface:
   projection of `CascadePriority::ForLayerComparison` for both importance
   values across 32 field cases. Origin, tree order, and the rest of the packed
   priority remain fixed or omitted.
+* `examples/blink_css_color_defaulting.cpp` models missing, `inherit`,
+  `initial`, and `unset` outcomes for Blink's inherited `color` longhand, with
+  parent-present and root cases. A C++ branch transcription and typed λΠ
+  reduction agree on 24 finite cases; values are abstract color IDs.
+* `examples/blink_tokenizer_open_tag_bisimulation.cpp` models the Data,
+  TagOpen, and EndTagOpen dispatch branches of `HTMLTokenizer::NextTokenImpl`
+  over ten character classes and seven states (70 finite transitions).
+  Tag-name, markup, bogus-comment, and character-reference states are opaque;
+  this is not full tokenizer behavior.
 * `examples/blink_layout_dirty_bisimulation.cpp` models the clean-to-dirty
   transition of one layout object and propagation of child-dirty flags through
   a finite rooted container chain. Fixtures assume no relayout-boundary early

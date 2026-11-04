@@ -39,6 +39,7 @@ refer to files from the full sparse checkout. Stable source links:
 * [HTMLConstructionSite implied end tags](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_construction_site.cc#113)
 * [HTMLElementStack button-scope markers and cached paragraph state](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_element_stack.cc#145)
 * [HTMLTreeBuilder list-item end-tag processing](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_tree_builder.cc#2309)
+* [HTMLTokenizer::NextTokenImpl state dispatch](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_tokenizer.cc#260)
 * [StyleCascade revert-layer resolution](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/style_cascade.cc#1593)
 * [CascadeMap revert-layer candidate search](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/cascade_map.cc#78)
 * [CascadePriority encoding and layer comparison](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/cascade_priority.h#21)
