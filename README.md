@@ -354,6 +354,12 @@ make test
    * The C++ transcription and typed λΠ decision cover all 32 combinations of those five Boolean inputs. The model covers eligibility only; context-tag dispatch, fragment parsing, and DOM effects remain outside scope.
 
 
+67. **`examples/blink_html_fastpath_context.cpp`**:
+   * Models `HTMLFastPathParser::Run` context dispatch: the `body` special case, all 15 non-void tags accepted as parser contexts, rejection of supported void tags, foreign namespaces, and unlisted tag names. Body initial-whitespace behavior is represented as a result distinction.
+   * The typed λΠ model and C++ transcription cover 76 finite tag/namespace/behavior states across the 17 `SUPPORTED_TAGS` entries, `body`, and an unlisted-tag category.
+   * Exact tag-name hash collisions, element creation, child parsing, and DOM effects are abstracted. The source’s post-hash exact QName check is reflected in the supported-tag classification.
+
+
 ---
 
 ## License

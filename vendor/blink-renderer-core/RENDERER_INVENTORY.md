@@ -33,6 +33,11 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_context.cpp` models `Run` context dispatch for
+  the fast HTML fragment parser: all 17 `SUPPORTED_TAGS` entries, the `body`
+  special case, foreign namespaces, and unlisted tags. It distinguishes the
+  accepted non-void contexts from rejected void contexts and covers the body
+  whitespace behavior flag in 76 finite states. Child parsing is outside scope.
 * `examples/blink_html_fastpath_gate.cpp` models the ordered fragment fast-path
   eligibility guards in `CanUseFastPath`, including the template exception to
   form-ancestor rejection. It covers all 32 Boolean input combinations; it

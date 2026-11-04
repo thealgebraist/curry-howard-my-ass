@@ -551,6 +551,18 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path context dispatch
+
+`examples/blink_html_fastpath_context.cpp` models the context-tag switch in
+`HTMLFastPathParser::Run`. The `body` context is handled separately and records
+whether the behavior flag strips initial whitespace. Among `SUPPORTED_TAGS`,
+non-void tags are accepted as parser contexts and void tags are rejected.
+Unlisted tags and foreign-namespace names reject. The pinned switch checks exact
+HTML QName equality after `TagnameHash`, so a hash case alone does not establish
+acceptance. The C++ transcription and typed λΠ result relation cover 76 finite
+tag/namespace/behavior states. Hash implementation, element construction,
+child parsing, and DOM effects are abstracted. Source: `html_document_parser_fastpath.cc:457-499,320-345`.
+
 ## HTML fragment fast-path eligibility
 
 `examples/blink_html_fastpath_gate.cpp` models the ordered guard decision in
