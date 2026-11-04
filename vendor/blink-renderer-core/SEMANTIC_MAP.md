@@ -956,7 +956,17 @@ compares four optional coordinates and stops while ignoring common repeat/color
 fields, matching the pinned branch. Modern types first compare common base fields,
 then handle an angle or compare optional first-position x/y values. Coordinate and
 angle payloads are finite CSSValue atoms. This does not model all linear gradient
-values, radial/conic subclasses, or the complete CSSValue equality dispatch.
+values or the complete CSSValue equality dispatch.
+
+`CSSRadialGradientValue::Equals` is covered over 121 targeted fixture pairs. The
+deprecated branch checks matching gradient type, four nullable position values,
+two radii, and stops. The modern branch checks common base equality and center
+coordinates, then either explicit horizontal/vertical size values or sizing and
+shape identifiers with their defaults. The source only checks the gradient type
+when the left value is deprecated; for modern left values, a deprecated right
+value can pass the modern checks. A targeted cross-type pair exhibits this
+direction-dependent result. Size/position payloads and identifiers use finite
+atoms; this is not a full radial gradient CSSValue model.
 
 The scroll-marker-group comparison is also refined. `ComputedStyle::ScrollMarkerGroupEqual`
 uses value equivalence for the optional group, and `ScrollMarkerGroup::operator==`

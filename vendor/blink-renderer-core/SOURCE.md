@@ -143,3 +143,6 @@ example; they do not claim behavioral equivalence with Blink.
 
 * [CSSGradientValue equality fields and stop vector](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#1699)
 * [CSSLinearGradientValue deprecated/modern equality branches](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#1470)
+
+* [CSSRadialGradientValue equality branches](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#2040)
+* [Radial shape/sizing identifier equality defaults](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#2030)

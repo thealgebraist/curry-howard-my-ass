@@ -38,6 +38,20 @@ struct LinearGradient {
   const char* second_y;
   const char* angle;
 };
+struct RadialGradient {
+  const char* type;
+  GradientBase base;
+  const char* first_x;
+  const char* first_y;
+  const char* second_x;
+  const char* second_y;
+  const char* first_radius;
+  const char* second_radius;
+  const char* shape;
+  const char* sizing_behavior;
+  const char* end_horizontal_size;
+  const char* end_vertical_size;
+};
 
 static Ptr fn(Ptr a, Ptr b) { return arrow(std::move(a), std::move(b)); }
 static Rule rule(Ptr lhs, Ptr rhs) { return {std::move(lhs), std::move(rhs)}; }
@@ -98,6 +112,19 @@ static Ptr linear_gradient_term(const LinearGradient& value) {
               {sym(value.type),gradient_base_term(value.base),optional_value_term(value.first_x),
                optional_value_term(value.first_y),optional_value_term(value.second_x),
                optional_value_term(value.second_y),optional_value_term(value.angle)});
+}
+static Ptr optional_identifier_term(const char* value) {
+  return std::string(value)=="noneIdentifier" ? sym("noneIdentifier")
+    : app(sym("someIdentifier"),sym(value));
+}
+static Ptr radial_gradient_term(const RadialGradient& value) {
+  return apps(sym("radialGradient"),
+    {sym(value.type),gradient_base_term(value.base),optional_value_term(value.first_x),
+     optional_value_term(value.first_y),optional_value_term(value.second_x),
+     optional_value_term(value.second_y),optional_value_term(value.first_radius),
+     optional_value_term(value.second_radius),optional_identifier_term(value.shape),
+     optional_identifier_term(value.sizing_behavior),optional_value_term(value.end_horizontal_size),
+     optional_value_term(value.end_vertical_size)});
 }
 static Ptr generated_equal_term(const ContainerSizes& left_container,
                                 const ContainerSizes& right_container,
@@ -196,7 +223,7 @@ int main() {
   signature["gradientStopListEqual"] = fn(SL, fn(SL, B));
   signature["gradientBaseEqual"] = fn(G, fn(G, B));
   signature["GradientValueAtom"] = type_sort();
-  for (const char* atom : {"coordA","coordB","angleA","angleB"}) signature[atom] = sym("GradientValueAtom");
+  for (const char* atom : {"coordA","coordB","angleA","angleB","radiusA","radiusB","sizeA","sizeB"}) signature[atom] = sym("GradientValueAtom");
   signature["OptionalCSSValue"] = type_sort();
   signature["noneValue"] = sym("OptionalCSSValue");
   signature["someValue"] = fn(sym("GradientValueAtom"),sym("OptionalCSSValue"));
@@ -208,6 +235,27 @@ int main() {
   signature["optionalCSSValueEqual"] = fn(sym("OptionalCSSValue"),fn(sym("OptionalCSSValue"),B));
   signature["gradientStopsEqual"] = fn(G,fn(G,B));
   signature["linearGradientEqual"] = fn(sym("LinearGradient"),fn(sym("LinearGradient"),B));
+  signature["IdentifierAtom"] = type_sort();
+  for (const char* atom : {"shapeEllipse","shapeCircle","sizingFar","sizingClose"}) signature[atom] = sym("IdentifierAtom");
+  signature["OptionalIdentifier"] = type_sort();
+  signature["noneIdentifier"] = sym("OptionalIdentifier");
+  signature["someIdentifier"] = fn(sym("IdentifierAtom"),sym("OptionalIdentifier"));
+  signature["identifierEqual"] = fn(sym("IdentifierAtom"),fn(sym("IdentifierAtom"),B));
+  signature["canonicalIdentifier"] = fn(sym("OptionalIdentifier"),fn(sym("IdentifierAtom"),sym("IdentifierAtom")));
+  signature["identifierEqualWithDefault"] = fn(sym("OptionalIdentifier"),fn(sym("OptionalIdentifier"),fn(sym("IdentifierAtom"),B)));
+  signature["RadialGradientType"] = type_sort();
+  for (const char* type : {"deprecatedRadial","prefixedRadial","standardRadial"}) signature[type] = sym("RadialGradientType");
+  signature["RadialGradient"] = type_sort();
+  auto curried_type=[](Ptr result,std::vector<Ptr> domains){
+    for(auto it=domains.rbegin();it!=domains.rend();++it) result=fn(*it,result);
+    return result;
+  };
+  signature["radialGradient"] = curried_type(sym("RadialGradient"),
+    {sym("RadialGradientType"),G,sym("OptionalCSSValue"),sym("OptionalCSSValue"),
+     sym("OptionalCSSValue"),sym("OptionalCSSValue"),sym("OptionalCSSValue"),
+     sym("OptionalCSSValue"),sym("OptionalIdentifier"),sym("OptionalIdentifier"),
+     sym("OptionalCSSValue"),sym("OptionalCSSValue")});
+  signature["radialGradientEqual"] = fn(sym("RadialGradient"),fn(sym("RadialGradient"),B));
 
   for (bool a : {false, true})
     for (bool b : {false, true})
@@ -333,7 +381,7 @@ int main() {
                                {apps(sym("hueMethodEqual"),{pvar(74),pvar(78)}),
                                 apps(sym("gradientStopListEqual"),{pvar(75),pvar(79)})})})})));
 
-  for (const char* atom : {"coordA","coordB","angleA","angleB"})
+  for (const char* atom : {"coordA","coordB","angleA","angleB","radiusA","radiusB","sizeA","sizeB"})
     rules.push_back(rule(apps(sym("gradientValueAtomEqual"),{sym(atom),sym(atom)}),sym("true")));
   rules.push_back(rule(apps(sym("gradientValueAtomEqual"),{pvar(80),pvar(81)}),sym("false")));
   rules.push_back(rule(apps(sym("optionalCSSValueEqual"),{sym("noneValue"),sym("noneValue")}),sym("true")));
@@ -392,6 +440,65 @@ int main() {
   }
   rules.push_back(rule(apps(sym("linearGradientEqual"),{pvar(140),pvar(141)}),sym("false")));
 
+  rules.push_back(rule(apps(sym("identifierEqual"),{sym("shapeEllipse"),sym("shapeEllipse")}),sym("true")));
+  rules.push_back(rule(apps(sym("identifierEqual"),{sym("shapeCircle"),sym("shapeCircle")}),sym("true")));
+  rules.push_back(rule(apps(sym("identifierEqual"),{sym("sizingFar"),sym("sizingFar")}),sym("true")));
+  rules.push_back(rule(apps(sym("identifierEqual"),{sym("sizingClose"),sym("sizingClose")}),sym("true")));
+  rules.push_back(rule(apps(sym("identifierEqual"),{pvar(142),pvar(143)}),sym("false")));
+  rules.push_back(rule(apps(sym("canonicalIdentifier"),{sym("noneIdentifier"),pvar(144)}),pvar(144)));
+  rules.push_back(rule(apps(sym("canonicalIdentifier"),
+                            {app(sym("someIdentifier"),pvar(145)),pvar(146)}),pvar(145)));
+  rules.push_back(rule(apps(sym("identifierEqualWithDefault"),{pvar(147),pvar(148),pvar(149)}),
+    apps(sym("identifierEqual"),
+      {apps(sym("canonicalIdentifier"),{pvar(147),pvar(149)}),
+       apps(sym("canonicalIdentifier"),{pvar(148),pvar(149)})})));
+
+  std::vector<Ptr> deprecated_radial_left={sym("deprecatedRadial"),pvar(150),pvar(151),pvar(152),
+    pvar(153),pvar(154),pvar(155),pvar(156),pvar(157),pvar(158),pvar(159),pvar(160)};
+  std::vector<Ptr> deprecated_radial_right={sym("deprecatedRadial"),pvar(170),pvar(171),pvar(172),
+    pvar(173),pvar(174),pvar(175),pvar(176),pvar(177),pvar(178),pvar(179),pvar(180)};
+  Ptr deprecated_radial_result=gradient_and({
+    apps(sym("optionalCSSValueEqual"),{pvar(151),pvar(171)}),
+    apps(sym("optionalCSSValueEqual"),{pvar(152),pvar(172)}),
+    apps(sym("optionalCSSValueEqual"),{pvar(153),pvar(173)}),
+    apps(sym("optionalCSSValueEqual"),{pvar(154),pvar(174)}),
+    apps(sym("optionalCSSValueEqual"),{pvar(155),pvar(175)}),
+    apps(sym("optionalCSSValueEqual"),{pvar(156),pvar(176)}),
+    apps(sym("gradientStopsEqual"),{pvar(150),pvar(170)})});
+  rules.push_back(rule(apps(sym("radialGradientEqual"),
+                            {apps(sym("radialGradient"),deprecated_radial_left),
+                             apps(sym("radialGradient"),deprecated_radial_right)}),deprecated_radial_result));
+  for (const char* type : {"prefixedRadial","standardRadial"}) {
+    std::vector<Ptr> left={sym(type),pvar(200),pvar(201),pvar(202),pvar(203),pvar(204),
+      pvar(205),pvar(206),pvar(207),pvar(208),pvar(209),pvar(210)};
+    std::vector<Ptr> right={pvar(220),pvar(221),pvar(222),pvar(223),pvar(224),pvar(225),
+      pvar(226),pvar(227),pvar(228),pvar(229),pvar(230),pvar(231)};
+    Ptr base_and_position=gradient_and({
+      apps(sym("gradientBaseEqual"),{pvar(200),pvar(221)}),
+      apps(sym("optionalCSSValueEqual"),{pvar(201),pvar(222)}),
+      apps(sym("optionalCSSValueEqual"),{pvar(202),pvar(223)})});
+    auto left_explicit=left;left_explicit[10]=app(sym("someValue"),pvar(232));
+    Ptr explicit_result=gradient_and({base_and_position,
+      apps(sym("optionalCSSValueEqual"),{app(sym("someValue"),pvar(232)),pvar(230)}),
+      apps(sym("optionalCSSValueEqual"),{pvar(210),pvar(231)})});
+    rules.push_back(rule(apps(sym("radialGradientEqual"),
+                              {apps(sym("radialGradient"),left_explicit),
+                               apps(sym("radialGradient"),right)}),explicit_result));
+    auto left_no_horizontal=left;left_no_horizontal[10]=sym("noneValue");
+    auto right_explicit=right;right_explicit[10]=app(sym("someValue"),pvar(233));
+    rules.push_back(rule(apps(sym("radialGradientEqual"),
+                              {apps(sym("radialGradient"),left_no_horizontal),
+                               apps(sym("radialGradient"),right_explicit)}),sym("false")));
+    auto right_no_horizontal=right;right_no_horizontal[10]=sym("noneValue");
+    Ptr keyword_result=gradient_and({base_and_position,
+      apps(sym("identifierEqualWithDefault"),{pvar(208),pvar(229),sym("sizingFar")}),
+      apps(sym("identifierEqualWithDefault"),{pvar(207),pvar(228),sym("shapeEllipse")})});
+    rules.push_back(rule(apps(sym("radialGradientEqual"),
+                              {apps(sym("radialGradient"),left_no_horizontal),
+                               apps(sym("radialGradient"),right_no_horizontal)}),keyword_result));
+  }
+  rules.push_back(rule(apps(sym("radialGradientEqual"),{pvar(240),pvar(241)}),sym("false")));
+
   RuleIndex indexed_rules(rules);
   auto optional_type = infer({}, apps(sym("optionalSizeEqual"), {sym("noneSize"), sym("noneSize")}), signature, rules);
   assert(optional_type && conv(*optional_type, B, indexed_rules));
@@ -417,6 +524,15 @@ int main() {
                                                            "noneValue","noneValue","noneValue","noneValue","noneValue"})}),
                            signature, rules);
   assert(linear_type && conv(*linear_type, B, indexed_rules));
+  auto radial_type = infer({}, apps(sym("radialGradientEqual"),
+                                    {radial_gradient_term({"prefixedRadial",{false,"spaceNone","hueShorter",{}},
+                                      "noneValue","noneValue","noneValue","noneValue","noneValue","noneValue",
+                                      "noneIdentifier","noneIdentifier","noneValue","noneValue"}),
+                                     radial_gradient_term({"prefixedRadial",{false,"spaceNone","hueShorter",{}},
+                                      "noneValue","noneValue","noneValue","noneValue","noneValue","noneValue",
+                                      "noneIdentifier","noneIdentifier","noneValue","noneValue"})}),
+                           signature, rules);
+  assert(radial_type && conv(*radial_type, B, indexed_rules));
 
   std::vector<ContainerSizes> containers;
   const std::vector<std::optional<unsigned>> optional_values={std::nullopt, 0u, 1u};
@@ -599,4 +715,51 @@ int main() {
   }
   std::cout<<"CSSLinearGradientValue deprecated/modern branch equality compares "
            <<linear_pairs<<" targeted finite value pairs.\n";
+  const GradientBase base0={false,"spaceNone","hueShorter",{}};
+  const GradientBase base1={true,"spaceLab","hueLonger",{}};
+  const std::vector<RadialGradient> radial_gradients={
+    {"deprecatedRadial",base0,"noneValue","noneValue","noneValue","noneValue","noneValue","noneValue","noneIdentifier","noneIdentifier","noneValue","noneValue"},
+    {"deprecatedRadial",base1,"noneValue","noneValue","noneValue","noneValue","noneValue","noneValue","shapeCircle","sizingClose","noneValue","noneValue"},
+    {"deprecatedRadial",base0,"coordA","noneValue","coordB","coordA","radiusA","radiusB","noneIdentifier","noneIdentifier","noneValue","noneValue"},
+    {"deprecatedRadial",base0,"coordA","noneValue","coordB","coordA","radiusA","radiusA","noneIdentifier","noneIdentifier","noneValue","noneValue"},
+    {"prefixedRadial",base0,"noneValue","noneValue","noneValue","noneValue","noneValue","noneValue","noneIdentifier","noneIdentifier","noneValue","noneValue"},
+    {"prefixedRadial",base1,"noneValue","noneValue","noneValue","noneValue","noneValue","noneValue","noneIdentifier","noneIdentifier","noneValue","noneValue"},
+    {"standardRadial",base0,"noneValue","noneValue","coordB","coordA","radiusB","radiusA","shapeEllipse","sizingFar","noneValue","noneValue"},
+    {"prefixedRadial",base0,"noneValue","noneValue","noneValue","noneValue","noneValue","noneValue","shapeCircle","sizingClose","noneValue","noneValue"},
+    {"prefixedRadial",base0,"noneValue","noneValue","noneValue","noneValue","noneValue","noneValue","noneIdentifier","noneIdentifier","sizeA","sizeB"},
+    {"prefixedRadial",base0,"noneValue","noneValue","noneValue","noneValue","noneValue","noneValue","noneIdentifier","noneIdentifier","sizeA","sizeA"},
+    {"prefixedRadial",base0,"noneValue","noneValue","noneValue","noneValue","noneValue","noneValue","noneIdentifier","noneIdentifier","noneValue","sizeB"}
+  };
+  auto identifier_equal_default=[](const char* a,const char* b,const char* default_value){
+    const std::string left=std::string(a)=="noneIdentifier"?default_value:a;
+    const std::string right=std::string(b)=="noneIdentifier"?default_value:b;
+    return left==right;
+  };
+  auto radial_equals=[&](const RadialGradient& a,const RadialGradient& b){
+    if(std::string(a.type)=="deprecatedRadial")
+      return std::string(b.type)=="deprecatedRadial" &&
+        optional_equal(a.first_x,b.first_x)&&optional_equal(a.first_y,b.first_y)&&
+        optional_equal(a.second_x,b.second_x)&&optional_equal(a.second_y,b.second_y)&&
+        optional_equal(a.first_radius,b.first_radius)&&optional_equal(a.second_radius,b.second_radius)&&
+        stop_lists_equal(a.base.stops,b.base.stops);
+    if(!gradient_bases_equal(a.base,b.base)||!optional_equal(a.first_x,b.first_x)||
+       !optional_equal(a.first_y,b.first_y)) return false;
+    if(std::string(a.end_horizontal_size)!="noneValue")
+      return optional_equal(a.end_horizontal_size,b.end_horizontal_size)&&
+             optional_equal(a.end_vertical_size,b.end_vertical_size);
+    if(std::string(b.end_horizontal_size)!="noneValue") return false;
+    return identifier_equal_default(a.sizing_behavior,b.sizing_behavior,"sizingFar")&&
+           identifier_equal_default(a.shape,b.shape,"shapeEllipse");
+  };
+  unsigned radial_pairs=0;
+  for(const auto& left:radial_gradients) for(const auto& right:radial_gradients){
+    const bool expected=radial_equals(left,right);
+    Ptr term=apps(sym("radialGradientEqual"),{radial_gradient_term(left),radial_gradient_term(right)});
+    if(!conv(normalize(term,indexed_rules),bool_term(expected),indexed_rules)){
+      std::cerr<<"CSSRadialGradientValue equality mismatch\n";return 9;
+    }
+    ++radial_pairs;
+  }
+  std::cout<<"CSSRadialGradientValue deprecated/modern branch equality compares "
+           <<radial_pairs<<" targeted finite value pairs.\n";
 }
