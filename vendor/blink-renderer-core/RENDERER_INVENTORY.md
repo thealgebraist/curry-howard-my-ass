@@ -191,6 +191,12 @@ Current λΠ work is small compared with that source surface:
   both right-hand image kinds (50 composed states). Nested CSSValue relations
   are represented by finite atoms; arbitrary crossfade values and rendering
   behavior remain outside scope.
+* `examples/blink_image_set_selection.cpp` models the initial `GetBestOption`
+  computation: support/positive-resolution filtering, stable sort, stable
+  resolution deduplication, and threshold choice with highest-resolution
+  fallback. Eight finite lists are compared at four device scales (32 states).
+  Resolution computation, lazy `options_` cache behavior, and subsequent load
+  dispatch are not modeled.
 * `examples/blink_image_set_value_equality.cpp` refines the image-set branch:
   `StyleImageSet::IsEqual` requires matching subclass, equivalent best-fit
   images, and equal `CSSImageSetValue` lists. Each ordered option compares its

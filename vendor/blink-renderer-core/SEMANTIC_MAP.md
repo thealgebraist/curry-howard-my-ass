@@ -987,6 +987,15 @@ pairs reduce to false through the tag dispatch. The inequality is checked throug
 a generated-image change predicate. These fixtures integrate the represented
 subclass models but do not widen their finite CSSValue payload domains.
 
+`examples/blink_image_set_selection.cpp` models the first `GetBestOption`
+computation for an initially empty `options_` cache. It filters by MIME support
+and positive computed resolution, stable-sorts by resolution, removes duplicate
+resolutions while retaining the first option, then chooses the first option at
+or above the device scale, falling back to the final (highest-resolution)
+option. The reduction model compares eight bounded lists at four scale values.
+It treats resolution computation and type support as finite inputs and omits
+cache mutation and later resource loading.
+
 `examples/blink_image_set_value_equality.cpp` refines the image-set arm of
 `StyleImage::IsEqual`. `StyleImageSet::IsEqual` checks the right-hand subclass,
 then `ValuesEquivalent` for the best-fit image, then `CSSImageSetValue::Equals`.

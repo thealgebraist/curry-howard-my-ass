@@ -313,6 +313,12 @@ make test
    * Nested image, resolution, and type CSSValue relations use finite atoms. Best-fit image equality remains an explicit Boolean input; unbounded option lists, CSSValue dispatch, resource selection, and image rendering are not modeled.
 
 
+60. **`examples/blink_image_set_selection.cpp`**:
+   * Models the first-call `CSSImageSetValue::GetBestOption` pipeline: remove unsupported/nonpositive options, stable-sort by resolution, keep the first option at each duplicate resolution, then choose the first resolution at or above the device scale or fall back to the last option.
+   * Eight finite option lists with up to three options are compared at four device scales (32 states). The λΠ model expresses filtering, insertion sort, stable deduplication, and threshold/fallback selection as separate reductions.
+   * Resolution values are 0–3, device scales 1–4, and MIME support is a Boolean input. The model omits floating-point resolution computation, arbitrary CSS type support, `options_` cache mutation, and the subsequent image-load dispatch.
+
+
 ---
 
 ## License
