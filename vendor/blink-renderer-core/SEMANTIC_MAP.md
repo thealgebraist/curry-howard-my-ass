@@ -551,6 +551,20 @@ tracking, generated token internals, and tree-builder/DOM effects. The result
 is finite evidence for these state transitions, not complete tokenizer
 equivalence.
 
+## HTML fragment fast-path child dispatch
+
+`examples/blink_html_fastpath_child_dispatch.cpp` models the parent-specific
+child dispatch in `ParseChildren` and `ParseElement`. Flow containers use the
+non-phrasing mode; phrasing-content containers use the phrasing-only mode. The
+model includes tag-category outcomes for the pinned 17-tag set, the special
+`<ol>/<ul>` to `<li>` and `<select>` to `<option>` dispatches, option element
+child rejection, void elements, and the `inside_of_tag_a_` /
+`inside_of_tag_li_` guards that prevent nested auto-closing elements. It compares
+a typed λΠ reduction with a C++ transcription over 360 finite
+parent/tag/flag states. Token scanning, attributes, recursive parsing, element
+construction, and DOM effects remain outside scope. Source:
+`html_document_parser_fastpath.cc:543-747,1347-1378,1600-1725`.
+
 ## HTML fragment fast-path attribute-name frontier
 
 `examples/blink_html_fastpath_attr_boundary.cpp` models the decision at the end

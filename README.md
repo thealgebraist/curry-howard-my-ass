@@ -378,6 +378,12 @@ make test
    * The subsequent `ParseAttributes` decision and arbitrary source strings remain outside this frontier model.
 
 
+71. **`examples/blink_html_fastpath_child_dispatch.cpp`**:
+   * Models the fast fragment parser’s parent-dependent child grammar: generic flow and phrasing rules, `ol`/`ul` accepting only `li`, `select` accepting only `option`, and `option` rejecting element children. It also represents flow/phrasing child policies, void tags, and nested `a`/`li` rejection.
+   * The typed λΠ rules and C++ transcription cover 360 parent/tag/nesting-flag states over the 17 supported tags plus an unsupported category.
+   * This models one child dispatch step; tag scanning, attributes, recursive child parsing, and DOM construction are abstracted.
+
+
 ---
 
 ## License

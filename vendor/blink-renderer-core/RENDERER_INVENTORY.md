@@ -33,6 +33,11 @@ Current λΠ work is small compared with that source surface:
 
 * `examples/blink_rendering_model.cpp` reduces one paragraph case through a
   typed HTML/DOM/style/layout/paint abstraction.
+* `examples/blink_html_fastpath_child_dispatch.cpp` models parent-dependent
+  tag dispatch, including flow/phrasing restrictions, list/select special child
+  sets, option text-only handling, void tags, and nested `a`/`li` rejection.
+  Its 360 finite parent/tag/nesting combinations are compared with a C++
+  transcription; recursion and DOM effects are not represented.
 * `examples/blink_html_fastpath_attr_boundary.cpp` models the scan-frontier
   outcome of `ScanAttrName`: early EOF, unchanged prefix before a delimiter or
   invalid code unit, and the mapped full-name path when uppercase/digits occur.

@@ -150,6 +150,7 @@ example; they do not claim behavioral equivalence with Blink.
 * [CSSConicGradientValue equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#2281)
 * [CSSConstantGradientValue equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#2379)
 * [CSSColorImageValue equality delegation](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_gradient_value.cc#2457)
+* [HTMLFastPathParser supported child-tag dispatch](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_document_parser_fastpath.cc#1600)
 * [HTMLFastPathParser attribute-name scan frontier behavior](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_document_parser_fastpath.cc#990)
 * [HTMLFastPathParser attribute-name scan and lowercase mapping](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_document_parser_fastpath.cc#990)
 * [HTMLFastPathParser attribute scanning and rejection](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_document_parser_fastpath.cc#1491)
