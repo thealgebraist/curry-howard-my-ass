@@ -426,6 +426,12 @@ make test
    * Parser internals and actual histogram samples, byte counts, DOM mutations, and timing values are abstracted.
 
 
+79. **`examples/blink_image_set_load_cache.cpp`**:
+   * Composes `ResolveImageSet` dispatch with the caller’s `CacheImage`: no selected or unsupported options produce a wrapper with no inner style image, CSS images preserve the selected resolution override, gradients produce generated-image payloads, and all outcomes are wrapped and cached.
+   * The typed λΠ model and C++ transcription cover 120 finite selection, cache-mode/state, fetcher, and scale transitions, including overwriting one fetcher slot while preserving the other.
+   * `GetBestOption` selection and actual resource/generator loading are explicit observations; GC pointer identity and image contents are abstracted.
+
+
 ---
 
 ## License

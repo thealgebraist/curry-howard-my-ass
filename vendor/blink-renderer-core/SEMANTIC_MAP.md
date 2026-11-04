@@ -1173,6 +1173,18 @@ override. The model abstracts resource/image results and does not include the ou
 cache call in `Load`; its cache state effects are modeled separately in
 `blink_image_set_cache.cpp`.
 
+`examples/blink_image_set_load_cache.cpp` composes the selected option dispatch
+in `StyleImageLoader::ResolveImageSet` with the outer `CSSImageSetValue::CacheImage`
+call. A missing or unsupported selection yields a `StyleImageSet` whose inner
+style image is null; `CSSImageValue` carries the option resolution override,
+while the gradient path produces a generated image without that override. The
+result is wrapped and stored in shared or fetcher-keyed cache state, replacing
+the targeted entry and preserving the other fetcher entry. The C++/typed-λΠ
+comparison covers 120 finite transitions. `GetBestOption`, actual resource
+loading, generated-image evaluation, pointer identity, and GC are outside this
+composition. Sources: `element_style_resources.cc:195-210`,
+`css_image_set_value.cc:139-152`, `style_image_set.cc:34-36`.
+
 `examples/blink_image_set_failed_subresources.cpp` models the cache lookup and
 status decision in `HasFailedOrCanceledSubresources`. The effective cache mode
 selects either the shared entry or the requested fetcher entry; null fetcher or

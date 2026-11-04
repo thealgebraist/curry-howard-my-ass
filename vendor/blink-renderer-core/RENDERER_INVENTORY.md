@@ -260,6 +260,10 @@ Current λΠ work is small compared with that source surface:
   load observations. The CSS image route carries the option's resolution
   override; the gradient route does not. Fifteen finite states are represented.
   Resource fetching and outer image-set caching remain outside scope.
+* `examples/blink_image_set_load_cache.cpp` composes selected-option image/gradient
+  dispatch with `CSSImageSetValue::CacheImage` and the `StyleImageSet` wrapper,
+  including null inner images. It checks 120 finite state transitions across
+  cache mode, fetcher, scale, and option; selection/resource internals are inputs.
 * `examples/blink_image_set_failed_subresources.cpp` models the cached-image
   selection and resource-status result in `HasFailedOrCanceledSubresources`.
   Its 512 finite states include shared/fetcher-keyed cache choice, fetcher and

@@ -163,6 +163,8 @@ example; they do not claim behavioral equivalence with Blink.
 * [HTMLFastPathParser attribute scanning and rejection](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_document_parser_fastpath.cc#1491)
 * [HTMLFastPathParser context-tag dispatch](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_document_parser_fastpath.cc#457)
 * [HTML fragment fast-path eligibility gates](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_document_parser_fastpath.cc#1733)
+* [StyleImageLoader image-set resolution then cache wrap](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/element_style_resources.cc#195)
+* [StyleImageSet wrapper construction](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/style/style_image_set.cc#34)
 * [CSSImageSetValue cached subresource failure lookup](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_image_set_value.cc#171)
 * [CSSImageSetValue resolve-and-copy loop](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_image_set_value.cc#203)
 * [CSSImageSetValue original-or-copy return](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_image_set_value.cc#225)
