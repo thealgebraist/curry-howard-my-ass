@@ -629,26 +629,25 @@ reverse `Push`, longer `Prepend(kUnconsume)`, exact-match no-rewind, and
 longest-match reconsume. The typed tokenizer transition preserves buffered
 output/context and suspends on need-more; on completion it appends one or two
 decoded codepoints and sets the entity flag, or appends literal `&` on failure.
-Seven direct Source cases and fourteen legacy observer cross-checks plus Data
-and attribute `not` + appended `in;` continuations pass. `RuleIndex` indexes
-118,513 rules and builds in about 20 ms in the bounded run. Sources are
+Ten direct CursorSource cases and fourteen legacy observer cross-checks pass.
+Data and attribute `not` + appended `in;` continuations compare tokenizer
+outcomes and exact cursor-source states. `RuleIndex` indexes
+177,673 rules and builds in about 30 ms in the bounded run. Sources are
 `html_entity_parser.cc:66-134`, `platform/text/segmented_string.h:92-115`,
 `platform/text/segmented_string.cc:67-81`, and `html_tokenizer.cc:173-188,
-298-302, 1049-1078`. The direct traversal consumes Source at each edge;
-comparison checks final logical remainder and global offset, not post-rewind segment partition
-or intermediate cursor states. The tokenizer state is a bounded projection
+298-302, 1049-1078`. The direct traversal consumes CursorSource at each edge;
+comparison checks the full CursorSource constructor, current segment before/remaining lists, queued segment partition, and global offset after rollback. Backing String identity and intermediate cursor positions are omitted. The tokenizer state is a bounded projection
 and does not include complete token attributes, preprocessor behavior, or full
 tokenizer lifecycle. The old flat-list observer remains only as a separate
-finite cross-check.
-It compares twelve selected outcomes and a two-chunk `not` + `in;`
-continuation while preserving the additional-allowed-character context.
+finite cross-check. The earlier focused examples below retain their own
+selected-outcome coverage.
 The earlier `examples/blink_segmented_entity_source_bisimulation.cpp` and
 `examples/blink_html_named_entity_remainder.cpp` remain bounded flat-list
 models. Their twelve selected outcomes and restart-based continuation do not
 model `SegmentedString` segments or its actual `Push`/`Prepend` mutations.
 Those limitations do not describe the direct traversal above, which does use
 typed Source during trie lookup; its final-result comparison still omits the
-post-rewind segment partition and intermediate cursor states. Preprocessing
+backing String identity and intermediate cursor positions. Preprocessing
 and numeric references remain separate.
 `html_entity_table.h:35-53` defines each generated entry's one/two-value
 layout and name accessors. `html_tokenizer.cc:173-185` and `:1049-1062` show

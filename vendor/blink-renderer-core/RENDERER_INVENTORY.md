@@ -176,13 +176,16 @@ Current λΠ work is small compared with that source surface:
 * `examples/blink_named_entity_segmented_composition.cpp` composes the
   2,231-name generated trie with direct typed-Source traversal, explicit
   `streamingExhausted`/`finalEOF` status, and tokenizer state/token-buffer
-  transitions. Seven direct finite Source cases cover chunk-split edges,
-  mismatch lookahead, longest-match correction, attribute guard, and both end
-  modes; fourteen legacy observer comparisons remain for cross-checking. Data
-  and attribute `not` + `in;` append/resume traces cover suspension,
-  one/two-codepoint success, entity flagging, and literal `&` fallback. The
-  trie consumes Source directly; result checks compare logical remainder and
-  global offset, not post-rewind segment partition or intermediate cursors.
+  transitions. Ten direct finite CursorSource cases cover chunk-split edges,
+  mismatch lookahead, longest-match correction, exact and overread attribute
+  guards, one/two-character Push, longer Prepend, and both end modes; fourteen
+  legacy observer comparisons remain for cross-checking. Data and attribute
+  `not` + `in;` append/resume traces compare tokenizer outcomes and exact
+  cursor-source state, covering suspension, one/two-codepoint success, entity
+  flagging, and literal `&` fallback. The
+  trie consumes CursorSource directly; result checks compare the full cursor
+  constructor, segment before/remaining lists, queued segment partition, and
+  global offset. Backing String identity and intermediate cursors are omitted.
 * `examples/blink_css_revert_origin.cpp` models CSS `revert` target-origin
   selection, `CascadeMap::Find(property, origin)` filtering, and the
   `ResolveRevertTo` priority fallback. Eleven finite C++/λΠ cases cover
