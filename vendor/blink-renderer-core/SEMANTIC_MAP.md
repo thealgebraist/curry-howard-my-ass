@@ -1609,7 +1609,7 @@ String canonicalization, and task scheduling.
 ## HTML input-stream preprocessing
 
 `examples/blink_input_stream_preprocessor.cpp` defines a typed λΠ list
-transducer over complete finite code-unit streams. It maps CR to LF, consumes
+transducer over complete finite code-unit streams. Its ordinary-code-unit rewrite is parametric in an opaque input-unit term. It maps CR to LF, consumes
 an LF immediately following CR, treats ordinary NUL as U+FFFD unless the
 modeled tokenizer policy skips NULs, and preserves the closed-stream final NUL
 as an EOF marker. The transducer takes `skipNull` and `closed` explicitly;
