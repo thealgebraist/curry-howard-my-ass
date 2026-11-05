@@ -183,6 +183,7 @@ example; they do not claim behavioral equivalence with Blink.
 * [CSSMathFunctionValue computed resolution](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_math_function_value.cc#74)
 * [CSSNumericLiteralValue canonical resolution conversion](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_numeric_literal_value.cc#113)
 * [CSSValueClampingUtils NaN handling and double bounds](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_value_clamping_utils.cc#10)
+* [HTML numeric character-reference parsing and scalar correction](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_entity_parser.cc#135)
 * [StyleImageLoader image-set resolution and load dispatch](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/resolver/element_style_resources.cc#195)
 * [CSSValueList ordered list equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_value_list.cc#186)
 * [CSSImageSetOptionValue field equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_image_set_option_value.cc#70)
