@@ -453,7 +453,7 @@ Current λΠ work is small compared with that source surface:
   are outside the model.
 * `examples/blink_tokenized_p_start_dom.cpp` composes bounded raw `<p ...>`
   source scanning into typed `StartTagToken(pTag, Attrs)`, then passes the
-  scanned attributes through p-scope pop and DOM insertion. Sixteen inputs
+  scanned attributes through p-scope pop and DOM insertion. Twenty inputs
   cover ordered attributes, full-table named attribute references with guard
   behavior, selected numeric references, duplicate filtering, body references,
   and DOM/CSS/render projections. The C++ comparison checks
@@ -475,7 +475,7 @@ Current λΠ work is small compared with that source surface:
   selection. The `.beta` selector checks whitespace-separated class tokens
   and rejects the substring `betamax`. The C++ and typed λΠ projections derive one body CharacterToken from raw data
   before the next `<`; the bounded Data-state decoder uses the shared full-table named-reference relation and eleven selected decimal/hex numeric
-  references for ASCII punctuation and a class-name letter. Sixteen cases compare the resulting DOM and parser state, including
+  references for ASCII punctuation and a class-name letter. Twenty cases compare the resulting DOM and parser state, including
   child ID and next ID; fixtures check decoded text through paint.
   Typed `nodeText` concatenates child data for style/layout/paint;
   non-empty data reaches `textRun` and abstract `paintText`,
