@@ -453,13 +453,15 @@ Current λΠ work is small compared with that source surface:
   are outside the model.
 * `examples/blink_tokenized_p_start_dom.cpp` composes bounded raw `<p ...>`
   source scanning into typed `StartTagToken(pTag, Attrs)`, then passes the
-  scanned attributes through p-scope pop and DOM insertion. Fourteen inputs
-  cover ordered attributes, finite attribute references, duplicate filtering,
-  body references, and DOM/CSS/render projections. The C++ comparison checks
+  scanned attributes through p-scope pop and DOM insertion. Sixteen inputs
+  cover ordered attributes, full-table named attribute references with guard
+  behavior, selected numeric references, duplicate filtering, body references,
+  and DOM/CSS/render projections. The C++ comparison checks
   the complete token term and final DOM/stack state. This is a mapped
-  transcription, not execution of Blink's tokenizer; attribute reference
-  lookup remains finite, while body named-reference lookup uses the shared
-  full-table λΠ relation. General numeric parsing, parse-error reconsume,
+  transcription, not execution of Blink's tokenizer; body and attribute named
+  references use the shared full-table λΠ relation, and attribute values are
+  UTF-16 code-unit lists. Numeric references remain selected fixtures. General
+  numeric parsing, parse-error reconsume,
   custom/sanitizer effects, and full DOM lifecycle are excluded.
   The same raw source yields a start-tag token, text token through the next `<`,
   and restricted `</p>` token; the p-end transition closes the open-element
@@ -473,7 +475,7 @@ Current λΠ work is small compared with that source surface:
   selection. The `.beta` selector checks whitespace-separated class tokens
   and rejects the substring `betamax`. The C++ and typed λΠ projections derive one body CharacterToken from raw data
   before the next `<`; the bounded Data-state decoder uses the shared full-table named-reference relation and eleven selected decimal/hex numeric
-  references for ASCII punctuation and a class-name letter. Fourteen cases compare the resulting DOM and parser state, including
+  references for ASCII punctuation and a class-name letter. Sixteen cases compare the resulting DOM and parser state, including
   child ID and next ID; fixtures check decoded text through paint.
   Typed `nodeText` concatenates child data for style/layout/paint;
   non-empty data reaches `textRun` and abstract `paintText`,
