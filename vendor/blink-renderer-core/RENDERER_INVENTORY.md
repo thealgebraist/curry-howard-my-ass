@@ -473,8 +473,9 @@ Current λΠ work is small compared with that source surface:
   and restricted `</p>` token; the p-end transition closes the open-element
   stack. A quoted-attribute `>` case checks the tag/body boundary. The DOM
   then feeds a value-parameterized simple tag/ID/class matcher with the fixed
-  `p`/`.beta`/`#alpha` declarations, specificity tuple selection followed by
-  source-order tie-breaking, and abstract text layout/paint. The body decoder uses the
+  `p`/`.beta`/`#alpha` declarations, specificity tuple selection followed by a restricted `CascadePriority` whose
+  rule index varies while all other fields are fixed to the normal-author fixture,
+  and abstract text layout/paint. The body decoder uses the
   shared full-table named-reference search/consume and ProcessEntity rules,
   eleven earlier numeric spellings, and decimal/hex forms for all 32
   U+0080-U+009F values. The target compiles; its observer
