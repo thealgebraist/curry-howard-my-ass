@@ -463,20 +463,20 @@ Current λΠ work is small compared with that source surface:
   and restricted `</p>` token; the p-end transition closes the open-element
   stack. A quoted-attribute `>` case checks the tag/body boundary. The DOM
   then feeds fixed `p`/`.beta`/`#alpha` selector matching, numeric-priority
-  color selection, and abstract text layout/paint. Nine cases
+  color selection, and abstract text layout/paint. Ten cases
   are in the comparison harness; it compiles, but the harness was not run in
   this update. The
   both-selectors-hit case also checks declaration-order-independent winner
   selection. The `.beta` selector checks whitespace-separated class tokens
   and rejects the substring `betamax`. The C++ and typed λΠ projections derive one body CharacterToken from raw data
-  before the next `<`; the bounded Data-state decoder handles five named references plus ten selected decimal/hex numeric
-  references for ASCII punctuation. Nine cases compare the resulting DOM and parser state, including
+  before the next `<`; the bounded Data-state decoder handles five named references plus eleven selected decimal/hex numeric
+  references for ASCII punctuation and a class-name letter. Ten cases compare the resulting DOM and parser state, including
   child ID and next ID; fixtures check decoded text through paint.
   Typed `nodeText` concatenates child data for style/layout/paint;
   non-empty data reaches `textRun` and abstract `paintText`,
   while an empty token emits no text item. A
   changed-color simple-paint flag is projected only when text is present.
-  Only a text run followed by `</p>` is accepted; other markup, general numeric parsing, other named body
+  Only a text run followed by `</p>` is accepted; other markup, general numeric parsing, other named
   references, streaming boundaries/suspensions, location-change flushes, and
   actual Blink Node pointers remain unmodeled. Text child IDs are abstract;
   glyph shaping,
