@@ -186,8 +186,11 @@ static Ptr consume_term(const ConsumeOutcome& outcome, const std::string& input)
   return app(sym("consumeFailure"), chars(input));
 }
 static Ptr process_term(const ProcessOutcome& outcome) {
+  const char* state = outcome.suspended
+      ? (outcome.rcdata ? "charRefRCDATAState" : "charRefDataState")
+      : (outcome.rcdata ? "rcdataState" : "dataState");
   return apps(sym("tokenizerOutcome"), sym(outcome.suspended ? "suspend" : "resume"),
-      sym(outcome.rcdata ? "rcdata" : "data"),
+      sym(state),
       token_term(outcome.units, outcome.has_entity));
 }
 
@@ -201,7 +204,7 @@ int main() {
   const Ptr Codepoint = sym("Codepoint"), OptionCp = sym("OptionCp"), EntityResult = sym("EntityResult");
   const Ptr ConsumeResult = sym("ConsumeResult");
   const Ptr CodeUnit = sym("CodeUnit"), Units = sym("Units"), Token = sym("Token");
-  const Ptr ReturnState = sym("ReturnState"), Status = sym("Status"), TokenizerOutcome = sym("TokenizerOutcome");
+  const Ptr ReturnState = sym("ReturnState"), Status = sym("Status"), TokenizerState = sym("TokenizerState"), TokenizerOutcome = sym("TokenizerOutcome");
   sig["Nat"] = type_sort(); sig["z"] = Nat; sig["s"] = fn(Nat, Nat);
   sig["Bool"] = type_sort(); sig["true"] = Bool; sig["false"] = Bool;
   sig["Char"] = type_sort(); sig["nilChar"] = Chars; sig["consChar"] = fn(Char, fn(Chars, Chars));
@@ -240,8 +243,11 @@ int main() {
   sig["consumeDecoded"] = fn(Codepoint, fn(OptionCp, fn(Nat, fn(Chars, ConsumeResult))));
   sig["Token"] = type_sort(); sig["token"] = fn(Units, fn(Bool, Token));
   sig["ReturnState"] = type_sort(); sig["data"] = ReturnState; sig["rcdata"] = ReturnState;
+  sig["TokenizerState"] = type_sort(); sig["dataState"] = TokenizerState; sig["rcdataState"] = TokenizerState;
+  sig["charRefDataState"] = TokenizerState; sig["charRefRCDATAState"] = TokenizerState;
   sig["Status"] = type_sort(); sig["resume"] = Status; sig["suspend"] = Status;
-  sig["TokenizerOutcome"] = type_sort(); sig["tokenizerOutcome"] = fn(Status, fn(ReturnState, fn(Token, TokenizerOutcome)));
+  sig["TokenizerOutcome"] = type_sort(); sig["tokenizerOutcome"] = fn(Status, fn(TokenizerState, fn(Token, TokenizerOutcome)));
+  sig["resumedState"] = fn(ReturnState, TokenizerState); sig["suspendedState"] = fn(ReturnState, TokenizerState);
   sig["codepointUnits"] = fn(Codepoint, Units); sig["appendUnits"] = fn(Units, fn(Units, Units));
   sig["decodedUnits"] = fn(Codepoint, fn(OptionCp, Units));
   sig["processConsume"] = fn(ConsumeResult, fn(ReturnState, fn(Token, TokenizerOutcome)));
@@ -360,10 +366,14 @@ int main() {
   rules.push_back(rule(apps(sym("appendUnits"), apps(sym("consUnit"), p(0), p(1)), p(2)), apps(sym("consUnit"), p(0), apps(sym("appendUnits"), p(1), p(2)))));
   rules.push_back(rule(apps(sym("decodedUnits"), p(0), sym("noSecond")), app(sym("codepointUnits"), p(0))));
   rules.push_back(rule(apps(sym("decodedUnits"), p(0), app(sym("someSecond"), p(1))), apps(sym("appendUnits"), app(sym("codepointUnits"), p(0)), app(sym("codepointUnits"), p(1)))));
-  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeNeedMore"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("suspend"), p(1), apps(sym("token"), p(2), p(3)))));
-  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeFailure"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("resume"), p(1), apps(sym("token"), apps(sym("appendUnits"), p(2), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(3)))));
-  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeGuardReject"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("resume"), p(1), apps(sym("token"), apps(sym("appendUnits"), p(2), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(3)))));
-  rules.push_back(rule(apps(sym("processConsume"), apps(sym("consumeDecoded"), p(0), p(1), p(2), p(3)), p(4), apps(sym("token"), p(5), p(6))), apps(sym("tokenizerOutcome"), sym("resume"), p(4), apps(sym("token"), apps(sym("appendUnits"), p(5), apps(sym("decodedUnits"), p(0), p(1))), yes))));
+  rules.push_back(rule(app(sym("resumedState"), sym("data")), sym("dataState")));
+  rules.push_back(rule(app(sym("resumedState"), sym("rcdata")), sym("rcdataState")));
+  rules.push_back(rule(app(sym("suspendedState"), sym("data")), sym("charRefDataState")));
+  rules.push_back(rule(app(sym("suspendedState"), sym("rcdata")), sym("charRefRCDATAState")));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeNeedMore"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("suspend"), app(sym("suspendedState"), p(1)), apps(sym("token"), p(2), p(3)))));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeFailure"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(1)), apps(sym("token"), apps(sym("appendUnits"), p(2), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(3)))));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeGuardReject"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(1)), apps(sym("token"), apps(sym("appendUnits"), p(2), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(3)))));
+  rules.push_back(rule(apps(sym("processConsume"), apps(sym("consumeDecoded"), p(0), p(1), p(2), p(3)), p(4), apps(sym("token"), p(5), p(6))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(4)), apps(sym("token"), apps(sym("appendUnits"), p(5), apps(sym("decodedUnits"), p(0), p(1))), yes))));
 
   // Finite observations use prefixes from the pinned entity table, including
   // terminal names and prefixes that fail after a successful match.
