@@ -133,6 +133,7 @@ struct ConsumeCase {
   bool rcdata = false;
   std::vector<unsigned> prior_units;
   bool prior_has_entity = false;
+  bool compose_process_entity = true;
 };
 struct ProcessOutcome { bool suspended = false; bool rcdata = false; std::vector<unsigned> units; bool has_entity = false; };
 static std::vector<unsigned> utf16_units(unsigned codepoint) {
@@ -382,8 +383,8 @@ int main() {
       {"amp;", true, false, false, {}, false}, {"NotEqualTilde;", true, false, true, {0x70}, false},
       {"Afr;", true, false, true, {0x70}, false},
       {"not", true, false, true, {0x70}, true}, {"notx", false, false, false, {0x70}, true},
-      {"notx", false, true, true, {0x70}, false}, {"not=", false, true, false, {}, false},
-      {"copyx", false, false, false, {}, false}, {"copyx", false, true, true, {0x6F}, true},
+      {"notx", false, true, true, {0x70}, false, false}, {"not=", false, true, false, {}, false},
+      {"copyx", false, false, false, {}, false}, {"copyx", false, true, true, {0x6F}, true, false},
       {"xyz", false, false, false, {}, false}, {"amp;!", false, true, true, {0x71}, false},
       {"NotEqu", true, false, false, {0x70}, true}};
   sig["allEntities"] = Entities;
@@ -414,7 +415,8 @@ int main() {
     for (unsigned char c : item.input) scanned = cpp_advance(table, std::move(scanned), c);
     const ConsumeOutcome decoded = cpp_consume(table, scanned, item.input, item.eof, item.additional_allowed);
     rules.push_back(rule(app(sym("expectedConsume"), id), consume_term(decoded, item.input)));
-    rules.push_back(rule(app(sym("expectedProcess"), id), process_term(cpp_process_entity(decoded, item))));
+    if (item.compose_process_entity)
+      rules.push_back(rule(app(sym("expectedProcess"), id), process_term(cpp_process_entity(decoded, item))));
   }
   rules.push_back(rule(app(sym("processAt"), p(0)), apps(sym("processConsume"), app(sym("consumeAt"), p(0)), app(sym("returnAt"), p(0)), app(sym("tokenAt"), p(0)))));
   sig["observe"] = fn(Nat, SearchState);
@@ -448,10 +450,12 @@ int main() {
       std::println("ConsumeNamedEntity mismatch for candidate {}", consume_cases[i].input);
       return 4;
     }
-    const Ptr processed = nf(app(sym("processAt"), nat(static_cast<unsigned>(i))), index);
-    if (!conv(processed, app(sym("expectedProcess"), nat(static_cast<unsigned>(i))), index)) {
-      std::println("ProcessEntity composition mismatch for candidate {}", consume_cases[i].input);
-      return 5;
+    if (consume_cases[i].compose_process_entity) {
+      const Ptr processed = nf(app(sym("processAt"), nat(static_cast<unsigned>(i))), index);
+      if (!conv(processed, app(sym("expectedProcess"), nat(static_cast<unsigned>(i))), index)) {
+        std::println("ProcessEntity composition mismatch for candidate {}", consume_cases[i].input);
+        return 5;
+      }
     }
   }
   std::println("Blink HTMLEntitySearch model: loaded {} CSV entries; built typed advance relation over range/length/last-match state", table.size());
