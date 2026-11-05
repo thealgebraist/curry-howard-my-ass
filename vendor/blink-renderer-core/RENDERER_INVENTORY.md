@@ -453,7 +453,7 @@ Current λΠ work is small compared with that source surface:
   are outside the model.
 * `examples/blink_tokenized_p_start_dom.cpp` composes bounded raw `<p ...>`
   source scanning into typed `StartTagToken(pTag, Attrs, HasEntity)`, then passes the
-  scanned attributes through p-scope pop and DOM insertion. Twenty-four inputs
+  scanned attributes through p-scope pop and DOM insertion. Twenty-five inputs
   cover ordered attributes, full-table named attribute references with guard
   behavior, selected decimal/hex references plus decimal and hexadecimal
   semicolon-terminated forms for all 32 values in Blink's Windows-1252
@@ -473,9 +473,9 @@ Current λΠ work is small compared with that source surface:
   and restricted `</p>` token; the p-end transition closes the open-element
   stack. A quoted-attribute `>` case checks the tag/body boundary. The DOM
   then feeds a value-parameterized simple tag/ID/class matcher with the fixed
-  `p`/`.beta`/`#alpha`/`.gamma`/`.omega` declarations, specificity tuple selection followed by a
+  `p`/`.beta`/`#alpha`/`.gamma`/`.omega`/`.delta`/`.epsilon` declarations, specificity tuple selection followed by a
   nine-field normalized `CascadePriority` comparator in Blink significance order,
-  and abstract text layout/paint. The `class="beta gamma"` fixture reaches the equal-specificity tie branch, where `.gamma` wins by greater rule index after declaration reversal. The `class="gamma omega"` fixture checks normal author origin outranks normal user origin despite `.omega` having a greater rule index; both results are checked after reversing declaration order. A vertical-tab fixture checks that VT remains part of an unquoted attribute value rather than acting as whitespace; a decoded `&nbsp;` fixture checks that U+00A0 does not split class tokens. The composed fixtures vary rule index and one normal-origin pair (author rank 4 versus user rank 2); packed-field encoding, importance variation, and arbitrary priority construction are modeled separately. The body decoder uses the
+  and abstract text layout/paint. The `class="beta gamma"` fixture reaches the equal-specificity tie branch, where `.gamma` wins by greater rule index after declaration reversal. The `class="gamma omega"` fixture checks normal author origin outranks normal user origin despite `.omega` having a greater rule index. The `class="delta epsilon"` fixture checks user-important encoded rank 13 outranks author-important rank 11 even though `.epsilon` has a lower rule index. All three priority outcomes are checked after reversing declaration order. A vertical-tab fixture checks that VT remains part of an unquoted attribute value rather than acting as whitespace; a decoded `&nbsp;` fixture checks that U+00A0 does not split class tokens. The composed fixtures vary rule index and normalized origin/importance ranks for normal author/user and important author/user pairs. Packed-field encoding, tree/layer/flag variations, and arbitrary priority construction remain modeled separately. The body decoder uses the
   shared full-table named-reference search/consume and ProcessEntity rules,
   eleven earlier numeric spellings, and decimal/hex forms for all 32
   U+0080-U+009F values. The target compiles; its observer
@@ -484,7 +484,7 @@ Current λΠ work is small compared with that source surface:
   selection. The `.beta` selector checks whitespace-separated class tokens
   and rejects the substring `betamax`. The C++ and typed λΠ projections derive one body CharacterToken from raw data
   before the next `<`; the bounded Data-state decoder uses the shared full-table named-reference relation and eleven selected decimal/hex numeric
-  references for ASCII punctuation and a class-name letter. Twenty-four cases compare the resulting DOM and parser state, including
+  references for ASCII punctuation and a class-name letter. Twenty-five cases compare the resulting DOM and parser state, including
   child ID and next ID; fixtures check decoded text through paint.
   Typed `nodeText` concatenates child data for style/layout/paint;
   non-empty data reaches `textRun` and abstract `paintText`,
