@@ -453,7 +453,7 @@ Current λΠ work is small compared with that source surface:
   are outside the model.
 * `examples/blink_tokenized_p_start_dom.cpp` composes bounded raw `<p ...>`
   source scanning into typed `StartTagToken(pTag, Attrs, HasEntity)`, then passes the
-  scanned attributes through p-scope pop and DOM insertion. Twenty-one inputs
+  scanned attributes through p-scope pop and DOM insertion. Twenty-two inputs
   cover ordered attributes, full-table named attribute references with guard
   behavior, selected decimal/hex references plus decimal and hexadecimal
   semicolon-terminated forms for all 32 values in Blink's Windows-1252
@@ -475,7 +475,7 @@ Current λΠ work is small compared with that source surface:
   then feeds a value-parameterized simple tag/ID/class matcher with the fixed
   `p`/`.beta`/`#alpha`/`.gamma` declarations, specificity tuple selection followed by a
   nine-field normalized `CascadePriority` comparator in Blink significance order,
-  and abstract text layout/paint. The `class="beta gamma"` fixture reaches the equal-specificity tie branch, where `.gamma` wins by greater rule index even after reversing declaration order. The composed fixtures still vary only rule index; packed-field encoding and arbitrary priority construction are modeled separately. The body decoder uses the
+  and abstract text layout/paint. The `class="beta gamma"` fixture reaches the equal-specificity tie branch, where `.gamma` wins by greater rule index even after reversing declaration order. A vertical-tab fixture checks that VT remains part of an unquoted attribute value rather than acting as whitespace. The composed fixtures still vary only rule index; packed-field encoding and arbitrary priority construction are modeled separately. The body decoder uses the
   shared full-table named-reference search/consume and ProcessEntity rules,
   eleven earlier numeric spellings, and decimal/hex forms for all 32
   U+0080-U+009F values. The target compiles; its observer
@@ -484,7 +484,7 @@ Current λΠ work is small compared with that source surface:
   selection. The `.beta` selector checks whitespace-separated class tokens
   and rejects the substring `betamax`. The C++ and typed λΠ projections derive one body CharacterToken from raw data
   before the next `<`; the bounded Data-state decoder uses the shared full-table named-reference relation and eleven selected decimal/hex numeric
-  references for ASCII punctuation and a class-name letter. Twenty-one cases compare the resulting DOM and parser state, including
+  references for ASCII punctuation and a class-name letter. Twenty-two cases compare the resulting DOM and parser state, including
   child ID and next ID; fixtures check decoded text through paint.
   Typed `nodeText` concatenates child data for style/layout/paint;
   non-empty data reaches `textRun` and abstract `paintText`,
