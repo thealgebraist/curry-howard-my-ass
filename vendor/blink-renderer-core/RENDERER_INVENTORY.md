@@ -530,3 +530,11 @@ Current λΠ work is small compared with that source surface:
 
 The inventory is an accounting aid for the remaining conversion work, not a
 claim that the renderer can be represented by a single small rewrite system.
+
+* `examples/blink_input_stream_preprocessor.cpp` models complete-stream
+  preprocessing as a typed λΠ transducer: CR/CRLF normalization, NUL
+  replacement/skipping policy, and the closed-stream terminal NUL marker. Seven
+  finite C++ and λΠ observations are encoded; the target compiles, but the
+  observer was not run. `SegmentedString` cursor effects, line numbers,
+  Peek/Advance return behavior, and streaming exhaustion are omitted, and this
+  relation is not yet composed into the raw-tokenizer bridge.

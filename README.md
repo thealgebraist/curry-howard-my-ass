@@ -455,6 +455,10 @@ make test
 
 ---
 
+60. **`examples/blink_input_stream_preprocessor.cpp`**:
+   * Models Blink's input-stream preprocessing over complete finite streams: CR becomes LF, CRLF collapses to one LF, NUL is replaced or skipped under an explicit tokenizer policy, and a closed stream's final NUL is represented as an EOF marker.
+   * Seven hand-written C++/λΠ fixtures are encoded. The target compiled; observer comparisons were not run. Segmented cursor state, line-number updates, Peek/Advance return values, and streaming exhaustion remain outside this model, which is not yet composed into the raw-tokenizer bridge.
+
 ## License
 
 MIT

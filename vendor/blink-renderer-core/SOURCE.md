@@ -195,3 +195,4 @@ example; they do not claim behavioral equivalence with Blink.
 
 * [CSSColor value equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/css/css_color.h#31)
 * [Color field-by-field equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/platform/graphics/color.h#380)
+* [InputStreamPreprocessor CR/LF and NUL handling](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/input_stream_preprocessor.h#45)

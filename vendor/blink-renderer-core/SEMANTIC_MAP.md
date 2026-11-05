@@ -1605,3 +1605,20 @@ child. This is a child-list/identity projection for `FlushPendingText`, not
 Blink pointer identity or full DOM mutation. It fixes the adjusted insertion
 location to one parent at append-to-end and omits templates, foster parenting,
 String canonicalization, and task scheduling.
+
+## HTML input-stream preprocessing
+
+`examples/blink_input_stream_preprocessor.cpp` defines a typed λΠ list
+transducer over complete finite code-unit streams. It maps CR to LF, consumes
+an LF immediately following CR, treats ordinary NUL as U+FFFD unless the
+modeled tokenizer policy skips NULs, and preserves the closed-stream final NUL
+as an EOF marker. The transducer takes `skipNull` and `closed` explicitly;
+seven hand-written C++/λΠ fixtures cover CR, CRLF, repeated newline boundaries,
+NUL replacement/skipping, and the terminal-NUL marker. The target compiles, but
+the observer comparisons were not run. Source: pinned
+`input_stream_preprocessor.h:45-111,115-165`.
+
+This abstraction does not model `SegmentedString` cursor movement, Peek versus
+Advance, line-number updates, open-stream suspension, or the precise boolean
+return values at exhaustion. It describes the normalized finite sequence only;
+it is not yet wired into `blink_tokenized_p_start_dom.cpp`.
