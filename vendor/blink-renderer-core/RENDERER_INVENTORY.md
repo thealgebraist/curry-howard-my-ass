@@ -453,31 +453,33 @@ Current λΠ work is small compared with that source surface:
   are outside the model.
 * `examples/blink_tokenized_p_start_dom.cpp` composes bounded raw `<p ...>`
   source scanning into typed `StartTagToken(pTag, Attrs)`, then passes the
-  scanned attributes through p-scope pop and DOM insertion. Three inputs cover
-  empty attributes, multiple ordered attributes including a typed `&amp;`
-  decode, and alternate source order. The C++ comparison checks the complete
-  token term and final DOM/stack state. This is a mapped transcription, not
-  execution of Blink's tokenizer; Unicode, duplicate attrs, parse-error
-  reconsume, custom/sanitizer effects, and full DOM lifecycle are excluded.
+  scanned attributes through p-scope pop and DOM insertion. Fourteen inputs
+  cover ordered attributes, finite attribute references, duplicate filtering,
+  body references, and DOM/CSS/render projections. The C++ comparison checks
+  the complete token term and final DOM/stack state. This is a mapped
+  transcription, not execution of Blink's tokenizer; attribute reference
+  lookup remains finite, while body named-reference lookup uses the shared
+  full-table λΠ relation. General numeric parsing, parse-error reconsume,
+  custom/sanitizer effects, and full DOM lifecycle are excluded.
   The same raw source yields a start-tag token, text token through the next `<`,
   and restricted `</p>` token; the p-end transition closes the open-element
   stack. A quoted-attribute `>` case checks the tag/body boundary. The DOM
   then feeds fixed `p`/`.beta`/`#alpha` selector matching, numeric-priority
-  color selection, and abstract text layout/paint. Ten cases
-  are in the comparison harness; it compiles, but the harness was not run in
-  this update. The
+  color selection, and abstract text layout/paint. The body decoder uses the
+  shared full-table named-reference search/consume and ProcessEntity rules,
+  and eleven exact numeric spellings. The target compiles; its observer
+  harness was not run in this update. The
   both-selectors-hit case also checks declaration-order-independent winner
   selection. The `.beta` selector checks whitespace-separated class tokens
   and rejects the substring `betamax`. The C++ and typed λΠ projections derive one body CharacterToken from raw data
-  before the next `<`; the bounded Data-state decoder handles five named references plus eleven selected decimal/hex numeric
-  references for ASCII punctuation and a class-name letter. Ten cases compare the resulting DOM and parser state, including
+  before the next `<`; the bounded Data-state decoder uses the shared full-table named-reference relation and eleven selected decimal/hex numeric
+  references for ASCII punctuation and a class-name letter. Fourteen cases compare the resulting DOM and parser state, including
   child ID and next ID; fixtures check decoded text through paint.
   Typed `nodeText` concatenates child data for style/layout/paint;
   non-empty data reaches `textRun` and abstract `paintText`,
   while an empty token emits no text item. A
   changed-color simple-paint flag is projected only when text is present.
-  Only a text run followed by `</p>` is accepted; other markup, general numeric parsing, other named
-  references, streaming boundaries/suspensions, location-change flushes, and
+  Only a text run followed by `</p>` is accepted; other markup, general numeric parsing, streaming boundaries/suspensions, location-change flushes, and
   actual Blink Node pointers remain unmodeled. Text child IDs are abstract;
   glyph shaping,
   geometry, full layout, and Blink paint artifact internals remain outside scope. Full selector syntax,
