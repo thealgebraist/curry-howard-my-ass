@@ -441,6 +441,11 @@ make test
    * The source contains a two-call λΠ/C++ comparison harness over two bounded lists, first and second device scales 1–4, and AVIF support on/off at each call (128 transitions). Changing AVIF support between calls represents the fact that later calls reuse the initialized option list rather than refiltering it.
    * The finite lists represent at most two options. Resolver-derived floating-point resolution changes, concurrent access, option pointer identity, and mutation of other CSS image-set state remain outside this model. The harness is compile-checked but was not executed in this change.
 
+82. **`examples/blink_image_set_computed_resolution.cpp`**:
+   * Models `ComputedResolution` dispatch between a non-calculated numeric literal and a calculated resolution expression, followed by Blink's result clamping. The literal branch applies a finite canonical-unit conversion; the calculated branch consumes an explicit expression-evaluation observation.
+   * A bounded harness covers 24 literal value/unit combinations and five calculated-expression observations, including zero, finite values, NaN, and infinities. This is a representation of the source's dispatch and clamp boundaries, not a transcription of CSS math expression evaluation.
+   * Unit coverage is limited to representative resolution units, and floating-point behavior is reduced to an explicitly bounded domain. Parser validation, random CSS math evaluation, full unit conversion tables, and arbitrary resolver states remain outside scope; the harness has only been compile-checked.
+
 
 ---
 

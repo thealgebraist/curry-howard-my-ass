@@ -1213,6 +1213,18 @@ change. It assumes stable computed resolutions and omits concurrent calls,
 pointer identity, and other mutable resolver behavior. Sources:
 `css_image_set_value.cc:49-108`, `css_image_set_option_value.cc:38-45`.
 
+`examples/blink_image_set_computed_resolution.cpp` models the dispatch in
+`CSSPrimitiveValue::ComputeDotsPerPixel`: calculated values delegate to
+`CSSMathFunctionValue::ComputeDotsPerPixel(length_resolver)`, while numeric
+literals use their stored value multiplied by the canonical-unit scale; either
+result then passes through `CSSValueClampingUtils::ClampDouble`. The model
+isolates this boundary with literal unit metadata and a calculated-expression
+observation. It does not evaluate CSS math expression trees or establish
+resolver independence for every supported expression. The finite harness is
+compile-checked only. Sources: `css_image_set_option_value.cc:33-36`,
+`css_primitive_value.cc:310-317`, `css_math_function_value.cc:74-78`,
+`css_numeric_literal_value.cc:113-116`.
+
 `examples/blink_image_set_failed_subresources.cpp` models the cache lookup and
 status decision in `HasFailedOrCanceledSubresources`. The effective cache mode
 selects either the shared entry or the requested fetcher entry; null fetcher or

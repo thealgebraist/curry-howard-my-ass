@@ -276,6 +276,11 @@ Current λΠ work is small compared with that source surface:
   device scales 1–4, and independently varied AVIF support at each call (128
   states). It is compile-checked, not executed; arbitrary floating resolutions,
   concurrency, and pointer identity are omitted.
+* `examples/blink_image_set_computed_resolution.cpp` covers the
+  `ComputeDotsPerPixel` literal/calculated dispatch and `ClampDouble` boundary
+  with 24 literal value/unit combinations and five calculated observations.
+  CSS math evaluation is an explicit input observation. It compiles but is not
+  executed in this update.
 * `examples/blink_image_set_failed_subresources.cpp` models the cached-image
   selection and resource-status result in `HasFailedOrCanceledSubresources`.
   Its 512 finite states include shared/fetcher-keyed cache choice, fetcher and
