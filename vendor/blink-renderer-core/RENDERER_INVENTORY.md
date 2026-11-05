@@ -452,15 +452,17 @@ Current λΠ work is small compared with that source surface:
   reprocessing control flow, custom/sanitizer behavior, and foster parenting
   are outside the model.
 * `examples/blink_tokenized_p_start_dom.cpp` composes bounded raw `<p ...>`
-  source scanning into typed `StartTagToken(pTag, Attrs)`, then passes the
+  source scanning into typed `StartTagToken(pTag, Attrs, HasEntity)`, then passes the
   scanned attributes through p-scope pop and DOM insertion. Twenty inputs
   cover ordered attributes, full-table named attribute references with guard
   behavior, selected numeric references, duplicate filtering, body references,
   and DOM/CSS/render projections. The C++ comparison checks
-  the complete token term and final DOM/stack state. This is a mapped
+  the complete token term, its entity flag, and final DOM/stack state. This is a mapped
   transcription, not execution of Blink's tokenizer; body and attribute named
   references use the shared full-table λΠ relation, and attribute values are
-  UTF-16 code-unit lists. Numeric references remain selected fixtures. General
+  UTF-16 code-unit lists. Successful named-reference decoding and selected
+  numeric rewrites set the modeled entity flag, following
+  `html_tokenizer.cc:1061` and `html_token.h:358-359,412`. Numeric references remain selected fixtures. General
   numeric parsing, parse-error reconsume,
   custom/sanitizer effects, and full DOM lifecycle are excluded.
   The same raw source yields a start-tag token, text token through the next `<`,
