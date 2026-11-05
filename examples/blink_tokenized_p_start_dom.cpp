@@ -31,7 +31,13 @@ static std::vector<std::pair<std::string,char16_t>> make_reference_entities(){
       {"#38;",u'&'},{"#60;",u'<'},{"#62;",u'>'},{"#34;",u'"'},{"#39;",u'\''},{"#101;",u'e'},
       {"#x26;",u'&'},{"#x3c;",u'<'},{"#x3e;",u'>'},{"#x22;",u'"'},{"#x27;",u'\''}};
   constexpr char digits[]="0123456789abcdef";
-  for(unsigned i=0;i<windows_latin1_extension.size();++i){const unsigned cp=0x80+i;std::string name="#x";if(cp>=16)name.push_back(digits[cp>>4]);name.push_back(digits[cp&15]);name.push_back(';');refs.emplace_back(std::move(name),windows_latin1_extension[i]);}
+  auto add_numeric_forms=[&](const std::string& stem,char16_t value){refs.emplace_back(stem+';',value);refs.emplace_back(stem,value);};
+  for(unsigned i=0;i<windows_latin1_extension.size();++i){
+    const unsigned cp=0x80+i;const char hi=digits[cp>>4],lo=digits[cp&15];
+    add_numeric_forms("#"+std::to_string(cp),windows_latin1_extension[i]);
+    for(char x:{'x','X'})for(char h:{hi,static_cast<char>(std::toupper(static_cast<unsigned char>(hi)))})for(char l:{lo,static_cast<char>(std::toupper(static_cast<unsigned char>(lo)))})
+      add_numeric_forms(std::string("#")+x+h+l,windows_latin1_extension[i]);
+  }
   return refs;
 }
 static const auto reference_entities=make_reference_entities();

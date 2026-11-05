@@ -455,27 +455,27 @@ Current λΠ work is small compared with that source surface:
   source scanning into typed `StartTagToken(pTag, Attrs, HasEntity)`, then passes the
   scanned attributes through p-scope pop and DOM insertion. Twenty inputs
   cover ordered attributes, full-table named attribute references with guard
-  behavior, selected decimal/hex references plus all 32 exact hexadecimal
-  spellings in Blink's Windows-1252 adjustment interval, duplicate filtering, body references,
+  behavior, selected decimal/hex references plus decimal and hexadecimal
+  forms for all 32 values in Blink's Windows-1252 adjustment interval
+  (optional semicolon and either `x`/`X`), duplicate filtering, body references,
   and DOM/CSS/render projections. The C++ comparison checks
   the complete token term, its entity flag, and final DOM/stack state. This is a mapped
   transcription, not execution of Blink's tokenizer; body and attribute named
   references use the shared full-table λΠ relation, and attribute values are
   UTF-16 code-unit lists. Successful named-reference decoding and selected
   numeric rewrites set the modeled entity flag, following
-  `html_tokenizer.cc:1061` and `html_token.h:358-359,412`. The 32 interval
-  spellings are table-derived but still exact-string rules; general numeric
-  accumulation remains
-  numeric parsing, parse-error reconsume,
-  custom/sanitizer effects, and full DOM lifecycle are excluded.
+  `html_tokenizer.cc:1061` and `html_token.h:358-359,412`. These interval
+  forms are table-derived rewrite rules; general numeric accumulation, parse-
+  error reconsume, custom/sanitizer effects, and full DOM lifecycle are
+  excluded.
   The same raw source yields a start-tag token, text token through the next `<`,
   and restricted `</p>` token; the p-end transition closes the open-element
   stack. A quoted-attribute `>` case checks the tag/body boundary. The DOM
   then feeds fixed `p`/`.beta`/`#alpha` selector matching, numeric-priority
   color selection, and abstract text layout/paint. The body decoder uses the
   shared full-table named-reference search/consume and ProcessEntity rules,
-  eleven earlier numeric spellings, and the 32 exact hex spellings for
-  U+0080-U+009F. The target compiles; its observer
+  eleven earlier numeric spellings, and decimal/hex forms for all 32
+  U+0080-U+009F values. The target compiles; its observer
   harness was not run in this update. The
   both-selectors-hit case also checks declaration-order-independent winner
   selection. The `.beta` selector checks whitespace-separated class tokens
