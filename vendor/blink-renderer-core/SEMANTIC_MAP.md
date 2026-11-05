@@ -1202,6 +1202,17 @@ CSS value subclass. Sources: `css_image_set_value.cc:49-108`,
 `element_style_resources.cc:195-210`, `css_image_set_value.cc:139-152`,
 `style_image_set.cc:34-36`.
 
+`examples/blink_image_set_options_cache.cpp` adds the first-call cache state
+transition from `CSSImageSetValue::GetBestOption`. An uninitialized cache is
+filled with the supported, sorted, deduplicated options; if none survive, the
+model stores a dedicated no-supported-options sentinel corresponding to Blink's
+single null `options_` entry. Later calls select from the cached list without
+re-filtering under new MIME feature observations. The included two-call C++/λΠ
+comparison harness covers 128 finite inputs, but it was not executed in this
+change. It assumes stable computed resolutions and omits concurrent calls,
+pointer identity, and other mutable resolver behavior. Sources:
+`css_image_set_value.cc:49-108`, `css_image_set_option_value.cc:38-45`.
+
 `examples/blink_image_set_failed_subresources.cpp` models the cache lookup and
 status decision in `HasFailedOrCanceledSubresources`. The effective cache mode
 selects either the shared entry or the requested fetcher entry; null fetcher or

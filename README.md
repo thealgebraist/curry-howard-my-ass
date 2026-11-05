@@ -436,6 +436,11 @@ make test
    * The source includes a C++ comparison harness over three option lists, four device scales, both AVIF support settings, both cache modes, and two fetchers (96 transitions), with fixtures for CSS image load, gradient generation, selected-but-unsupported values, and no supported option. It has been compiled, but the harness has not been run in this change.
    * Resource fetching, generator evaluation, lazy `options_` mutation, nonempty initial cache contents, arbitrary floating-point resolutions, pointer/GC identity, and unbounded MIME strings remain abstract. The model's value-kind mapping is explicit fixture input, not inferred from MIME type.
 
+81. **`examples/blink_image_set_options_cache.cpp`**:
+   * Models the lazy `CSSImageSetValue::options_` behavior in `GetBestOption`: initialize from MIME/resolution-supported options, store a null-result sentinel if none survive, and reuse the cached sorted/deduplicated list on later calls.
+   * The source contains a two-call λΠ/C++ comparison harness over two bounded lists, first and second device scales 1–4, and AVIF support on/off at each call (128 transitions). Changing AVIF support between calls represents the fact that later calls reuse the initialized option list rather than refiltering it.
+   * The finite lists represent at most two options. Resolver-derived floating-point resolution changes, concurrent access, option pointer identity, and mutation of other CSS image-set state remain outside this model. The harness is compile-checked but was not executed in this change.
+
 
 ---
 

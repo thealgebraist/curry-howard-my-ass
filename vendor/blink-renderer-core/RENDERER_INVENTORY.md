@@ -270,6 +270,12 @@ Current λΠ work is small compared with that source surface:
   harness covers three option lists, four scales, AVIF on/off, two cache modes,
   and two fetchers (96 transitions), including empty selection and unsupported
   selected values. The target compiles; this change does not run its harness.
+* `examples/blink_image_set_options_cache.cpp` adds `GetBestOption`'s lazy
+  `options_` initialization and cached-null sentinel to the existing selection
+  rewrite rules. Its two-call comparison harness spans two bounded lists,
+  device scales 1–4, and independently varied AVIF support at each call (128
+  states). It is compile-checked, not executed; arbitrary floating resolutions,
+  concurrency, and pointer identity are omitted.
 * `examples/blink_image_set_failed_subresources.cpp` models the cached-image
   selection and resource-status result in `HasFailedOrCanceledSubresources`.
   Its 512 finite states include shared/fetcher-keyed cache choice, fetcher and
