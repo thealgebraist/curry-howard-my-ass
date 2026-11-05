@@ -453,7 +453,7 @@ Current λΠ work is small compared with that source surface:
   are outside the model.
 * `examples/blink_tokenized_p_start_dom.cpp` composes bounded raw `<p ...>`
   source scanning into typed `StartTagToken(pTag, Attrs, HasEntity)`, then passes the
-  scanned attributes through p-scope pop and DOM insertion. Twenty-seven inputs
+  scanned attributes through p-scope pop and DOM insertion. Twenty-eight inputs
   cover ordered attributes, full-table named attribute references with guard
   behavior, selected decimal/hex references plus decimal and hexadecimal
   semicolon-terminated forms for all 32 values in Blink's Windows-1252
@@ -462,10 +462,10 @@ Current λΠ work is small compared with that source surface:
   the complete token term, its entity flag, and final DOM/stack state. This is a mapped
   transcription, not execution of Blink's tokenizer; body and attribute named
   references use the shared full-table λΠ relation, and attribute values are
-  UTF-16 code-unit lists. The λΠ path composes a recursive CR/CRLF input-text normalizer before token scanning, body decoding, and end-tag recognition; one fixture carries CRLF through an attribute class value and body text. Successful named-reference decoding and selected
+  UTF-16 code-unit lists. The λΠ path composes a recursive CR/CRLF input-text normalizer before token scanning, body decoding, and end-tag recognition; one fixture carries CRLF through an attribute class value and body text. NUL in an attribute value maps to U+FFFD, while NUL in Data-state body text is skipped, following the two tokenizer policies; a single raw-input fixture covers both. Successful named-reference decoding and selected
   numeric rewrites set the modeled entity flag, following
   `html_tokenizer.cc:1061` and `html_token.h:358-359,412`. These interval
-  forms are table-derived rewrite rules; NUL policy is represented by the standalone preprocessor model but is not integrated here. General numeric accumulation and
+  forms are table-derived rewrite rules; NUL behavior is integrated for attribute-value and Data states only; other tokenizer states and streaming preprocessing are not modeled. General numeric accumulation and
   optional numeric semicolon handling, parse-error reconsume,
   custom/sanitizer effects, and full DOM lifecycle are
   excluded.
@@ -538,4 +538,6 @@ claim that the renderer can be represented by a single small rewrite system.
   observer was not run. `SegmentedString` cursor effects, line numbers,
   Peek/Advance return behavior, and streaming exhaustion are omitted, and this
   CR/CRLF normalization is also composed into the raw-tokenizer bridge; the
-  standalone NUL/terminal-marker and cursor transitions remain separate.
+  standalone terminal-marker and cursor transitions remain separate; its
+  NUL replacement/skipping outcomes are composed for attribute-value and Data
+  states in the raw-tokenizer bridge.
