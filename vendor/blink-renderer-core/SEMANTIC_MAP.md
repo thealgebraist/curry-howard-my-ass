@@ -1608,19 +1608,19 @@ String canonicalization, and task scheduling.
 
 ## HTML input-stream preprocessing
 
-`examples/blink_input_stream_preprocessor.cpp` defines a typed λΠ list
-transducer over complete finite code-unit streams. Its ordinary-code-unit rewrite is parametric in an opaque input-unit term. It maps CR to LF, consumes
-an LF immediately following CR, treats ordinary NUL as U+FFFD unless the
-modeled tokenizer policy skips NULs, and preserves the closed-stream final NUL
-as an EOF marker. The transducer takes `skipNull` and `closed` explicitly;
-seven hand-written C++/λΠ fixtures cover CR, CRLF, repeated newline boundaries,
-NUL replacement/skipping, and the terminal-NUL marker. The target compiles, but
-the observer comparisons were not run. Its CR/CRLF branch is also represented
-in the integrated raw-tokenizer bridge; NUL/EOF and cursor branches remain
-separate there. Source: pinned
-`input_stream_preprocessor.h:45-111,115-165`.
+`examples/blink_input_stream_preprocessor.cpp` defines a typed λΠ transducer
+for complete finite code-unit streams. Its ordinary-code-unit rewrite is
+parametric in an opaque input-unit term. It maps CR to LF, consumes an
+immediately following LF, and represents a closed stream's final NUL as an EOF
+marker. NUL handling is parameterized by `HTMLTokenizer::State` and the
+force-replacement flag. The policy relation encodes all 76 states from the
+pinned enum with both flag values (152 valuations): only Data, RCDATA, and
+RAWTEXT skip NUL when force-replacement is false, matching
+`ShouldSkipNullCharacters`. Seven finite stream fixtures select policies by
+state and cover CR, CRLF, NUL replacement/skipping, and the terminal marker.
+The target compiles, but observer comparisons were not run. Source:
+`html_tokenizer.h:57-134,192` and `input_stream_preprocessor.h:45-111,115-167`.
 
 This abstraction does not model `SegmentedString` cursor movement, Peek versus
 Advance, line-number updates, open-stream suspension, or the precise boolean
-return values at exhaustion. It describes the normalized finite sequence only;
-its complete-stream NUL/terminal-marker branches are not wired into `blink_tokenized_p_start_dom.cpp`; that integrated bridge composes CR/CRLF normalization with the raw text path.
+return values at exhaustion. It describes the normalized finite sequence only. The integrated raw-tokenizer bridge composes CR/CRLF normalization and specializes NUL handling for the represented attribute-value and Data states; it does not reuse this complete-stream relation.

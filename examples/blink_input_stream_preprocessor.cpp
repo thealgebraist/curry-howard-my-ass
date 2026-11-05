@@ -1,5 +1,6 @@
 #include "../src/lambda_pi.hpp"
 
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <tuple>
@@ -9,6 +10,88 @@ using namespace lp;
 
 enum class Unit { A, B, Wide, CR, LF, Nul, Replacement, Eof };
 using Stream = std::vector<Unit>;
+
+static constexpr std::array<const char*,76> tokenizer_state_names={
+  "kDataState",
+  "kCharacterReferenceInDataState",
+  "kRCDATAState",
+  "kCharacterReferenceInRCDATAState",
+  "kRAWTEXTState",
+  "kScriptDataState",
+  "kPLAINTEXTState",
+  "kTagOpenState",
+  "kEndTagOpenState",
+  "kTagNameState",
+  "kRCDATALessThanSignState",
+  "kRCDATAEndTagOpenState",
+  "kRCDATAEndTagNameState",
+  "kRAWTEXTLessThanSignState",
+  "kRAWTEXTEndTagOpenState",
+  "kRAWTEXTEndTagNameState",
+  "kScriptDataLessThanSignState",
+  "kScriptDataEndTagOpenState",
+  "kScriptDataEndTagNameState",
+  "kScriptDataEscapeStartState",
+  "kScriptDataEscapeStartDashState",
+  "kScriptDataEscapedState",
+  "kScriptDataEscapedDashState",
+  "kScriptDataEscapedDashDashState",
+  "kScriptDataEscapedLessThanSignState",
+  "kScriptDataEscapedEndTagOpenState",
+  "kScriptDataEscapedEndTagNameState",
+  "kScriptDataDoubleEscapeStartState",
+  "kScriptDataDoubleEscapedState",
+  "kScriptDataDoubleEscapedDashState",
+  "kScriptDataDoubleEscapedDashDashState",
+  "kScriptDataDoubleEscapedLessThanSignState",
+  "kScriptDataDoubleEscapeEndState",
+  "kBeforeAttributeNameState",
+  "kAttributeNameState",
+  "kAfterAttributeNameState",
+  "kBeforeAttributeValueState",
+  "kAttributeValueDoubleQuotedState",
+  "kAttributeValueSingleQuotedState",
+  "kAttributeValueUnquotedState",
+  "kCharacterReferenceInAttributeValueState",
+  "kAfterAttributeValueQuotedState",
+  "kSelfClosingStartTagState",
+  "kProcessingInstructionOpenState",
+  "kProcessingInstructionTargetState",
+  "kAfterProcessingInstructionTargetState",
+  "kProcessingInstructionDataState",
+  "kProcessingInstructionQuestionableState",
+  "kBogusCommentState",
+  "kContinueBogusCommentState",
+  "kMarkupDeclarationOpenState",
+  "kCommentStartState",
+  "kCommentStartDashState",
+  "kCommentState",
+  "kCommentEndDashState",
+  "kCommentEndState",
+  "kCommentEndBangState",
+  "kDOCTYPEState",
+  "kBeforeDOCTYPENameState",
+  "kDOCTYPENameState",
+  "kAfterDOCTYPENameState",
+  "kAfterDOCTYPEPublicKeywordState",
+  "kBeforeDOCTYPEPublicIdentifierState",
+  "kDOCTYPEPublicIdentifierDoubleQuotedState",
+  "kDOCTYPEPublicIdentifierSingleQuotedState",
+  "kAfterDOCTYPEPublicIdentifierState",
+  "kBetweenDOCTYPEPublicAndSystemIdentifiersState",
+  "kAfterDOCTYPESystemKeywordState",
+  "kBeforeDOCTYPESystemIdentifierState",
+  "kDOCTYPESystemIdentifierDoubleQuotedState",
+  "kDOCTYPESystemIdentifierSingleQuotedState",
+  "kAfterDOCTYPESystemIdentifierState",
+  "kBogusDOCTYPEState",
+  "kCDATASectionState",
+  "kCDATASectionBracketState",
+  "kCDATASectionEndState",
+};
+static bool cpp_should_skip_null(size_t state,bool force_replacement){
+  return !force_replacement&&(state==0||state==2||state==4);
+}
 
 static Stream cpp_preprocess(const Stream& input, bool skip_null, bool closed) {
   Stream out;
@@ -72,17 +155,20 @@ static Ptr out_stream(const Stream& s) {
     t = apps(sym("consOut"), {out_unit(*it), t});
   return t;
 }
-static Ptr input_term(bool skip_null, bool closed, const Stream& s) {
-  return apps(sym("preprocess"), {sym(skip_null ? "yes" : "no"),
-                                   sym(closed ? "yes" : "no"), raw_stream(s)});
+static Ptr input_term(size_t state,bool force_replacement,bool closed,const Stream& s) {
+  const Ptr policy=apps(sym("shouldSkipNullCharacters"),{sym("tokenizerState"+std::to_string(state)),sym(force_replacement?"yes":"no")});
+  return apps(sym("preprocess"), {policy,sym(closed ? "yes" : "no"),raw_stream(s)});
 }
 
 int main() {
   const Ptr B = sym("Bool"), In = sym("InputUnit"), Raw = sym("RawUnit");
-  const Ptr Out = sym("OutputUnit"), RI = sym("RawStream"), RO = sym("OutputStream");
+  const Ptr Out = sym("OutputUnit"), RI = sym("RawStream"), RO = sym("OutputStream"), TS=sym("TokenizerState");
   Signature sig;
   std::vector<Rule> rules;
   sig["Bool"] = type_sort(); sig["yes"] = B; sig["no"] = B;
+  sig["TokenizerState"]=type_sort();
+  for(size_t i=0;i<tokenizer_state_names.size();++i)sig["tokenizerState"+std::to_string(i)]=TS;
+  sig["shouldSkipNullCharacters"]=fn(TS,fn(B,B));
   sig["InputUnit"] = type_sort();
   for (const char* c : {"codeA", "codeB", "codeWide"}) sig[c] = In;
   sig["RawUnit"] = type_sort();
@@ -96,6 +182,11 @@ int main() {
   sig["OutputStream"] = type_sort(); sig["nilOut"] = RO;
   sig["consOut"] = fn(Out, fn(RO, RO));
   sig["preprocess"] = fn(B, fn(B, fn(RI, RO)));
+  for(size_t i=0;i<tokenizer_state_names.size();++i){
+    const bool state_skips=(i==0||i==2||i==4);
+    rules.push_back(rule(apps(sym("shouldSkipNullCharacters"),{sym("tokenizerState"+std::to_string(i)),sym("no")}),sym(state_skips?"yes":"no")));
+    rules.push_back(rule(apps(sym("shouldSkipNullCharacters"),{sym("tokenizerState"+std::to_string(i)),sym("yes")}),sym("no")));
+  }
 
   // Variables 0/1/2 are skip-null, closed-stream, and input tail.
   rules.push_back(rule(apps(sym("preprocess"), {pvar(0), pvar(1), sym("nilRaw")}), sym("nilOut")));
@@ -117,20 +208,28 @@ int main() {
   rules.push_back(rule(apps(sym("preprocess"), {pvar(0), pvar(1), apps(sym("consRaw"), {app(sym("rawOrdinary"), pvar(3)), pvar(2)})}),
                        apps(sym("consOut"), {app(sym("outOrdinary"), pvar(3)), apps(sym("preprocess"), {pvar(0), pvar(1), pvar(2)})})));
 
-  const std::vector<std::tuple<Stream, bool, bool>> cases = {
-      {{Unit::A, Unit::CR, Unit::LF, Unit::B}, false, false},
-      {{Unit::CR, Unit::CR, Unit::LF}, false, false},
-      {{Unit::Nul, Unit::Wide, Unit::Nul}, false, false},
-      {{Unit::Nul, Unit::A, Unit::Nul}, true, false},
-      {{Unit::A, Unit::Nul}, false, true},
-      {{Unit::Wide, Unit::Nul}, true, true},
-      {{Unit::A, Unit::LF, Unit::B}, true, false},
+  const std::vector<std::tuple<Stream,size_t,bool,bool>> cases = {
+      {{Unit::A, Unit::CR, Unit::LF, Unit::B},0,false,false},
+      {{Unit::CR, Unit::CR, Unit::LF},2,false,false},
+      {{Unit::Nul, Unit::Wide, Unit::Nul},38,false,false},
+      {{Unit::Nul, Unit::A, Unit::Nul},0,false,false},
+      {{Unit::A, Unit::Nul},0,true,false},
+      {{Unit::Wide, Unit::Nul},38,false,true},
+      {{Unit::A, Unit::LF, Unit::B},5,false,false},
   };
-  for (const auto& [input, skip_null, closed] : cases) {
-    const auto expected = cpp_preprocess(input, skip_null, closed);
-    const Ptr observed = nf(input_term(skip_null, closed, input), rules);
-    assert(conv(observed, out_stream(expected), rules));
+  for(const auto& [input,state,force_replacement,closed]:cases){
+    const bool skip_null=cpp_should_skip_null(state,force_replacement);
+    const auto expected=cpp_preprocess(input,skip_null,closed);
+    const Ptr observed=nf(input_term(state,force_replacement,closed,input),rules);
+    assert(conv(observed,out_stream(expected),rules));
+  }
+  // The source policy is exhaustive over the pinned tokenizer state enum and
+  // both force-replacement settings. These encoded checks were not executed.
+  for(size_t state=0;state<tokenizer_state_names.size();++state)for(bool force:{false,true}){
+    const Ptr observed=nf(apps(sym("shouldSkipNullCharacters"),{sym("tokenizerState"+std::to_string(state)),sym(force?"yes":"no")}),rules);
+    assert(conv(observed,sym(cpp_should_skip_null(state,force)?"yes":"no"),rules));
   }
   std::cout << "Blink input-stream preprocessor model: " << cases.size()
-            << " finite traces and a parametric ordinary-unit rule\n";
+            << " finite traces; null policy encoded for " << tokenizer_state_names.size()
+            << " tokenizer states and both force settings\n";
 }

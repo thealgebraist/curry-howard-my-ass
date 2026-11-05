@@ -532,12 +532,12 @@ The inventory is an accounting aid for the remaining conversion work, not a
 claim that the renderer can be represented by a single small rewrite system.
 
 * `examples/blink_input_stream_preprocessor.cpp` models complete-stream
-  preprocessing as a typed λΠ transducer with a parametric ordinary-unit branch: CR/CRLF normalization, NUL
-  replacement/skipping policy, and the closed-stream terminal NUL marker. Seven
-  finite C++ and λΠ observations are encoded; the target compiles, but the
-  observer was not run. `SegmentedString` cursor effects, line numbers,
-  Peek/Advance return behavior, and streaming exhaustion are omitted, and this
-  CR/CRLF normalization is also composed into the raw-tokenizer bridge; the
-  standalone terminal-marker and cursor transitions remain separate; its
-  NUL replacement/skipping outcomes are composed for attribute-value and Data
-  states in the raw-tokenizer bridge.
+  preprocessing as a typed λΠ transducer with a parametric ordinary-unit branch:
+  CR/CRLF normalization, NUL replacement/skipping, and the closed-stream
+  terminal NUL marker. `ShouldSkipNullCharacters` is encoded for all 76 pinned
+  tokenizer states under both force-replacement settings (152 valuations), with
+  seven finite stream fixtures. The target compiles; observers were not run.
+  `SegmentedString` cursor effects, line numbers, Peek/Advance return behavior,
+  and streaming exhaustion remain omitted. The raw-tokenizer bridge separately
+  composes CR/CRLF normalization and NUL outcomes for attribute-value and Data
+  states.
