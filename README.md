@@ -431,6 +431,11 @@ make test
    * The typed λΠ model and C++ transcription cover 120 finite selection, cache-mode/state, fetcher, and scale transitions, including overwriting one fetcher slot while preserving the other.
    * `GetBestOption` selection and actual resource/generator loading are explicit observations; GC pointer identity and image contents are abstracted.
 
+80. **`examples/blink_image_set_selection_load_cache.cpp`**:
+   * Puts the MIME-aware `GetBestOption` reduction, selected CSS value-kind dispatch, `StyleImageSet` wrapper creation, and caller-side cache update into one typed λΠ rewrite system. The selection rules are shared with item 60; a finite `imageValueKind` observation bridges the chosen option to loader dispatch.
+   * The source includes a C++ comparison harness over three option lists, four device scales, both AVIF support settings, both cache modes, and two fetchers (96 transitions), with fixtures for CSS image load, gradient generation, selected-but-unsupported values, and no supported option. It has been compiled, but the harness has not been run in this change.
+   * Resource fetching, generator evaluation, lazy `options_` mutation, nonempty initial cache contents, arbitrary floating-point resolutions, pointer/GC identity, and unbounded MIME strings remain abstract. The model's value-kind mapping is explicit fixture input, not inferred from MIME type.
+
 
 ---
 

@@ -264,6 +264,12 @@ Current λΠ work is small compared with that source surface:
   dispatch with `CSSImageSetValue::CacheImage` and the `StyleImageSet` wrapper,
   including null inner images. It checks 120 finite state transitions across
   cache mode, fetcher, scale, and option; selection/resource internals are inputs.
+* `examples/blink_image_set_selection_load_cache.cpp` puts the finite
+  `GetBestOption` rewrite system in the same signature and rule set as loader
+  kind dispatch, `StyleImageSet` wrapping, and cache update. Its C++ comparison
+  harness covers three option lists, four scales, AVIF on/off, two cache modes,
+  and two fetchers (96 transitions), including empty selection and unsupported
+  selected values. The target compiles; this change does not run its harness.
 * `examples/blink_image_set_failed_subresources.cpp` models the cached-image
   selection and resource-status result in `HasFailedOrCanceledSubresources`.
   Its 512 finite states include shared/fetcher-keyed cache choice, fetcher and

@@ -1185,6 +1185,23 @@ loading, generated-image evaluation, pointer identity, and GC are outside this
 composition. Sources: `element_style_resources.cc:195-210`,
 `css_image_set_value.cc:139-152`, `style_image_set.cc:34-36`.
 
+`examples/blink_image_set_selection_load_cache.cpp` extends that composition
+upstream to the first-call `GetBestOption` rules in the same typed rewrite
+system. A bridge maps the selected option's finite image identity to an explicit
+CSS value-kind observation, then preserves option resolution through CSS image
+loading, wraps the nullable result in `StyleImageSet`, and updates the shared or
+fetcher-keyed cache. Its C++ comparison harness contains 96 bounded transitions,
+including a selected unsupported value and a list with no supported options.
+The harness was compiled but not executed during this change. Resolution is an
+integer fixture domain; lazy `options_` cache mutation, actual resource loading,
+generated-image evaluation, preexisting nonempty cache values, GC/pointer
+identity, and arbitrary MIME/floating-point values remain abstract. The
+`imageValueKind` mapping is a declared observation for fixture images; MIME
+support controls whether an option survives selection but does not determine its
+CSS value subclass. Sources: `css_image_set_value.cc:49-108`,
+`element_style_resources.cc:195-210`, `css_image_set_value.cc:139-152`,
+`style_image_set.cc:34-36`.
+
 `examples/blink_image_set_failed_subresources.cpp` models the cache lookup and
 status decision in `HasFailedOrCanceledSubresources`. The effective cache mode
 selects either the shared entry or the requested fetcher entry; null fetcher or

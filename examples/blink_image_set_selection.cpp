@@ -105,12 +105,11 @@ static Ptr best_term(const Options& options, unsigned scale, MimeFeatures featur
   return apps(sym("bestOption"), {options_term(options), scale_term(scale), features_term(features)});
 }
 
-int main() {
+static void add_selection_rules(Signature& signature, std::vector<Rule>& rules) {
   const Ptr B=sym("Bool"), R=sym("Resolution"), D=sym("DeviceScale");
   const Ptr I=sym("ImageId"), O=sym("ImageSetOption"), L=sym("OptionList");
   const Ptr M=sym("MimeInput"), C=sym("CanonicalMime"), OM=sym("OptionalMime"), F=sym("MimeFeatures");
-  Signature signature;
-  std::vector<Rule> rules;
+
   signature["Bool"]=type_sort(); signature["true"]=B; signature["false"]=B;
   signature["Resolution"]=type_sort();
   for(unsigned i=0;i<=3;++i) signature["r"+std::to_string(i)]=R;
@@ -205,7 +204,13 @@ int main() {
   rules.push_back(rule(apps(sym("selectStep"),{sym("false"),pvar(73),pvar(74),pvar(75),pvar(76)}),apps(sym("selectOption"),{pvar(73),pvar(75),app(sym("someOption"),pvar(74))})));
   rules.push_back(rule(apps(sym("bestOption"),{pvar(77),pvar(78),pvar(79)}),
       apps(sym("selectOption"),{pvar(78),app(sym("uniqueOptions"),app(sym("sortOptions"),apps(sym("filterOptions"),{pvar(77),pvar(79)}))),sym("noOption")})));
+  return;
+}
 
+int main() {
+  Signature signature;
+  std::vector<Rule> rules;
+  add_selection_rules(signature, rules);
   RuleIndex indexed_rules(rules);
   Options empty;
   auto sample=best_term(empty,1,{false,false,false});
@@ -250,4 +255,5 @@ int main() {
     }
   std::cout<<"CSSImageSetValue MIME-aware filtering, stable resolution ordering/deduplication, and device-scale selection cover "<<states<<" finite states.\n";
   std::cout<<"Scope: resolution values are 0..3, device scales 1..4, all twelve pinned static image MIME entries and ASCII case variants are represented, AVIF/JXL feature flags vary, and each fixture has at most three options; arbitrary MIME strings, floating-point resolution computation, lazy options_ cache mutation, and later image loading remain omitted.\n";
+  return 0;
 }
