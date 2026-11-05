@@ -4,6 +4,7 @@
 #include <cassert>
 #include <fstream>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -57,10 +58,19 @@ static Rule rule(Ptr a, Ptr b) { return {std::move(a), std::move(b)}; }
 static Ptr p(int i) { return pvar(i); }
 static Ptr nat(unsigned n) { Ptr r = sym("z"); while (n--) r = app(sym("s"), r); return r; }
 static Ptr ch(unsigned char c) { return sym("ch" + std::to_string(c)); }
+static Ptr unit(unsigned u) { return sym("u16_" + std::to_string(u)); }
 static Ptr chars(const std::string& s) {
   Ptr r = sym("nilChar");
   for (auto i = s.rbegin(); i != s.rend(); ++i) r = apps(sym("consChar"), ch(static_cast<unsigned char>(*i)), r);
   return r;
+}
+static Ptr units_term(const std::vector<unsigned>& values) {
+  Ptr r = sym("nilUnits");
+  for (auto i = values.rbegin(); i != values.rend(); ++i) r = apps(sym("consUnit"), unit(*i), r);
+  return r;
+}
+static Ptr token_term(const std::vector<unsigned>& values, bool has_entity) {
+  return apps(sym("token"), units_term(values), sym(has_entity ? "true" : "false"));
 }
 static Ptr table_term(const std::vector<Entity>& table) {
   Ptr r = sym("nilEntities");
@@ -116,7 +126,37 @@ struct ConsumeOutcome {
   size_t consumed = 0;
   std::string remainder;
 };
-struct ConsumeCase { std::string input; bool eof; bool additional_allowed; };
+struct ConsumeCase {
+  std::string input;
+  bool eof;
+  bool additional_allowed;
+  bool rcdata = false;
+  std::vector<unsigned> prior_units;
+  bool prior_has_entity = false;
+};
+struct ProcessOutcome { bool suspended = false; bool rcdata = false; std::vector<unsigned> units; bool has_entity = false; };
+static std::vector<unsigned> utf16_units(unsigned codepoint) {
+  if (codepoint <= 0xFFFF) return {codepoint};
+  codepoint -= 0x10000;
+  return {0xD800 + (codepoint >> 10), 0xDC00 + (codepoint & 0x3FF)};
+}
+static ProcessOutcome cpp_process_entity(const ConsumeOutcome& decoded, const ConsumeCase& item) {
+  ProcessOutcome out{false, item.rcdata, item.prior_units, item.prior_has_entity};
+  if (decoded.kind == ConsumeKind::NeedMore) { out.suspended = true; return out; }
+  if (decoded.kind == ConsumeKind::Failure || decoded.kind == ConsumeKind::GuardReject) {
+    out.units.push_back(0x26);
+    return out;
+  }
+  const auto first = utf16_units(decoded.first);
+  out.units.insert(out.units.end(), first.begin(), first.end());
+  if (decoded.second) {
+    const auto second = utf16_units(*decoded.second);
+    out.units.insert(out.units.end(), second.begin(), second.end());
+  }
+  assert(out.units.size() <= item.prior_units.size() + 4);
+  out.has_entity = true;
+  return out;
+}
 static bool ascii_alnum(unsigned char c) {
   return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
@@ -145,6 +185,11 @@ static Ptr consume_term(const ConsumeOutcome& outcome, const std::string& input)
   }
   return app(sym("consumeFailure"), chars(input));
 }
+static Ptr process_term(const ProcessOutcome& outcome) {
+  return apps(sym("tokenizerOutcome"), sym(outcome.suspended ? "suspend" : "resume"),
+      sym(outcome.rcdata ? "rcdata" : "data"),
+      token_term(outcome.units, outcome.has_entity));
+}
 
 int main() {
   const auto table = load_entities();
@@ -155,15 +200,22 @@ int main() {
   const Ptr Match = sym("Match"), SearchState = sym("SearchState");
   const Ptr Codepoint = sym("Codepoint"), OptionCp = sym("OptionCp"), EntityResult = sym("EntityResult");
   const Ptr ConsumeResult = sym("ConsumeResult");
+  const Ptr CodeUnit = sym("CodeUnit"), Units = sym("Units"), Token = sym("Token");
+  const Ptr ReturnState = sym("ReturnState"), Status = sym("Status"), TokenizerOutcome = sym("TokenizerOutcome");
   sig["Nat"] = type_sort(); sig["z"] = Nat; sig["s"] = fn(Nat, Nat);
   sig["Bool"] = type_sort(); sig["true"] = Bool; sig["false"] = Bool;
   sig["Char"] = type_sort(); sig["nilChar"] = Chars; sig["consChar"] = fn(Char, fn(Chars, Chars));
   for (unsigned i = 0; i < 128; ++i) sig["ch" + std::to_string(i)] = Char;
   sig["Chars"] = type_sort();
   sig["Codepoint"] = type_sort(); sig["OptionCp"] = type_sort(); sig["noSecond"] = OptionCp; sig["someSecond"] = fn(Codepoint, OptionCp);
+  sig["CodeUnit"] = type_sort(); sig["Units"] = type_sort(); sig["nilUnits"] = Units; sig["consUnit"] = fn(CodeUnit, fn(Units, Units));
+  auto register_units = [&](unsigned cp) { for (unsigned value : utf16_units(cp)) sig["u16_" + std::to_string(value)] = CodeUnit; };
+  register_units(0x26);
   for (const auto& item : table) {
     sig["cp_" + std::to_string(item.first_value)] = Codepoint;
+    register_units(item.first_value);
     if (item.second_value) sig["cp_" + std::to_string(*item.second_value)] = Codepoint;
+    if (item.second_value) register_units(*item.second_value);
   }
   sig["Entity"] = type_sort(); sig["entity"] = fn(Chars, fn(Nat, fn(Codepoint, fn(OptionCp, fn(Bool, Entity)))));
   sig["Entities"] = type_sort(); sig["nilEntities"] = Entities; sig["consEntity"] = fn(Entity, fn(Entities, Entities));
@@ -186,6 +238,15 @@ int main() {
   sig["consumeResult"] = type_sort(); sig["consumeNeedMore"] = fn(Chars, ConsumeResult);
   sig["consumeFailure"] = fn(Chars, ConsumeResult); sig["consumeGuardReject"] = fn(Chars, ConsumeResult);
   sig["consumeDecoded"] = fn(Codepoint, fn(OptionCp, fn(Nat, fn(Chars, ConsumeResult))));
+  sig["Token"] = type_sort(); sig["token"] = fn(Units, fn(Bool, Token));
+  sig["ReturnState"] = type_sort(); sig["data"] = ReturnState; sig["rcdata"] = ReturnState;
+  sig["Status"] = type_sort(); sig["resume"] = Status; sig["suspend"] = Status;
+  sig["TokenizerOutcome"] = type_sort(); sig["tokenizerOutcome"] = fn(Status, fn(ReturnState, fn(Token, TokenizerOutcome)));
+  sig["codepointUnits"] = fn(Codepoint, Units); sig["appendUnits"] = fn(Units, fn(Units, Units));
+  sig["decodedUnits"] = fn(Codepoint, fn(OptionCp, Units));
+  sig["processConsume"] = fn(ConsumeResult, fn(ReturnState, fn(Token, TokenizerOutcome)));
+  sig["processAt"] = fn(Nat, TokenizerOutcome); sig["expectedProcess"] = fn(Nat, TokenizerOutcome);
+  sig["returnAt"] = fn(Nat, ReturnState); sig["tokenAt"] = fn(Nat, Token);
   sig["eqNat"] = fn(Nat, fn(Nat, Bool)); sig["eqChar"] = fn(Char, fn(Char, Bool));
   sig["eqMaybeChar"] = fn(MaybeChar, fn(MaybeChar, Bool));
   sig["charAt"] = fn(Chars, fn(Nat, MaybeChar));
@@ -284,14 +345,37 @@ int main() {
   rules.push_back(rule(apps(sym("consumeKnownStep"), yes, p(0), p(1), p(2), p(3)), apps(sym("consumeDecoded"), p(0), p(1), p(2), apps(sym("dropChars"), p(3), p(2)))));
   rules.push_back(rule(apps(sym("consumeKnownStep"), no, p(0), p(1), p(2), p(3)), app(sym("consumeGuardReject"), p(3))));
 
+  std::set<unsigned> known_codepoints;
+  for (const auto& item : table) {
+    known_codepoints.insert(item.first_value);
+    if (item.second_value) known_codepoints.insert(*item.second_value);
+  }
+  for (unsigned cp : known_codepoints) {
+    const auto values = utf16_units(cp);
+    Ptr units = sym("nilUnits");
+    for (auto i = values.rbegin(); i != values.rend(); ++i) units = apps(sym("consUnit"), unit(*i), units);
+    rules.push_back(rule(app(sym("codepointUnits"), sym("cp_" + std::to_string(cp))), units));
+  }
+  rules.push_back(rule(apps(sym("appendUnits"), sym("nilUnits"), p(0)), p(0)));
+  rules.push_back(rule(apps(sym("appendUnits"), apps(sym("consUnit"), p(0), p(1)), p(2)), apps(sym("consUnit"), p(0), apps(sym("appendUnits"), p(1), p(2)))));
+  rules.push_back(rule(apps(sym("decodedUnits"), p(0), sym("noSecond")), app(sym("codepointUnits"), p(0))));
+  rules.push_back(rule(apps(sym("decodedUnits"), p(0), app(sym("someSecond"), p(1))), apps(sym("appendUnits"), app(sym("codepointUnits"), p(0)), app(sym("codepointUnits"), p(1)))));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeNeedMore"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("suspend"), p(1), apps(sym("token"), p(2), p(3)))));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeFailure"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("resume"), p(1), apps(sym("token"), apps(sym("appendUnits"), p(2), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(3)))));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeGuardReject"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("resume"), p(1), apps(sym("token"), apps(sym("appendUnits"), p(2), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(3)))));
+  rules.push_back(rule(apps(sym("processConsume"), apps(sym("consumeDecoded"), p(0), p(1), p(2), p(3)), p(4), apps(sym("token"), p(5), p(6))), apps(sym("tokenizerOutcome"), sym("resume"), p(4), apps(sym("token"), apps(sym("appendUnits"), p(5), apps(sym("decodedUnits"), p(0), p(1))), yes))));
+
   // Finite observations use prefixes from the pinned entity table, including
   // terminal names and prefixes that fail after a successful match.
   const std::vector<std::string> prefixes = {"A", "am", "amp", "amp;", "not", "noti", "notin;", "not="};
   const std::vector<ConsumeCase> consume_cases = {
-      {"amp;", true, false}, {"NotEqualTilde;", true, false}, {"not", true, false},
-      {"notx", false, false}, {"notx", false, true}, {"not=", false, true},
-      {"copyx", false, false}, {"copyx", false, true}, {"xyz", false, false},
-      {"amp;!", false, true}, {"NotEqu", true, false}};
+      {"amp;", true, false, false, {}, false}, {"NotEqualTilde;", true, false, true, {0x70}, false},
+      {"Afr;", true, false, true, {0x70}, false},
+      {"not", true, false, true, {0x70}, true}, {"notx", false, false, false, {0x70}, true},
+      {"notx", false, true, true, {0x70}, false}, {"not=", false, true, false, {}, false},
+      {"copyx", false, false, false, {}, false}, {"copyx", false, true, true, {0x6F}, true},
+      {"xyz", false, false, false, {}, false}, {"amp;!", false, true, true, {0x71}, false},
+      {"NotEqu", true, false, false, {0x70}, true}};
   sig["allEntities"] = Entities;
   rules.push_back(rule(sym("allEntities"), table_term(table)));
   sig["expected"] = fn(Nat, SearchState);
@@ -311,13 +395,18 @@ int main() {
     rules.push_back(rule(app(sym("consumeInputAt"), id), chars(item.input)));
     rules.push_back(rule(app(sym("consumeEofAt"), id), sym(item.eof ? "true" : "false")));
     rules.push_back(rule(app(sym("consumeAdditionalAt"), id), sym(item.additional_allowed ? "true" : "false")));
+    rules.push_back(rule(app(sym("returnAt"), id), sym(item.rcdata ? "rcdata" : "data")));
+    rules.push_back(rule(app(sym("tokenAt"), id), token_term(item.prior_units, item.prior_has_entity)));
     rules.push_back(rule(app(sym("consumeAt"), id), apps(sym("consumeNamed"),
         apps(sym("run"), app(sym("initialState"), sym("allEntities")), sym("allEntities"), app(sym("consumeInputAt"), id)),
         app(sym("consumeInputAt"), id), app(sym("consumeEofAt"), id), app(sym("consumeAdditionalAt"), id))));
     Search scanned = initial_search(table.size());
     for (unsigned char c : item.input) scanned = cpp_advance(table, std::move(scanned), c);
-    rules.push_back(rule(app(sym("expectedConsume"), id), consume_term(cpp_consume(table, scanned, item.input, item.eof, item.additional_allowed), item.input)));
+    const ConsumeOutcome decoded = cpp_consume(table, scanned, item.input, item.eof, item.additional_allowed);
+    rules.push_back(rule(app(sym("expectedConsume"), id), consume_term(decoded, item.input)));
+    rules.push_back(rule(app(sym("expectedProcess"), id), process_term(cpp_process_entity(decoded, item))));
   }
+  rules.push_back(rule(app(sym("processAt"), p(0)), apps(sym("processConsume"), app(sym("consumeAt"), p(0)), app(sym("returnAt"), p(0)), app(sym("tokenAt"), p(0)))));
   sig["observe"] = fn(Nat, SearchState);
   RuleIndex index(rules);
   const auto type = infer({}, app(sym("observe"), nat(0)), sig, index);
@@ -328,6 +417,8 @@ int main() {
   assert(output_type && conv(*output_type, EntityResult, index));
   const auto consume_type = infer({}, app(sym("consumeAt"), nat(0)), sig, index);
   assert(consume_type && conv(*consume_type, ConsumeResult, index));
+  const auto process_type = infer({}, app(sym("processAt"), nat(0)), sig, index);
+  assert(process_type && conv(*process_type, TokenizerOutcome, index));
   for (size_t i = 0; i < prefixes.size(); ++i) {
     const Ptr actual = nf(app(sym("observe"), nat(static_cast<unsigned>(i))), index);
     const Ptr expected = app(sym("expected"), nat(static_cast<unsigned>(i)));
@@ -347,9 +438,15 @@ int main() {
       std::println("ConsumeNamedEntity mismatch for candidate {}", consume_cases[i].input);
       return 4;
     }
+    const Ptr processed = nf(app(sym("processAt"), nat(static_cast<unsigned>(i))), index);
+    if (!conv(processed, app(sym("expectedProcess"), nat(static_cast<unsigned>(i))), index)) {
+      std::println("ProcessEntity composition mismatch for candidate {}", consume_cases[i].input);
+      return 5;
+    }
   }
   std::println("Blink HTMLEntitySearch model: loaded {} CSV entries; built typed advance relation over range/length/last-match state", table.size());
   std::println("The source transition is represented over the full pinned table; {} finite prefixes are wired as observers", prefixes.size());
   std::println("ConsumeNamedEntity composition covers {} finite complete/cutoff candidates; segmented-string rewind operations remain abstracted as consumed length and restored suffix", consume_cases.size());
-  std::println("Scope: numeric references, Windows-1252 correction, Unicode UTF-16 expansion, and actual SegmentedString mutations remain outside this model.");
+  std::println("ProcessEntity appends UTF-16 units, sets the entity flag on success, emits '&' on failure, and preserves the token on suspension.");
+  std::println("Scope: numeric references, Windows-1252 correction, and actual SegmentedString mutations remain outside this model.");
 }
