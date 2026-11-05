@@ -197,3 +197,5 @@ example; they do not claim behavioral equivalence with Blink.
 * [Color field-by-field equality](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/platform/graphics/color.h#380)
 * [InputStreamPreprocessor CR/LF and NUL handling](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/input_stream_preprocessor.h#45)
 * [HTMLTokenizer null-character policy and state enum](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/core/html/parser/html_tokenizer.h#57)
+* [SegmentedString character advance and line updates](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/platform/text/segmented_string.h#241)
+* [SegmentedString segment exhaustion transition](https://chromium.googlesource.com/chromium/src/+/99d77c2af39f60ee06a5516ad5428e4d2aa61da4/third_party/blink/renderer/platform/text/segmented_string.cc#102)

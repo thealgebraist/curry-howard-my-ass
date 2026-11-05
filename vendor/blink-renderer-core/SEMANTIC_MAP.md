@@ -1624,3 +1624,23 @@ The target compiles, but observer comparisons were not run. Source:
 This abstraction does not model `SegmentedString` cursor movement, Peek versus
 Advance, line-number updates, open-stream suspension, or the precise boolean
 return values at exhaustion. It describes the normalized finite sequence only. The integrated raw-tokenizer bridge composes CR/CRLF normalization and specializes NUL handling for the represented attribute-value and Data states; it does not reuse this complete-stream relation.
+
+## Input-stream preprocessor cursor operations
+
+`examples/blink_input_stream_preprocessor_cursor.cpp` models `Peek` and
+`Advance` as λΠ transitions over a finite remaining input list, the
+`skip_next_new_line_` bit, tokenizer NUL policy, closed-stream flag, and line
+counter. The result records whether a character is available, the exposed
+character, remaining cursor, updated suppression bit, and line count. CR is
+exposed as LF without consuming it; after that peek, `Advance` consumes CR and
+suppresses a following LF while updating the line number. The relation also
+represents NUL replacement/skipping and the closed final NUL observation. Nine
+finite C++/λΠ observations are encoded, but the executable comparisons were
+not run. The target compiles. Source correspondence: pinned
+`input_stream_preprocessor.h:58-66,115-167` and
+`platform/text/segmented_string.h:241-312`.
+
+The model flattens `SegmentedString` segments into one list, so it does not
+represent segment identities, per-segment line-number exclusion, append/prepend,
+`AdvancePastNonNewline`, `AdvancePastCarriageReturn`, or cursor metadata such as
+global consumed offsets. Those operations remain separate work.

@@ -541,3 +541,10 @@ claim that the renderer can be represented by a single small rewrite system.
   and streaming exhaustion remain omitted. The raw-tokenizer bridge separately
   composes CR/CRLF normalization and NUL outcomes for attribute-value and Data
   states.
+
+* `examples/blink_input_stream_preprocessor_cursor.cpp` models Blink's
+  `Peek`/`Advance` cursor transitions in λΠ, tracking the remaining flat input,
+  CRLF suppression bit, closed state, NUL policy, exposed character, and line
+  count. Nine finite C++/λΠ observations are encoded; the target compiles, but
+  comparisons were not run. Segment identity, per-segment line metadata,
+  append/prepend, and the specialized advance operations remain unmodeled.

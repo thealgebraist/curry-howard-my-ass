@@ -459,6 +459,11 @@ make test
    * Models Blink's input-stream preprocessing over complete finite streams: CR becomes LF, CRLF collapses to one LF, NUL is replaced or skipped under an explicit tokenizer policy, a closed stream's final NUL is represented as an EOF marker, and the ordinary-unit rewrite preserves an opaque payload.
    * Seven finite stream fixtures are encoded, plus the `ShouldSkipNullCharacters` policy for all 76 tokenizer states under both force-replacement settings (152 valuations). The target compiled; observer comparisons were not run. Segmented cursor state, line-number updates, Peek/Advance return values, and streaming exhaustion remain outside this model. The raw-tokenizer bridge separately composes CR/CRLF and its represented attribute/Data NUL outcomes.
 
+
+61. **`examples/blink_input_stream_preprocessor_cursor.cpp`**:
+   * Models `InputStreamPreprocessor::Peek` and `Advance` over a finite flat input list, tracking the next character, remaining input, CRLF suppression bit, closed/NUL policy, and line count. In particular, `Peek` exposes CR as LF without consuming it; the following `Advance` consumes CRLF and updates the line count.
+   * Nine finite C++/λΠ cursor observations are encoded. The target compiles; observer comparisons were not run. Segment identity, segment line-number exclusion, append/prepend, and `AdvancePastNonNewline`/`AdvancePastCarriageReturn` remain outside the model.
+
 ## License
 
 MIT
