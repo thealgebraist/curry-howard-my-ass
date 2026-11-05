@@ -21,12 +21,25 @@ struct Node { unsigned id,parent; Tag tag; std::vector<Attribute> attrs; std::ve
 struct State { std::vector<Node> dom; std::vector<Entry> stack; unsigned next; };
 enum class WhitespaceMode : unsigned { Unknown=0, NotAll=1, All=2, Newline=3 };
 struct PendingText { unsigned parent,next_child; std::u16string data; WhitespaceMode mode; };
-static const std::array<std::pair<std::string,char>,16> reference_entities={{{"amp;",'&'},{"lt;",'<'},{"gt;",'>'},{"quot;",'"'},{"apos;",'\''},
-    {"#38;",'&'},{"#60;",'<'},{"#62;",'>'},{"#34;",'"'},{"#39;",'\''},{"#101;",'e'},
-    {"#x26;",'&'},{"#x3c;",'<'},{"#x3e;",'>'},{"#x22;",'"'},{"#x27;",'\''}}};
-static const std::vector<std::pair<std::string,std::u16string>> body_reference_entities={
-    {"#38;",u"&"},{"#60;",u"<"},{"#62;",u">"},{"#34;",u"\""},{"#39;",u"'"},{"#101;",u"e"},
-    {"#x26;",u"&"},{"#x3c;",u"<"},{"#x3e;",u">"},{"#x22;",u"\""},{"#x27;",u"'"}};
+static constexpr std::array<char16_t,32> windows_latin1_extension={
+    0x20ac,0x0081,0x201a,0x0192,0x201e,0x2026,0x2020,0x2021,
+    0x02c6,0x2030,0x0160,0x2039,0x0152,0x008d,0x017d,0x008f,
+    0x0090,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,
+    0x02dc,0x2122,0x0161,0x203a,0x0153,0x009d,0x017e,0x0178};
+static std::vector<std::pair<std::string,char16_t>> make_reference_entities(){
+  std::vector<std::pair<std::string,char16_t>> refs={{"amp;",u'&'},{"lt;",u'<'},{"gt;",u'>'},{"quot;",u'"'},{"apos;",u'\''},
+      {"#38;",u'&'},{"#60;",u'<'},{"#62;",u'>'},{"#34;",u'"'},{"#39;",u'\''},{"#101;",u'e'},
+      {"#x26;",u'&'},{"#x3c;",u'<'},{"#x3e;",u'>'},{"#x22;",u'"'},{"#x27;",u'\''}};
+  constexpr char digits[]="0123456789abcdef";
+  for(unsigned i=0;i<windows_latin1_extension.size();++i){const unsigned cp=0x80+i;std::string name="#x";if(cp>=16)name.push_back(digits[cp>>4]);name.push_back(digits[cp&15]);name.push_back(';');refs.emplace_back(std::move(name),windows_latin1_extension[i]);}
+  return refs;
+}
+static const auto reference_entities=make_reference_entities();
+static const std::vector<std::pair<std::string,std::u16string>> body_reference_entities=[] {
+  std::vector<std::pair<std::string,std::u16string>> refs;
+  for(const auto&[name,value]:reference_entities)if(name.starts_with('#'))refs.emplace_back(name,std::u16string(1,value));
+  return refs;
+}();
 static Token cpp_tokenize(const std::string& in,const std::vector<blink_entity_semantics::Entity>& entities){
   assert(in.rfind("<p",0)==0);size_t i=2;Token t{Tag::P,{}};
   while(i<in.size()){while(i<in.size()&&std::isspace(static_cast<unsigned char>(in[i])))++i;if(i==in.size())break;if(in[i]=='>')return t;
@@ -36,7 +49,7 @@ static Token cpp_tokenize(const std::string& in,const std::vector<blink_entity_s
       for(const auto& entity:entities)if(entity.name.size()>(best?best->name.size():0)&&in.compare(i+1,entity.name.size(),entity.name)==0)best=&entity;
       if(best){const size_t after=i+1+best->name.size();const unsigned char next=after<in.size()?static_cast<unsigned char>(in[after]):0;const bool guarded=!best->semicolon&&((next>='0'&&next<='9')||(next>='A'&&next<='Z')||(next>='a'&&next<='z')||next=='=');
         if(!guarded){for(unsigned unit:blink_entity_semantics::utf16_units(best->first_value))value.push_back(static_cast<char16_t>(unit));if(best->second_value)for(unsigned unit:blink_entity_semantics::utf16_units(*best->second_value))value.push_back(static_cast<char16_t>(unit));i=after;decoded=true;t.has_entity=true;}}
-      for(const auto&[reference,character]:reference_entities)if(!decoded&&reference.starts_with('#')&&in.compare(i+1,reference.size(),reference)==0){value.push_back(static_cast<char16_t>(character));i+=reference.size()+1;decoded=true;t.has_entity=true;break;}
+      for(const auto&[reference,character]:reference_entities)if(!decoded&&reference.starts_with('#')&&in.compare(i+1,reference.size(),reference)==0){value.push_back(character);i+=reference.size()+1;decoded=true;t.has_entity=true;break;}
       if(decoded)continue;value.push_back('&');++i;continue;
     }value.push_back(static_cast<char16_t>(static_cast<unsigned char>(in[i++])));}
     t.attrs.push_back({std::move(name),std::move(value)});
@@ -117,7 +130,7 @@ int main(){
  sig["Nat"]=type_sort();sig["z"]=Nat;sig["s"]=fn(Nat,Nat);sig["Bool"]=type_sort();sig["true"]=Bool;sig["false"]=Bool;sig["Char"]=type_sort();
  std::string alphabet="<> =\"'&;#x0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-\t\n\r\f";for(unsigned char x:alphabet)sig["c"+std::to_string(x)]=Char;for(unsigned x=0;x<128;++x)sig["c"+std::to_string(x)]=Char;
  sig["Text"]=type_sort();sig["nilText"]=Text;sig["consText"]=fn(Char,fn(Text,Text));sig["snocText"]=fn(Text,fn(Char,Text));
- for(unsigned x=0;x<128;++x)sig["u16_"+std::to_string(x)]=Text16Unit;
+ for(unsigned x=0;x<128;++x)sig["u16_"+std::to_string(x)]=Text16Unit;for(const auto&[reference,value]:reference_entities)if(reference.starts_with('#'))sig["u16_"+std::to_string(static_cast<unsigned>(value))]=Text16Unit;
  sig["snocText16"]=fn(Text16,fn(Text16Unit,Text16));sig["asciiToText16"]=fn(Char,Text16Unit);
  sig["Attr"]=type_sort();sig["attr"]=fn(Text,fn(Text16,Attr));sig["attrName"]=fn(Attr,Text);sig["attrValue"]=fn(Attr,Text16);sig["Attrs"]=type_sort();sig["nilAttrs"]=Attrs;sig["consAttr"]=fn(Attr,fn(Attrs,Attrs));sig["snocAttr"]=fn(Attrs,fn(Attr,Attrs));sig["lowerAttrChar"]=fn(Char,Char);sig["textEq"]=fn(Text,fn(Text,Bool));sig["hasAttrName"]=fn(Text,fn(Attrs,Bool));sig["domAttrs"]=fn(Attrs,Attrs);sig["domAttrsGo"]=fn(Attrs,fn(Attrs,Attrs));
  sig["Tag"]=type_sort();for(Tag t:{Tag::P,Tag::Div,Tag::Button,Tag::Html,Tag::Span})sig[tn(t)]=TagT;
@@ -152,7 +165,7 @@ int main(){
  rs.push_back(R(app(sym("fromEntityChars"),sym("nilChar")),sym("nilText")));
  for(const auto& [name,value]:reference_entities)if(name.starts_with('#')){
    Ptr pattern=p(0);for(auto it=name.rbegin();it!=name.rend();++it)pattern=apps(sym("consText"),c(static_cast<unsigned char>(*it)),pattern);pattern=apps(sym("consText"),c('&'),pattern);
-   Ptr decoded=text16_term(std::u16string(1,static_cast<char16_t>(static_cast<unsigned char>(value))));
+   Ptr decoded=text16_term(std::u16string(1,value));
    for(const char* scanner:{"readDoubleValue","readSingleValue","readUnquotedValue"})rs.push_back(R(apps(sym(scanner),pattern,p(1),p(2),p(3),p(4)),apps(sym(scanner),p(0),p(1),apps(sym("appendUnits"),p(2),decoded),p(3),yes)));
  }
  rs.push_back(R(apps(sym("resumeAttribute"),sym("attrDouble"),p(0),p(1),p(2),p(3),p(4)),apps(sym("readDoubleValue"),p(0),p(1),p(2),p(3),p(4))));
