@@ -69,8 +69,8 @@ static Ptr units_term(const std::vector<unsigned>& values) {
   for (auto i = values.rbegin(); i != values.rend(); ++i) r = apps(sym("consUnit"), unit(*i), r);
   return r;
 }
-static Ptr token_term(const std::vector<unsigned>& values, bool has_entity) {
-  return apps(sym("token"), units_term(values), sym(has_entity ? "true" : "false"));
+static Ptr token_term(const std::vector<unsigned>& values, bool has_entity, bool is_character_token) {
+  return apps(sym("token"), units_term(values), sym(has_entity ? "true" : "false"), sym(is_character_token ? "true" : "false"));
 }
 static Ptr table_term(const std::vector<Entity>& table) {
   Ptr r = sym("nilEntities");
@@ -133,19 +133,21 @@ struct ConsumeCase {
   bool rcdata = false;
   std::vector<unsigned> prior_units;
   bool prior_has_entity = false;
+  bool prior_character_token = false;
   bool compose_process_entity = true;
 };
-struct ProcessOutcome { bool suspended = false; bool rcdata = false; std::vector<unsigned> units; bool has_entity = false; };
+struct ProcessOutcome { bool suspended = false; bool rcdata = false; bool returns_now = false; std::vector<unsigned> units; bool has_entity = false; bool is_character_token = false; };
 static std::vector<unsigned> utf16_units(unsigned codepoint) {
   if (codepoint <= 0xFFFF) return {codepoint};
   codepoint -= 0x10000;
   return {0xD800 + (codepoint >> 10), 0xDC00 + (codepoint & 0x3FF)};
 }
 static ProcessOutcome cpp_process_entity(const ConsumeOutcome& decoded, const ConsumeCase& item) {
-  ProcessOutcome out{false, item.rcdata, item.prior_units, item.prior_has_entity};
-  if (decoded.kind == ConsumeKind::NeedMore) { out.suspended = true; return out; }
+  ProcessOutcome out{false, item.rcdata, false, item.prior_units, item.prior_has_entity, item.prior_character_token};
+  if (decoded.kind == ConsumeKind::NeedMore) { out.suspended = true; out.returns_now = item.prior_character_token; return out; }
   if (decoded.kind == ConsumeKind::Failure || decoded.kind == ConsumeKind::GuardReject) {
     out.units.push_back(0x26);
+    out.is_character_token = true;
     return out;
   }
   const auto first = utf16_units(decoded.first);
@@ -156,6 +158,7 @@ static ProcessOutcome cpp_process_entity(const ConsumeOutcome& decoded, const Co
   }
   assert(out.units.size() <= item.prior_units.size() + 4);
   out.has_entity = true;
+  out.is_character_token = true;
   return out;
 }
 static bool ascii_alnum(unsigned char c) {
@@ -192,7 +195,8 @@ static Ptr process_term(const ProcessOutcome& outcome) {
       : (outcome.rcdata ? "rcdataState" : "dataState");
   return apps(sym("tokenizerOutcome"), sym(outcome.suspended ? "suspend" : "resume"),
       sym(state),
-      token_term(outcome.units, outcome.has_entity));
+      sym(outcome.returns_now ? "true" : "false"),
+      token_term(outcome.units, outcome.has_entity, outcome.is_character_token));
 }
 
 int main() {
@@ -242,18 +246,18 @@ int main() {
   sig["consumeResult"] = type_sort(); sig["consumeNeedMore"] = fn(Chars, ConsumeResult);
   sig["consumeFailure"] = fn(Chars, ConsumeResult); sig["consumeGuardReject"] = fn(Chars, ConsumeResult);
   sig["consumeDecoded"] = fn(Codepoint, fn(OptionCp, fn(Nat, fn(Chars, ConsumeResult))));
-  sig["Token"] = type_sort(); sig["token"] = fn(Units, fn(Bool, Token));
+  sig["Token"] = type_sort(); sig["token"] = fn(Units, fn(Bool, fn(Bool, Token)));
   sig["ReturnState"] = type_sort(); sig["data"] = ReturnState; sig["rcdata"] = ReturnState;
   sig["TokenizerState"] = type_sort(); sig["dataState"] = TokenizerState; sig["rcdataState"] = TokenizerState;
   sig["charRefDataState"] = TokenizerState; sig["charRefRCDATAState"] = TokenizerState;
   sig["Status"] = type_sort(); sig["resume"] = Status; sig["suspend"] = Status;
-  sig["TokenizerOutcome"] = type_sort(); sig["tokenizerOutcome"] = fn(Status, fn(TokenizerState, fn(Token, TokenizerOutcome)));
+  sig["TokenizerOutcome"] = type_sort(); sig["tokenizerOutcome"] = fn(Status, fn(TokenizerState, fn(Bool, fn(Token, TokenizerOutcome))));
   sig["resumedState"] = fn(ReturnState, TokenizerState); sig["suspendedState"] = fn(ReturnState, TokenizerState);
   sig["codepointUnits"] = fn(Codepoint, Units); sig["appendUnits"] = fn(Units, fn(Units, Units));
   sig["decodedUnits"] = fn(Codepoint, fn(OptionCp, Units));
-  sig["processConsume"] = fn(ConsumeResult, fn(ReturnState, fn(Token, TokenizerOutcome)));
+  sig["processConsume"] = fn(ConsumeResult, fn(ReturnState, fn(Bool, fn(Token, TokenizerOutcome))));
   sig["processAt"] = fn(Nat, TokenizerOutcome); sig["expectedProcess"] = fn(Nat, TokenizerOutcome);
-  sig["returnAt"] = fn(Nat, ReturnState); sig["tokenAt"] = fn(Nat, Token);
+  sig["returnAt"] = fn(Nat, ReturnState); sig["tokenAt"] = fn(Nat, Token); sig["characterTokenAt"] = fn(Nat, Bool);
   sig["eqNat"] = fn(Nat, fn(Nat, Bool)); sig["eqChar"] = fn(Char, fn(Char, Bool));
   sig["eqMaybeChar"] = fn(MaybeChar, fn(MaybeChar, Bool));
   sig["charAt"] = fn(Chars, fn(Nat, MaybeChar));
@@ -371,22 +375,22 @@ int main() {
   rules.push_back(rule(app(sym("resumedState"), sym("rcdata")), sym("rcdataState")));
   rules.push_back(rule(app(sym("suspendedState"), sym("data")), sym("charRefDataState")));
   rules.push_back(rule(app(sym("suspendedState"), sym("rcdata")), sym("charRefRCDATAState")));
-  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeNeedMore"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("suspend"), app(sym("suspendedState"), p(1)), apps(sym("token"), p(2), p(3)))));
-  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeFailure"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(1)), apps(sym("token"), apps(sym("appendUnits"), p(2), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(3)))));
-  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeGuardReject"), p(0)), p(1), apps(sym("token"), p(2), p(3))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(1)), apps(sym("token"), apps(sym("appendUnits"), p(2), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(3)))));
-  rules.push_back(rule(apps(sym("processConsume"), apps(sym("consumeDecoded"), p(0), p(1), p(2), p(3)), p(4), apps(sym("token"), p(5), p(6))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(4)), apps(sym("token"), apps(sym("appendUnits"), p(5), apps(sym("decodedUnits"), p(0), p(1))), yes))));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeNeedMore"), p(0)), p(1), p(2), apps(sym("token"), p(3), p(4), p(5))), apps(sym("tokenizerOutcome"), sym("suspend"), app(sym("suspendedState"), p(1)), p(2), apps(sym("token"), p(3), p(4), p(5)))));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeFailure"), p(0)), p(1), p(2), apps(sym("token"), p(3), p(4), p(5))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(1)), no, apps(sym("token"), apps(sym("appendUnits"), p(3), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(4), yes))));
+  rules.push_back(rule(apps(sym("processConsume"), app(sym("consumeGuardReject"), p(0)), p(1), p(2), apps(sym("token"), p(3), p(4), p(5))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(1)), no, apps(sym("token"), apps(sym("appendUnits"), p(3), apps(sym("consUnit"), unit(0x26), sym("nilUnits"))), p(4), yes))));
+  rules.push_back(rule(apps(sym("processConsume"), apps(sym("consumeDecoded"), p(0), p(1), p(2), p(3)), p(4), p(5), apps(sym("token"), p(6), p(7), p(8))), apps(sym("tokenizerOutcome"), sym("resume"), app(sym("resumedState"), p(4)), no, apps(sym("token"), apps(sym("appendUnits"), p(6), apps(sym("decodedUnits"), p(0), p(1))), yes, yes))));
 
   // Finite observations use prefixes from the pinned entity table, including
   // terminal names and prefixes that fail after a successful match.
   const std::vector<std::string> prefixes = {"A", "am", "amp", "amp;", "not", "noti", "notin;", "not="};
   const std::vector<ConsumeCase> consume_cases = {
-      {"amp;", true, false, false, {}, false}, {"NotEqualTilde;", true, false, true, {0x70}, false},
-      {"Afr;", true, false, true, {0x70}, false},
-      {"not", true, false, true, {0x70}, true}, {"notx", false, false, false, {0x70}, true},
-      {"notx", false, true, true, {0x70}, false, false}, {"not=", false, true, false, {}, false},
-      {"copyx", false, false, false, {}, false}, {"copyx", false, true, true, {0x6F}, true, false},
-      {"xyz", false, false, false, {}, false}, {"amp;!", false, true, true, {0x71}, false},
-      {"NotEqu", true, false, false, {0x70}, true}};
+      {"amp;", true, false, false, {}, false}, {"NotEqualTilde;", true, false, true, {0x70}, false, true},
+      {"Afr;", true, false, true, {0x70}, false, true},
+      {"not", true, false, true, {0x70}, true, true}, {"notx", false, false, false, {0x70}, true, true},
+      {"notx", false, true, true, {0x70}, false, true, false}, {"not=", false, true, false, {}, false},
+      {"copyx", false, false, false, {}, false}, {"copyx", false, true, true, {0x6F}, true, true, false},
+      {"xyz", false, false, false, {}, false}, {"amp;!", false, true, true, {0x71}, false, true},
+      {"NotEqu", true, false, false, {0x70}, true, true}, {"NotEqu", true, false, false, {}, false, false}};
   sig["allEntities"] = Entities;
   rules.push_back(rule(sym("allEntities"), table_term(table)));
   sig["expected"] = fn(Nat, SearchState);
@@ -407,7 +411,8 @@ int main() {
     rules.push_back(rule(app(sym("consumeEofAt"), id), sym(item.eof ? "true" : "false")));
     rules.push_back(rule(app(sym("consumeAdditionalAt"), id), sym(item.additional_allowed ? "true" : "false")));
     rules.push_back(rule(app(sym("returnAt"), id), sym(item.rcdata ? "rcdata" : "data")));
-    rules.push_back(rule(app(sym("tokenAt"), id), token_term(item.prior_units, item.prior_has_entity)));
+    rules.push_back(rule(app(sym("characterTokenAt"), id), sym(item.prior_character_token ? "true" : "false")));
+    rules.push_back(rule(app(sym("tokenAt"), id), token_term(item.prior_units, item.prior_has_entity, item.prior_character_token)));
     rules.push_back(rule(app(sym("consumeAt"), id), apps(sym("consumeNamed"),
         apps(sym("run"), app(sym("initialState"), sym("allEntities")), sym("allEntities"), app(sym("consumeInputAt"), id)),
         app(sym("consumeInputAt"), id), app(sym("consumeEofAt"), id), app(sym("consumeAdditionalAt"), id))));
@@ -418,7 +423,7 @@ int main() {
     if (item.compose_process_entity)
       rules.push_back(rule(app(sym("expectedProcess"), id), process_term(cpp_process_entity(decoded, item))));
   }
-  rules.push_back(rule(app(sym("processAt"), p(0)), apps(sym("processConsume"), app(sym("consumeAt"), p(0)), app(sym("returnAt"), p(0)), app(sym("tokenAt"), p(0)))));
+  rules.push_back(rule(app(sym("processAt"), p(0)), apps(sym("processConsume"), app(sym("consumeAt"), p(0)), app(sym("returnAt"), p(0)), app(sym("characterTokenAt"), p(0)), app(sym("tokenAt"), p(0)))));
   sig["observe"] = fn(Nat, SearchState);
   RuleIndex index(rules);
   const auto type = infer({}, app(sym("observe"), nat(0)), sig, index);
