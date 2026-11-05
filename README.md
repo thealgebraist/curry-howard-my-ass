@@ -446,6 +446,11 @@ make test
    * A bounded harness covers 24 literal value/unit combinations and five calculated-expression observations, including zero, finite values, NaN, and infinities. This is a representation of the source's dispatch and clamp boundaries, not a transcription of CSS math expression evaluation.
    * Unit coverage is limited to representative resolution units, and floating-point behavior is reduced to an explicitly bounded domain. Parser validation, random CSS math evaluation, full unit conversion tables, and arbitrary resolver states remain outside scope; the harness has only been compile-checked.
 
+83. **`examples/blink_html_entity_search_bisimulation.cpp`**:
+   * Models `HTMLEntitySearch` construction and `Advance` with a typed state containing the current character offset, surviving ordered entity range, and most recent full-name match. It loads the complete 2,231-name pinned `html_entity_names.csv`; generic λΠ rules narrow the range by the first character or the character at the current offset and update the terminal match only when the narrowed range's first entity ends at the new offset.
+   * Eight finite prefixes are wired to observer terms, including `not=` which exercises range failure after retaining the prior `not` match. The source behavior is mapped to `html_entity_search.cc:33-62` and `html_entity_search.h:40-57`; the generated entity data and entry ordering come from `html_entity_names.csv` and `html_entity_table.h`.
+   * This models the search state transition over the full name table. It does not model `ConsumeNamedEntity` rollback, `SegmentedString` mutation/suspension, numeric references, or Unicode output decoding. The target has been compile-checked; its typed observer comparisons have not been executed in this update.
+
 
 ---
 
