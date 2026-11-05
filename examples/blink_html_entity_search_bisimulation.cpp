@@ -1,5 +1,6 @@
 #include "../src/lambda_pi.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <optional>
@@ -20,6 +21,15 @@ static std::vector<Entity> load_entities() {
     result.push_back({line.substr(1, comma - 2)});
   }
   assert(result.size() == 2231);
+  for (const auto& entity : result) {
+    assert(!entity.name.empty());
+    for (unsigned char c : entity.name) assert(c < 128);
+  }
+  // The generated HTMLEntityTable sorts the CSV rows before creating
+  // kStaticEntityTable, so its observable range order is lexical by name.
+  std::sort(result.begin(), result.end(), [](const Entity& a, const Entity& b) { return a.name < b.name; });
+  assert(std::is_sorted(result.begin(), result.end(), [](const Entity& a, const Entity& b) { return a.name < b.name; }));
+  assert(std::adjacent_find(result.begin(), result.end(), [](const Entity& a, const Entity& b) { return a.name == b.name; }) == result.end());
   return result;
 }
 
