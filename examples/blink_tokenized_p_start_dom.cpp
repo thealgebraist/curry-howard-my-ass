@@ -1,5 +1,6 @@
 #include "../src/lambda_pi.hpp"
 #include "blink_html_entity_search_model.hpp"
+#include "blink_html_numeric_entity_table.hpp"
 #include <array>
 #include <cassert>
 #include <cctype>
@@ -21,11 +22,7 @@ struct Node { unsigned id,parent; Tag tag; std::vector<Attribute> attrs; std::ve
 struct State { std::vector<Node> dom; std::vector<Entry> stack; unsigned next; };
 enum class WhitespaceMode : unsigned { Unknown=0, NotAll=1, All=2, Newline=3 };
 struct PendingText { unsigned parent,next_child; std::u16string data; WhitespaceMode mode; };
-static constexpr std::array<char16_t,32> windows_latin1_extension={
-    0x20ac,0x0081,0x201a,0x0192,0x201e,0x2026,0x2020,0x2021,
-    0x02c6,0x2030,0x0160,0x2039,0x0152,0x008d,0x017d,0x008f,
-    0x0090,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,
-    0x02dc,0x2122,0x0161,0x203a,0x0153,0x009d,0x017e,0x0178};
+static constexpr auto& windows_latin1_extension=blink_numeric_entity_table::windows_latin1_extension;
 static std::vector<std::pair<std::string,char16_t>> make_reference_entities(){
   std::vector<std::pair<std::string,char16_t>> refs={{"amp;",u'&'},{"lt;",u'<'},{"gt;",u'>'},{"quot;",u'"'},{"apos;",u'\''},
       {"#38;",u'&'},{"#60;",u'<'},{"#62;",u'>'},{"#34;",u'"'},{"#39;",u'\''},{"#101;",u'e'},
@@ -34,9 +31,10 @@ static std::vector<std::pair<std::string,char16_t>> make_reference_entities(){
   auto add_numeric_form=[&](const std::string& stem,char16_t value){refs.emplace_back(stem+';',value);};
   for(unsigned i=0;i<windows_latin1_extension.size();++i){
     const unsigned cp=0x80+i;const char hi=digits[cp>>4],lo=digits[cp&15];
-    add_numeric_form("#"+std::to_string(cp),windows_latin1_extension[i]);
+    const char16_t output=static_cast<char16_t>(windows_latin1_extension[i]);
+    add_numeric_form("#"+std::to_string(cp),output);
     for(char x:{'x','X'})for(char h:{hi,static_cast<char>(std::toupper(static_cast<unsigned char>(hi)))})for(char l:{lo,static_cast<char>(std::toupper(static_cast<unsigned char>(lo)))})
-      add_numeric_form(std::string("#")+x+h+l,windows_latin1_extension[i]);
+      add_numeric_form(std::string("#")+x+h+l,output);
   }
   return refs;
 }

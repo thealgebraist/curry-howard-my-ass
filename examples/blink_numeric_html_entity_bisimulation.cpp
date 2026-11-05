@@ -1,4 +1,5 @@
 #include "../src/lambda_pi.hpp"
+#include "blink_html_numeric_entity_table.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstdint>
@@ -13,15 +14,14 @@ using namespace lp;
 enum class Mode { Initial, Number, HexPrefix, Decimal, Hex, Done, Await };
 struct Scan { Mode mode=Mode::Initial; int64_t value=0; bool accepted=false, semicolon=false; unsigned cursor=0; };
 struct Arithmetic { bool hex; int64_t before; unsigned digit; int64_t after; };
-static constexpr uint32_t kWindowsLatin1[32]={0x20ac,0x81,0x201a,0x192,0x201e,0x2026,0x2020,0x2021,0x2c6,0x2030,0x160,0x2039,0x152,0x8d,0x17d,0x8f,0x90,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,0x2dc,0x2122,0x161,0x203a,0x153,0x9d,0x17e,0x178};
 // Independent transcription for the λΠ mapping rules; compared against the
-// C++ helper above on all source table inputs.
+// C++ source table on all mapped input values.
 static constexpr uint32_t kTypedWindowsLatin1[32]={0x20ac,0x81,0x201a,0x192,0x201e,0x2026,0x2020,0x2021,0x2c6,0x2030,0x160,0x2039,0x152,0x8d,0x17d,0x8f,0x90,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,0x2dc,0x2122,0x161,0x203a,0x153,0x9d,0x17e,0x178};
 static int dec(char c){return c>='0'&&c<='9'?c-'0':-1;}
 static int hexv(char c){if(c>='0'&&c<='9')return c-'0';if(c>='a'&&c<='f')return c-'a'+10;if(c>='A'&&c<='F')return c-'A'+10;return -1;}
 static uint32_t append_legal(int64_t c){
  if(c<=0||c>0x10ffff||(c>=0xd800&&c<=0xdfff))return 0xfffd;
- if(c>=0x80&&c<=0x9f)return kWindowsLatin1[c-0x80];return static_cast<uint32_t>(c);
+ return blink_numeric_entity_table::adjust(static_cast<uint32_t>(c));
 }
 static Scan cpp_step(Scan s,char c){
  auto add=[&](bool hex,unsigned d){if(s.value<0)return;int64_t next=s.value*(hex?16:10)+d;s.value=next>0x10ffff?-1:next;};
@@ -73,7 +73,7 @@ int main(){
  for(const char* m:{"initial","number","hexPrefix","decimal","hexadecimal","done","await"})sig[m]=sym("Mode");
  sig["Digit"]=type_sort();for(const char* d:{"hash","lowerX","upperX","semi","other"})sig[d]=dig;for(unsigned i=0;i<10;++i)sig["d"+std::to_string(i)]=dig;for(const char* d:{"hA","hB","hC","hD","hE","hF"})sig[d]=dig;
  sig["Value"]=type_sort();std::set<int64_t> vals={0,1,4,5,6,7,8,9,10,11,12,16,17,55,65,111,127,128,159,160,256,271,272,552,1114,4096,4351,4352,5529,43520,65536,69631,69632,111411,1114110,1114111,1114112,-1};
- for(unsigned i=0;i<32;++i){vals.insert(0x80+i);vals.insert(kWindowsLatin1[i]);vals.insert(kTypedWindowsLatin1[i]);}
+ for(unsigned i=0;i<32;++i){vals.insert(0x80+i);vals.insert(blink_numeric_entity_table::windows_latin1_extension[i]);vals.insert(kTypedWindowsLatin1[i]);}
  for(const auto& a:arithmetic){vals.insert(a.before);vals.insert(a.after);}for(auto x:vals)sig[value_name(x)]=vty;for(const char* c:{"replacement","euro","yDiaeresis"})sig[c]=vty;
  sig["scanState"]=fn(sym("Mode"),fn(vty,fn(bit,fn(bit,fn(natty,state)))));sig["acc10"]=fn(vty,fn(dig,vty));sig["acc16"]=fn(vty,fn(dig,vty));sig["legal"]=fn(vty,vty);sig["step"]=fn(state,fn(dig,state));sig["finish"]=fn(state,state);
  auto yes=sym("yes"),no=sym("no");
