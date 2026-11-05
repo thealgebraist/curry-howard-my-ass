@@ -456,8 +456,8 @@ Current λΠ work is small compared with that source surface:
   scanned attributes through p-scope pop and DOM insertion. Twenty inputs
   cover ordered attributes, full-table named attribute references with guard
   behavior, selected decimal/hex references plus decimal and hexadecimal
-  forms for all 32 values in Blink's Windows-1252 adjustment interval
-  (optional semicolon and either `x`/`X`), duplicate filtering, body references,
+  semicolon-terminated forms for all 32 values in Blink's Windows-1252
+  adjustment interval (either `x`/`X`, hex digit case variants), duplicate filtering, body references,
   and DOM/CSS/render projections. The C++ comparison checks
   the complete token term, its entity flag, and final DOM/stack state. This is a mapped
   transcription, not execution of Blink's tokenizer; body and attribute named
@@ -465,8 +465,9 @@ Current λΠ work is small compared with that source surface:
   UTF-16 code-unit lists. Successful named-reference decoding and selected
   numeric rewrites set the modeled entity flag, following
   `html_tokenizer.cc:1061` and `html_token.h:358-359,412`. These interval
-  forms are table-derived rewrite rules; general numeric accumulation, parse-
-  error reconsume, custom/sanitizer effects, and full DOM lifecycle are
+  forms are table-derived rewrite rules; general numeric accumulation and
+  optional numeric semicolon handling, parse-error reconsume,
+  custom/sanitizer effects, and full DOM lifecycle are
   excluded.
   The same raw source yields a start-tag token, text token through the next `<`,
   and restricted `</p>` token; the p-end transition closes the open-element
